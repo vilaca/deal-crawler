@@ -1,4 +1,4 @@
-.PHONY: help install test coverage format format-check lint typecheck security quality check-all clean
+.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean
 
 help:
 	@echo "Available targets (activate venv first: source venv/bin/activate):"
@@ -11,7 +11,8 @@ help:
 	@echo "  make typecheck    - Run type checking (mypy)"
 	@echo "  make security     - Run security checks (bandit, pip-audit)"
 	@echo "  make quality      - Run code quality checks (vulture, interrogate)"
-	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, test)"
+	@echo "  make complexity   - Run complexity checks (radon)"
+	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, complexity, test)"
 	@echo "  make clean        - Clean up temporary files"
 
 install:
@@ -54,7 +55,14 @@ quality:
 	@echo "\nRunning interrogate (docstring coverage)..."
 	@interrogate -v main.py utils test
 
-check-all: format-check lint typecheck quality security test
+complexity:
+	@echo "Running complexity checks (radon)..."
+	@echo "\n📊 Cyclomatic Complexity (should be A-B, max per function: 10):"
+	@radon cc main.py utils -a -nb
+	@echo "\n📊 Maintainability Index (should be A-B, min: 20):"
+	@radon mi main.py utils -s
+
+check-all: format-check lint typecheck quality complexity security test
 	@echo "\n✅ All checks completed!"
 
 clean:
