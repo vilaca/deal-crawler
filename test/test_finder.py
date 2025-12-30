@@ -41,12 +41,17 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product A", results)
-        self.assertIsNotNone(results["Product A"])
-        assert results["Product A"] is not None  # Type narrowing for mypy
-        price, url = results["Product A"]
+        self.assertIn("Product A", results.prices)
+        self.assertIsNotNone(results.prices["Product A"])
+        assert results.prices["Product A"] is not None  # Type narrowing for mypy
+        price, url = results.prices["Product A"]
         self.assertEqual(price, 30.00)
         self.assertEqual(url, "https://example.com/product2")
+
+        # Check summary statistics
+        self.assertEqual(results.total_products, 1)
+        self.assertEqual(results.total_urls_checked, 3)
+        self.assertEqual(results.prices_found, 3)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -71,13 +76,17 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product B", results)
-        self.assertIsNotNone(results["Product B"])
-        assert results["Product B"] is not None  # Type narrowing for mypy
-        price, url = results["Product B"]
+        self.assertIn("Product B", results.prices)
+        self.assertIsNotNone(results.prices["Product B"])
+        assert results.prices["Product B"] is not None  # Type narrowing for mypy
+        price, url = results.prices["Product B"]
         # Should get cheapest in-stock price (60.00), not the out-of-stock one
         self.assertEqual(price, 60.00)
         self.assertEqual(url, "https://example.com/product3")
+
+        # Check summary statistics
+        self.assertEqual(results.out_of_stock, 1)
+        self.assertEqual(results.prices_found, 2)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -100,8 +109,11 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product C", results)
-        self.assertIsNone(results["Product C"])
+        self.assertIn("Product C", results.prices)
+        self.assertIsNone(results.prices["Product C"])
+
+        # Check summary statistics
+        self.assertEqual(results.extraction_errors, 2)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -123,8 +135,11 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product D", results)
-        self.assertIsNone(results["Product D"])
+        self.assertIn("Product D", results.prices)
+        self.assertIsNone(results.prices["Product D"])
+
+        # Check summary statistics
+        self.assertEqual(results.out_of_stock, 2)
 
     def test_handles_fetch_failure(self):
         """Test handles fetch_page returning None."""
@@ -136,8 +151,11 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product E", results)
-        self.assertIsNone(results["Product E"])
+        self.assertIn("Product E", results.prices)
+        self.assertIsNone(results.prices["Product E"])
+
+        # Check summary statistics
+        self.assertEqual(results.fetch_errors, 1)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -161,19 +179,23 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertEqual(len(results), 2)
-        self.assertIn("Product A", results)
-        self.assertIn("Product B", results)
+        self.assertEqual(len(results.prices), 2)
+        self.assertIn("Product A", results.prices)
+        self.assertIn("Product B", results.prices)
 
-        assert results["Product A"] is not None  # Type narrowing for mypy
-        price_a, url_a = results["Product A"]
+        assert results.prices["Product A"] is not None  # Type narrowing for mypy
+        price_a, url_a = results.prices["Product A"]
         self.assertEqual(price_a, 20.00)
         self.assertEqual(url_a, "https://example.com/a2")
 
-        assert results["Product B"] is not None  # Type narrowing for mypy
-        price_b, url_b = results["Product B"]
+        assert results.prices["Product B"] is not None  # Type narrowing for mypy
+        price_b, url_b = results.prices["Product B"]
         self.assertEqual(price_b, 15.00)
         self.assertEqual(url_b, "https://example.com/b1")
+
+        # Check summary statistics
+        self.assertEqual(results.total_products, 2)
+        self.assertEqual(results.prices_found, 3)
 
     def test_handles_empty_products(self):
         """Test handles empty products dictionary."""
@@ -184,7 +206,8 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertEqual(results, {})
+        self.assertEqual(results.prices, {})
+        self.assertEqual(results.total_products, 0)
 
 
 if __name__ == "__main__":
