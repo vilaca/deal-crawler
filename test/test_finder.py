@@ -1,10 +1,11 @@
 """Tests for price comparison logic."""
 
+import io
 import unittest
 from unittest.mock import patch, MagicMock
 from bs4 import BeautifulSoup
 
-from utils.finder import find_cheapest_prices
+from utils.finder import find_cheapest_prices, SearchResults
 
 
 class TestFindCheapestPrices(unittest.TestCase):
@@ -41,12 +42,17 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product A", results)
-        self.assertIsNotNone(results["Product A"])
-        assert results["Product A"] is not None  # Type narrowing for mypy
-        price, url = results["Product A"]
+        self.assertIn("Product A", results.prices)
+        self.assertIsNotNone(results.prices["Product A"])
+        assert results.prices["Product A"] is not None  # Type narrowing for mypy
+        price, url = results.prices["Product A"]
         self.assertEqual(price, 30.00)
         self.assertEqual(url, "https://example.com/product2")
+
+        # Check summary statistics
+        self.assertEqual(results.total_products, 1)
+        self.assertEqual(results.total_urls_checked, 3)
+        self.assertEqual(results.prices_found, 3)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -71,13 +77,23 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product B", results)
-        self.assertIsNotNone(results["Product B"])
-        assert results["Product B"] is not None  # Type narrowing for mypy
-        price, url = results["Product B"]
+        self.assertIn("Product B", results.prices)
+        self.assertIsNotNone(results.prices["Product B"])
+        assert results.prices["Product B"] is not None  # Type narrowing for mypy
+        price, url = results.prices["Product B"]
         # Should get cheapest in-stock price (60.00), not the out-of-stock one
         self.assertEqual(price, 60.00)
         self.assertEqual(url, "https://example.com/product3")
+
+        # Check summary statistics
+        self.assertEqual(results.out_of_stock, 1)
+        self.assertEqual(results.prices_found, 2)
+        self.assertEqual(results.total_urls_checked, 3)
+        # Check out_of_stock_items tracking
+        self.assertIn("Product B", results.out_of_stock_items)
+        self.assertEqual(
+            results.out_of_stock_items["Product B"], ["https://example.com/product1"]
+        )
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -100,8 +116,15 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product C", results)
-        self.assertIsNone(results["Product C"])
+        self.assertIn("Product C", results.prices)
+        self.assertIsNone(results.prices["Product C"])
+
+        # Check summary statistics
+        self.assertEqual(results.extraction_errors, 2)
+        # Check failed_urls tracking
+        self.assertEqual(len(results.failed_urls), 2)
+        self.assertIn("https://example.com/product1", results.failed_urls)
+        self.assertIn("https://example.com/product2", results.failed_urls)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -123,8 +146,11 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product D", results)
-        self.assertIsNone(results["Product D"])
+        self.assertIn("Product D", results.prices)
+        self.assertIsNone(results.prices["Product D"])
+
+        # Check summary statistics
+        self.assertEqual(results.out_of_stock, 2)
 
     def test_handles_fetch_failure(self):
         """Test handles fetch_page returning None."""
@@ -136,8 +162,14 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertIn("Product E", results)
-        self.assertIsNone(results["Product E"])
+        self.assertIn("Product E", results.prices)
+        self.assertIsNone(results.prices["Product E"])
+
+        # Check summary statistics
+        self.assertEqual(results.fetch_errors, 1)
+        # Check failed_urls tracking
+        self.assertEqual(len(results.failed_urls), 1)
+        self.assertIn("https://example.com/product1", results.failed_urls)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -161,19 +193,23 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertEqual(len(results), 2)
-        self.assertIn("Product A", results)
-        self.assertIn("Product B", results)
+        self.assertEqual(len(results.prices), 2)
+        self.assertIn("Product A", results.prices)
+        self.assertIn("Product B", results.prices)
 
-        assert results["Product A"] is not None  # Type narrowing for mypy
-        price_a, url_a = results["Product A"]
+        assert results.prices["Product A"] is not None  # Type narrowing for mypy
+        price_a, url_a = results.prices["Product A"]
         self.assertEqual(price_a, 20.00)
         self.assertEqual(url_a, "https://example.com/a2")
 
-        assert results["Product B"] is not None  # Type narrowing for mypy
-        price_b, url_b = results["Product B"]
+        assert results.prices["Product B"] is not None  # Type narrowing for mypy
+        price_b, url_b = results.prices["Product B"]
         self.assertEqual(price_b, 15.00)
         self.assertEqual(url_b, "https://example.com/b1")
+
+        # Check summary statistics
+        self.assertEqual(results.total_products, 2)
+        self.assertEqual(results.prices_found, 3)
 
     def test_handles_empty_products(self):
         """Test handles empty products dictionary."""
@@ -184,7 +220,339 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         results = find_cheapest_prices(products, mock_client)
 
-        self.assertEqual(results, {})
+        self.assertEqual(results.prices, {})
+        self.assertEqual(results.total_products, 0)
+
+
+class TestSearchResults(unittest.TestCase):
+    """Test SearchResults formatting and display methods."""
+
+    def test_pluralize_singular(self):
+        """Test pluralization returns singular for count of 1."""
+        results = SearchResults()
+        self.assertEqual(results._pluralize(1, "product", "products"), "product")
+        self.assertEqual(results._pluralize(1, "URL", "URLs"), "URL")
+        self.assertEqual(results._pluralize(1, "error", "errors"), "error")
+
+    def test_pluralize_plural(self):
+        """Test pluralization returns plural for count != 1."""
+        results = SearchResults()
+        self.assertEqual(results._pluralize(0, "product", "products"), "products")
+        self.assertEqual(results._pluralize(2, "product", "products"), "products")
+        self.assertEqual(results._pluralize(10, "URL", "URLs"), "URLs")
+
+    def test_extract_domain_normal_url(self):
+        """Test domain extraction from normal URL."""
+        results = SearchResults()
+        self.assertEqual(
+            results._extract_domain("https://example.com/product"), "example.com"
+        )
+        self.assertEqual(
+            results._extract_domain("https://store.com/item/123"), "store.com"
+        )
+
+    def test_extract_domain_with_www(self):
+        """Test domain extraction removes www. prefix."""
+        results = SearchResults()
+        self.assertEqual(
+            results._extract_domain("https://www.example.com/product"), "example.com"
+        )
+        self.assertEqual(
+            results._extract_domain("http://www.store.com/item"), "store.com"
+        )
+
+    def test_extract_domain_malformed_url(self):
+        """Test domain extraction with malformed URLs returns full URL."""
+        results = SearchResults()
+        # Relative path (no netloc)
+        self.assertEqual(
+            results._extract_domain("/path/to/resource"), "/path/to/resource"
+        )
+        # Just a path
+        self.assertEqual(results._extract_domain("product/123"), "product/123")
+
+    def test_extract_domain_no_scheme(self):
+        """Test domain extraction from URL without scheme."""
+        results = SearchResults()
+        # Without scheme, urlparse might not extract netloc correctly
+        result = results._extract_domain("example.com/product")
+        # Should return the full string as fallback
+        self.assertIn("example.com", result)
+
+    def test_extract_domain_empty_string(self):
+        """Test domain extraction with empty string."""
+        results = SearchResults()
+        self.assertEqual(results._extract_domain(""), "")
+
+    def test_get_success_emoji_high_success(self):
+        """Test emoji for high success rate (≥80%)."""
+        results = SearchResults()
+        self.assertEqual(results._get_success_emoji(100.0), "✅")
+        self.assertEqual(results._get_success_emoji(80.0), "✅")
+        self.assertEqual(results._get_success_emoji(85.5), "✅")
+
+    def test_get_success_emoji_medium_success(self):
+        """Test emoji for medium success rate (50-79%)."""
+        results = SearchResults()
+        self.assertEqual(results._get_success_emoji(79.9), "⚠️")
+        self.assertEqual(results._get_success_emoji(50.0), "⚠️")
+        self.assertEqual(results._get_success_emoji(65.0), "⚠️")
+
+    def test_get_success_emoji_low_success(self):
+        """Test emoji for low success rate (<50%)."""
+        results = SearchResults()
+        self.assertEqual(results._get_success_emoji(49.9), "❌")
+        self.assertEqual(results._get_success_emoji(25.0), "❌")
+        self.assertEqual(results._get_success_emoji(0.0), "❌")
+
+    def test_format_success_line_no_urls(self):
+        """Test success line when no URLs were checked."""
+        results = SearchResults()
+        results.total_products = 5
+        results.total_urls_checked = 0
+
+        line = results._format_success_line()
+        self.assertEqual(line, "**5 products** · No URLs checked")
+
+    def test_format_success_line_no_urls_singular(self):
+        """Test success line with 1 product and no URLs."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 0
+
+        line = results._format_success_line()
+        self.assertEqual(line, "**1 product** · No URLs checked")
+
+    def test_format_success_line_with_urls(self):
+        """Test success line with URLs checked."""
+        results = SearchResults()
+        results.total_products = 3
+        results.total_urls_checked = 10
+        results.prices_found = 8
+
+        line = results._format_success_line()
+        self.assertIn("8/10 URLs", line)
+        self.assertIn("80% success", line)
+        self.assertIn("3 products", line)
+        self.assertIn("✅", line)
+
+    def test_format_success_line_with_singular_forms(self):
+        """Test success line uses singular forms when count is 1."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 1
+        results.prices_found = 1
+
+        line = results._format_success_line()
+        self.assertIn("1/1 URL", line)
+        self.assertIn("100% success", line)
+        self.assertIn("1 product", line)
+        self.assertNotIn("URLs", line)
+        self.assertNotIn("products", line)
+
+    def test_format_issues_line_no_issues(self):
+        """Test issues line when there are no issues."""
+        results = SearchResults()
+        line = results._format_issues_line()
+        self.assertIsNone(line)
+
+    def test_format_issues_line_single_issue(self):
+        """Test issues line with single issue type."""
+        results = SearchResults()
+        results.out_of_stock = 3
+
+        line = results._format_issues_line()
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("📦 3 out of stock", line)
+        self.assertNotIn("fetch errors", line)
+        self.assertNotIn("extraction errors", line)
+
+    def test_format_issues_line_multiple_issues(self):
+        """Test issues line with multiple issue types."""
+        results = SearchResults()
+        results.out_of_stock = 2
+        results.fetch_errors = 1
+        results.extraction_errors = 3
+
+        line = results._format_issues_line()
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("📦 2 out of stock", line)
+        self.assertIn("🌐 1 fetch error", line)
+        self.assertIn("🔍 3 extraction errors", line)
+        self.assertIn(" · ", line)  # Should have separators
+
+    def test_format_issues_line_singular_forms(self):
+        """Test issues line uses singular forms when count is 1."""
+        results = SearchResults()
+        results.fetch_errors = 1
+        results.extraction_errors = 1
+
+        line = results._format_issues_line()
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("🌐 1 fetch error", line)
+        self.assertIn("🔍 1 extraction error", line)
+        self.assertNotIn("errors", line)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_empty(self, mock_stdout):
+        """Test printing out-of-stock items when none exist."""
+        results = SearchResults()
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertEqual(output, "")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_single_product(self, mock_stdout):
+        """Test printing out-of-stock items for single product."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
+        }
+
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Out of Stock:**", output)
+        self.assertIn("**Product A**", output)
+        self.assertIn("example.com", output)
+        self.assertIn("store.com", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_multiple_products(self, mock_stdout):
+        """Test printing out-of-stock items for multiple products."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": ["https://example.com/a"],
+            "Product B": ["https://store.com/b", "https://shop.com/b"],
+        }
+
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Product A**", output)
+        self.assertIn("**Product B**", output)
+        self.assertIn("example.com", output)
+        self.assertIn("store.com", output)
+        self.assertIn("shop.com", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_with_malformed_urls(self, mock_stdout):
+        """Test printing out-of-stock items handles malformed URLs gracefully."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": [
+                "https://example.com/product",
+                "/relative/path",
+                "malformed-url",
+            ]
+        }
+
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Out of Stock:**", output)
+        self.assertIn("**Product A**", output)
+        self.assertIn("example.com", output)
+        # Malformed URLs should show the full URL as fallback
+        self.assertIn("/relative/path", output)
+        self.assertIn("malformed-url", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_empty(self, mock_stdout):
+        """Test printing failed URLs when none exist."""
+        results = SearchResults()
+        results._print_failed_urls()
+
+        output = mock_stdout.getvalue()
+        self.assertEqual(output, "")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_few(self, mock_stdout):
+        """Test printing failed URLs when 3 or fewer."""
+        results = SearchResults()
+        results.failed_urls = ["https://example.com/1", "https://example.com/2"]
+
+        results._print_failed_urls()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Failed URLs** (2):", output)
+        self.assertIn("https://example.com/1", output)
+        self.assertIn("https://example.com/2", output)
+        self.assertNotIn("more...", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_many(self, mock_stdout):
+        """Test printing failed URLs with truncation (>3)."""
+        results = SearchResults()
+        results.failed_urls = [
+            "https://example.com/1",
+            "https://example.com/2",
+            "https://example.com/3",
+            "https://example.com/4",
+            "https://example.com/5",
+        ]
+
+        results._print_failed_urls()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Failed URLs** (5):", output)
+        self.assertIn("https://example.com/1", output)
+        self.assertIn("https://example.com/2", output)
+        self.assertIn("https://example.com/3", output)
+        self.assertNotIn("https://example.com/4", output)
+        self.assertNotIn("https://example.com/5", output)
+        self.assertIn("2 more...", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_summary_minimal(self, mock_stdout):
+        """Test print_summary with minimal data (uses singular forms)."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 1
+        results.prices_found = 1
+
+        results.print_summary()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("## 📊 Search Summary", output)
+        self.assertIn("1/1 URL", output)
+        self.assertIn("100% success", output)
+        self.assertIn("1 product", output)
+        # Should not contain plural forms
+        self.assertNotIn("URLs", output)
+        self.assertNotIn("products", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_summary_with_issues(self, mock_stdout):
+        """Test print_summary with various issues."""
+        results = SearchResults()
+        results.total_products = 5
+        results.total_urls_checked = 15
+        results.prices_found = 10
+        results.out_of_stock = 2
+        results.fetch_errors = 1
+        results.extraction_errors = 2
+        results.out_of_stock_items = {"Product A": ["https://example.com/a"]}
+        # failed_urls should match fetch_errors + extraction_errors = 1 + 2 = 3
+        results.failed_urls = [
+            "https://example.com/failed1",
+            "https://example.com/failed2",
+            "https://example.com/failed3",
+        ]
+
+        results.print_summary()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("## 📊 Search Summary", output)
+        self.assertIn("10/15 URLs", output)
+        self.assertIn("67% success", output)
+        self.assertIn("📦 2 out of stock", output)
+        self.assertIn("🌐 1 fetch error", output)  # Singular form
+        self.assertIn("🔍 2 extraction errors", output)
+        self.assertIn("**Out of Stock:**", output)
+        self.assertIn("**Product A**", output)
+        self.assertIn("**Failed URLs** (3):", output)
 
 
 if __name__ == "__main__":
