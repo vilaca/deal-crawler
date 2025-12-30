@@ -1,0 +1,53 @@
+[MAIN]
+# Use multiple processes for faster checking
+jobs=4
+
+# Python version
+py-version=3.13
+
+[MESSAGES CONTROL]
+# Disable opinionated/false positive checks
+disable=
+    # Design - often false positives for data classes
+    too-few-public-methods,
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-locals,
+
+    # Docstrings - already checked by interrogate
+    missing-module-docstring,
+    missing-function-docstring,
+    missing-class-docstring,
+
+    # Broad except - sometimes intentional
+    broad-exception-caught,
+    broad-exception-raised,
+
+    # Formatting - already handled by black
+    line-too-long,
+
+    # Import order - not critical
+    wrong-import-order,
+    wrong-import-position
+
+[FORMAT]
+# Black compatibility
+max-line-length=88
+indent-string='    '
+
+[DESIGN]
+# Adjusted thresholds for reasonable limits
+max-attributes=15
+max-args=7
+max-locals=20
+max-branches=15
+max-statements=60
+
+[SIMILARITIES]
+# Check for duplicate code (set threshold)
+min-similarity-lines=6
+
+[REPORTS]
+# Output format
+output-format=text
+score=yes
