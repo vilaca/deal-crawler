@@ -323,6 +323,24 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
         # (we only check element + 5 ancestors = 6 checks)
         self.assertFalse(_is_inside_delivery_container(element))
 
+    def test_uppercase_class_name(self):
+        """Test case-insensitive matching with uppercase class name."""
+        soup = self.create_soup('<div class="DELIVERY"><span>50.00€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_mixed_case_class_name(self):
+        """Test case-insensitive matching with mixed-case class name."""
+        soup = self.create_soup('<div class="Shipping-Info"><span>5.99€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_uppercase_id_attribute(self):
+        """Test case-insensitive matching with uppercase ID attribute."""
+        soup = self.create_soup('<div id="DELIVERY_COST"><span>7.99€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
 
 class TestExtractPrice(unittest.TestCase):
     """Test generic price extraction."""
