@@ -41,7 +41,7 @@ lint: format-check
 
 typecheck:
 	@echo "Running mypy..."
-	mypy main.py utils/*.py test/*.py --ignore-missing-imports
+	mypy main.py utils/*.py test/*.py --ignore-missing-imports --check-untyped-defs
 
 security:
 	@echo "Running bandit (code security analysis)..."

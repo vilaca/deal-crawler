@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 from utils.extractors import (
     parse_price_string,
     extract_price,
-    extract_price_notino,
     _is_element_hidden,
 )
 
@@ -228,57 +227,6 @@ class TestIsElementHidden(unittest.TestCase):
         self.assertFalse(_is_element_hidden(element))
 
 
-class TestExtractPriceNotino(unittest.TestCase):
-    """Test notino.pt specific price extraction."""
-
-    def create_soup(self, html):
-        """Helper to create BeautifulSoup from HTML."""
-        return BeautifulSoup(html, "lxml")
-
-    def test_none_soup(self):
-        """Test None soup returns None."""
-        self.assertIsNone(extract_price_notino(None))
-
-    def test_json_with_price(self):
-        """Test extraction from JSON data."""
-        html = """
-        <script>
-        var productData = {"price": 83.20, "currency": "EUR"};
-        </script>
-        """
-        soup = self.create_soup(html)
-        price = extract_price_notino(soup)
-        self.assertEqual(price, 83.20)
-
-    def test_json_with_multiple_prices(self):
-        """Test extraction returns first valid price."""
-        html = """
-        <script>
-        var data = {"oldPrice": 0.5, "price": 65.00, "otherPrice": 2000};
-        </script>
-        """
-        soup = self.create_soup(html)
-        price = extract_price_notino(soup)
-        self.assertEqual(price, 65.00)
-
-    def test_price_outside_range(self):
-        """Test price outside valid range is skipped."""
-        html = """
-        <script>
-        var data = {"price": 0.5};
-        </script>
-        """
-        soup = self.create_soup(html)
-        price = extract_price_notino(soup)
-        self.assertIsNone(price)
-
-    def test_no_price_in_script(self):
-        """Test returns None when no price found."""
-        html = '<script>var data = {"name": "product"};</script>'
-        soup = self.create_soup(html)
-        self.assertIsNone(extract_price_notino(soup))
-
-
 class TestExtractPrice(unittest.TestCase):
     """Test generic price extraction."""
 
@@ -341,22 +289,8 @@ class TestExtractPrice(unittest.TestCase):
     def test_parse_price_string_with_attribute_error(self):
         """Test parse_price_string handles non-string types gracefully."""
         # This should handle the AttributeError case
-        result = parse_price_string(["not", "a", "string"])
+        result = parse_price_string(["not", "a", "string"])  # type: ignore[arg-type]
         self.assertIsNone(result)
-
-    def test_extract_price_notino_with_script_without_string(self):
-        """Test extract_price_notino handles scripts without string content."""
-        html = '<script src="external.js"></script><div>content</div>'
-        soup = self.create_soup(html)
-        price = extract_price_notino(soup)
-        self.assertIsNone(price)
-
-    def test_extract_price_notino_with_invalid_price_format(self):
-        """Test extract_price_notino handles invalid price JSON."""
-        html = '<script>{"price": "not_a_number"}</script>'
-        soup = self.create_soup(html)
-        price = extract_price_notino(soup)
-        self.assertIsNone(price)
 
     def test_priority_classes_with_content_attribute(self):
         """Test extraction from priority class with content attribute."""

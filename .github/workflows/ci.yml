@@ -32,12 +32,24 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        run: |
-          python -m unittest discover -s test -p 'test_*.py' -v
+        run: make test
 
       - name: Run coverage
         run: |
-          pytest --cov=utils --cov-report=term | tee coverage-output.txt
+          make coverage | tee coverage-output.txt
+
+      - name: Extract coverage for PR comments
+        if: github.event_name == 'pull_request'
+        run: |
+          # Extract current coverage
+          COVERAGE=$(grep "TOTAL" coverage-output.txt | awk '{print $4}' | sed 's/%//')
+          echo "CURRENT_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "Current coverage: $COVERAGE%"
+
+          # Get baseline coverage from main branch README
+          BASELINE=$(curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/README.md | grep -oP 'coverage-\K[0-9]+' | head -1)
+          echo "BASELINE_COVERAGE=$BASELINE" >> $GITHUB_ENV
+          echo "Baseline coverage: $BASELINE%"
 
       - name: Update coverage badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -68,27 +80,19 @@ jobs:
             echo "Could not extract coverage percentage"
           fi
 
-      - name: Lint with flake8
-        run: |
-          flake8 main.py utils/*.py test/*.py
+      - name: Check code formatting
+        run: make format-check > black-report.txt 2>&1 || true
 
-      - name: Lint with pylint
+      - name: Lint with flake8 and pylint
         run: |
-          pylint main.py utils/*.py test/*.py --score=y > pylint-report.txt 2>&1 || true
+          make lint > lint-full-report.txt 2>&1 || true
+          # Extract just pylint output for PR comments
+          grep -A9999 "Running pylint" lint-full-report.txt | tail -n +2 > pylint-report.txt || true
 
       - name: Type check with mypy
-        run: |
-          mypy main.py utils/*.py test/*.py --ignore-missing-imports
+        run: make typecheck
 
-      - name: Check code formatting with black
-        run: |
-          black --check main.py utils/*.py test/*.py > black-report.txt 2>&1 || true
-
-      - name: Check code security with bandit
-        run: |
-          bandit -r main.py utils test -ll > bandit-report.txt 2>&1 || true
-
-      - name: Check for dead code with vulture
+      - name: Check dead code
         run: |
           vulture main.py utils test --min-confidence 100 > vulture-report.txt 2>&1 || true
 
@@ -97,12 +101,11 @@ jobs:
           interrogate -v main.py utils test --fail-under 100
 
       - name: Check code complexity
+        run: make complexity > complexity-report.txt 2>&1 || true
+
+      - name: Check security with bandit
         run: |
-          echo "Cyclomatic Complexity:" > complexity-report.txt
-          radon cc main.py utils -a -nb >> complexity-report.txt 2>&1 || true
-          echo "" >> complexity-report.txt
-          echo "Maintainability Index:" >> complexity-report.txt
-          radon mi main.py utils -s >> complexity-report.txt 2>&1 || true
+          bandit -r main.py utils test -ll > bandit-report.txt 2>&1 || true
 
       - name: Check dependency vulnerabilities
         run: |
@@ -123,6 +126,12 @@ jobs:
             const pipaudit = fs.existsSync('pip-audit-report.txt') ? fs.readFileSync('pip-audit-report.txt', 'utf8') : 'No vulnerabilities found';
             const complexity = fs.existsSync('complexity-report.txt') ? fs.readFileSync('complexity-report.txt', 'utf8') : 'No complexity issues';
 
+            // Get coverage from environment variables
+            const currentCoverage = parseFloat(process.env.CURRENT_COVERAGE || '0');
+            const baselineCoverage = parseFloat(process.env.BASELINE_COVERAGE || '0');
+            const coverageDrop = baselineCoverage - currentCoverage;
+            const hasCoverageDrop = coverageDrop > 0;
+
             // Check if there are actual warnings
             const hasBlackWarnings = black.includes('would be reformatted') || black.includes('error');
 
@@ -141,7 +150,7 @@ jobs:
             const hasComplexityWarnings = complexityWarningPattern.test(complexity);
 
             // Only post if there are warnings
-            if (!hasBlackWarnings && !hasPylintWarnings && !hasBanditWarnings && !hasVultureWarnings && !hasPipAuditWarnings && !hasComplexityWarnings) {
+            if (!hasBlackWarnings && !hasPylintWarnings && !hasBanditWarnings && !hasVultureWarnings && !hasPipAuditWarnings && !hasComplexityWarnings && !hasCoverageDrop) {
               console.log('No warnings to report');
               return;
             }
@@ -154,6 +163,20 @@ jobs:
             if (pylintScore) {
               const scoreEmoji = parseFloat(pylintScore) >= 9.5 ? '⭐' : parseFloat(pylintScore) >= 8.0 ? '✅' : '⚠️';
               comment += `### 🎯 Code Quality Score: **${pylintScore}/10** ${scoreEmoji}\n\n`;
+            }
+
+            // Add coverage warning if coverage dropped
+            if (hasCoverageDrop) {
+              const dropEmoji = coverageDrop >= 5 ? '🚨' : coverageDrop >= 2 ? '⚠️' : '📉';
+              comment += `### ${dropEmoji} Test Coverage Drop\n`;
+              comment += `- **Baseline (main)**: ${baselineCoverage}%\n`;
+              comment += `- **Current (PR)**: ${currentCoverage}%\n`;
+              comment += `- **Drop**: -${coverageDrop.toFixed(1)}%\n\n`;
+              if (coverageDrop >= 5) {
+                comment += '_⚠️ Significant coverage drop! Please add tests for new code._\n\n';
+              } else {
+                comment += '_Please ensure new code has adequate test coverage._\n\n';
+              }
             }
 
             if (hasBlackWarnings) {

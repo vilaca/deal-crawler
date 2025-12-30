@@ -78,7 +78,7 @@ def _check_class_names_for_stock(soup: BeautifulSoup) -> Optional[bool]:
     return None
 
 
-def is_out_of_stock(soup: BeautifulSoup) -> bool:
+def is_out_of_stock(soup: Optional[BeautifulSoup]) -> bool:
     """Check if product is out of stock using multiple strategies.
 
     Tries strategies in order of reliability:
@@ -87,10 +87,10 @@ def is_out_of_stock(soup: BeautifulSoup) -> bool:
     3. CSS class names (fallback)
 
     Args:
-        soup: BeautifulSoup object of the page
+        soup: BeautifulSoup object of the page (or None)
 
     Returns:
-        True if product is out of stock, False otherwise
+        True if product is out of stock, False otherwise (returns False if soup is None)
     """
     if not soup:
         return False
