@@ -40,8 +40,10 @@ lint: format-check
 	@pylint main.py utils/*.py test/*.py --score=y || true
 
 typecheck:
-	@echo "Running mypy..."
-	mypy main.py utils/*.py test/*.py --ignore-missing-imports --check-untyped-defs
+	@echo "Running mypy on production code (strict)..."
+	mypy main.py utils/*.py --disallow-untyped-defs
+	@echo "Running mypy on test code (lenient)..."
+	mypy test/*.py --check-untyped-defs
 
 security:
 	@echo "Running bandit (code security analysis)..."

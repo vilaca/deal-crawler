@@ -5,13 +5,13 @@ import sys
 from urllib.parse import urlparse
 
 from utils.data_loader import load_products
-from utils.finder import find_cheapest_prices
+from utils.finder import find_cheapest_prices, SearchResults
 from utils.http_client import HttpClient
 
 
-def print_results_text(search_results):
+def print_results_text(search_results: SearchResults) -> None:
     """Print results in text format optimized for terminal."""
-    print("\n🛒 Cheapest Prices")
+    print("\n🛒 Best Prices")
     print("=" * 70)
 
     for product_name, result in search_results.prices.items():
@@ -29,9 +29,9 @@ def print_results_text(search_results):
     print("\n" + "=" * 70)
 
 
-def print_results_markdown(search_results):
+def print_results_markdown(search_results: SearchResults) -> None:
     """Print results in markdown format."""
-    print("\n# 🛒 Cheapest Prices\n")
+    print("\n# 🛒 Best Prices\n")
     print("| Product | Price | Link |")
     print("|---------|-------|------|")
 
@@ -46,7 +46,7 @@ def print_results_markdown(search_results):
     print("\n---\n")
 
 
-def main():
+def main() -> None:
     """Main function to run the price scraper."""
     parser = argparse.ArgumentParser(
         description="Find cheapest prices for products across multiple stores"

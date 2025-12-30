@@ -10,7 +10,7 @@ class Config:
     Example: DEAL_CRAWLER_MIN_PRICE=5.0 DEAL_CRAWLER_MAX_RETRIES=5 python main.py
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize configuration from environment variables with defaults."""
         # Price range validation
         self.min_price = float(os.getenv("DEAL_CRAWLER_MIN_PRICE", "1.0"))
