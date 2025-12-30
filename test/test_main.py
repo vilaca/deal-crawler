@@ -24,7 +24,7 @@ class TestPrintResultsText(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Check header
-        self.assertIn("🛒 Cheapest Prices", output)
+        self.assertIn("🛒 Best Prices", output)
         self.assertIn("=" * 70, output)
 
         # Check Product A
@@ -57,7 +57,7 @@ class TestPrintResultsText(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Check header
-        self.assertIn("🛒 Cheapest Prices", output)
+        self.assertIn("🛒 Best Prices", output)
 
         # Check products with no prices
         self.assertIn("Product A", output)
@@ -139,7 +139,7 @@ class TestPrintResultsText(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Should still have header
-        self.assertIn("🛒 Cheapest Prices", output)
+        self.assertIn("🛒 Best Prices", output)
         # Should not have any product information
         self.assertNotIn("Price:", output)
         self.assertNotIn("Store:", output)
@@ -161,7 +161,7 @@ class TestPrintResultsMarkdown(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Check header
-        self.assertIn("# 🛒 Cheapest Prices", output)
+        self.assertIn("# 🛒 Best Prices", output)
 
         # Check table header
         self.assertIn("| Product | Price | Link |", output)
@@ -192,7 +192,7 @@ class TestPrintResultsMarkdown(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Check header and table structure
-        self.assertIn("# 🛒 Cheapest Prices", output)
+        self.assertIn("# 🛒 Best Prices", output)
         self.assertIn("| Product | Price | Link |", output)
 
         # Check products with no prices
@@ -264,7 +264,7 @@ class TestPrintResultsMarkdown(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Should still have header and table structure
-        self.assertIn("# 🛒 Cheapest Prices", output)
+        self.assertIn("# 🛒 Best Prices", output)
         self.assertIn("| Product | Price | Link |", output)
         # Should not have any product rows
         self.assertNotIn("| **", output)

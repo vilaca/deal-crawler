@@ -3,7 +3,7 @@
 import random
 import sys
 import time
-from typing import Optional
+from typing import Optional, Self
 from urllib.parse import urlparse
 
 import requests
@@ -38,16 +38,15 @@ class HttpClient:
         )
         self.session = requests.Session()
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Context manager entry."""
         return self
 
-    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+    def __exit__(self, _exc_type: object, _exc_val: object, _exc_tb: object) -> None:
         """Context manager exit - ensures session is closed."""
         self.close()
-        return False
 
-    def close(self):
+    def close(self) -> None:
         """Close the HTTP session and release resources."""
         if self.session:
             self.session.close()
