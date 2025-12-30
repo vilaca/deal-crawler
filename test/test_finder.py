@@ -292,7 +292,7 @@ class TestSearchResults(unittest.TestCase):
         results.total_products = 5
         results.total_urls_checked = 0
 
-        line = results._format_success_line()
+        line = results._format_success_line(markdown=True)
         self.assertEqual(line, "**5 products** · No URLs checked")
 
     def test_format_success_line_with_urls(self):
@@ -302,7 +302,7 @@ class TestSearchResults(unittest.TestCase):
         results.total_urls_checked = 10
         results.prices_found = 8
 
-        line = results._format_success_line()
+        line = results._format_success_line(markdown=True)
         self.assertIn("8/10 URLs", line)
         self.assertIn("80% success", line)
         self.assertIn("3 products", line)
@@ -311,7 +311,7 @@ class TestSearchResults(unittest.TestCase):
     def test_format_issues_line_no_issues(self):
         """Test issues line when there are no issues."""
         results = SearchResults()
-        line = results._format_issues_line()
+        line = results._format_issues_line(markdown=True)
         self.assertIsNone(line)
 
     def test_format_issues_line_single_issue(self):
@@ -319,7 +319,7 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.out_of_stock = 3
 
-        line = results._format_issues_line()
+        line = results._format_issues_line(markdown=True)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("📦 3 out of stock", line)
         self.assertNotIn("fetch errors", line)
@@ -332,7 +332,7 @@ class TestSearchResults(unittest.TestCase):
         results.fetch_errors = 1
         results.extraction_errors = 3
 
-        line = results._format_issues_line()
+        line = results._format_issues_line(markdown=True)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("📦 2 out of stock", line)
         self.assertIn("🌐 1 fetch error", line)
@@ -345,7 +345,7 @@ class TestSearchResults(unittest.TestCase):
         results.fetch_errors = 1
         results.extraction_errors = 1
 
-        line = results._format_issues_line()
+        line = results._format_issues_line(markdown=True)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("🌐 1 fetch error", line)
         self.assertIn("🔍 1 extraction error", line)
@@ -355,7 +355,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_empty(self, mock_stdout):
         """Test printing out-of-stock items when none exist."""
         results = SearchResults()
-        results._print_out_of_stock_items()
+        results._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertEqual(output, "")
@@ -368,7 +368,7 @@ class TestSearchResults(unittest.TestCase):
             "Product A": ["https://www.example.com/product1", "https://store.com/item"]
         }
 
-        results._print_out_of_stock_items()
+        results._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Out of Stock:**", output)
@@ -385,7 +385,7 @@ class TestSearchResults(unittest.TestCase):
             "Product B": ["https://store.com/b", "https://shop.com/b"],
         }
 
-        results._print_out_of_stock_items()
+        results._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Product A**", output)
@@ -406,7 +406,7 @@ class TestSearchResults(unittest.TestCase):
             ]
         }
 
-        results._print_out_of_stock_items()
+        results._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Out of Stock:**", output)
@@ -420,7 +420,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_empty(self, mock_stdout):
         """Test printing failed URLs when none exist."""
         results = SearchResults()
-        results._print_failed_urls()
+        results._print_failed_urls(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertEqual(output, "")
@@ -431,7 +431,7 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.failed_urls = ["https://example.com/1", "https://example.com/2"]
 
-        results._print_failed_urls()
+        results._print_failed_urls(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Failed URLs** (2):", output)
@@ -451,7 +451,7 @@ class TestSearchResults(unittest.TestCase):
             "https://example.com/5",
         ]
 
-        results._print_failed_urls()
+        results._print_failed_urls(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Failed URLs** (5):", output)
@@ -470,7 +470,7 @@ class TestSearchResults(unittest.TestCase):
         results.total_urls_checked = 1
         results.prices_found = 1
 
-        results.print_summary()
+        results.print_summary(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("## 📊 Search Summary", output)
@@ -499,7 +499,7 @@ class TestSearchResults(unittest.TestCase):
             "https://example.com/failed3",
         ]
 
-        results.print_summary()
+        results.print_summary(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("## 📊 Search Summary", output)
@@ -511,6 +511,201 @@ class TestSearchResults(unittest.TestCase):
         self.assertIn("**Out of Stock:**", output)
         self.assertIn("**Product A**", output)
         self.assertIn("**Failed URLs** (3):", output)
+
+    # ========================================================================
+    # Text format tests (markdown=False)
+    # ========================================================================
+
+    def test_format_success_line_text_no_urls(self):
+        """Test success line in text format when no URLs were checked."""
+        results = SearchResults()
+        results.total_products = 5
+        results.total_urls_checked = 0
+
+        line = results._format_success_line(markdown=False)
+        self.assertEqual(line, "5 products · No URLs checked")
+        # Should NOT contain markdown bold markers
+        self.assertNotIn("**", line)
+
+    def test_format_success_line_text_with_urls(self):
+        """Test success line in text format with URLs checked."""
+        results = SearchResults()
+        results.total_products = 3
+        results.total_urls_checked = 10
+        results.prices_found = 8
+
+        line = results._format_success_line(markdown=False)
+        self.assertIn("8/10 URLs", line)
+        self.assertIn("80% success", line)
+        self.assertIn("3 products", line)
+        self.assertIn("✅", line)
+        # Should NOT contain markdown bold markers
+        self.assertNotIn("**", line)
+
+    def test_format_issues_line_text_multiple_issues(self):
+        """Test issues line in text format with multiple issue types."""
+        results = SearchResults()
+        results.out_of_stock = 2
+        results.fetch_errors = 1
+        results.extraction_errors = 3
+
+        line = results._format_issues_line(markdown=False)
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("Issues:", line)
+        self.assertIn("📦 2 out of stock", line)
+        self.assertIn("🌐 1 fetch error", line)
+        self.assertIn("🔍 3 extraction errors", line)
+        # Should NOT contain markdown italic markers
+        self.assertNotIn("_", line)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_text_single_product(self, mock_stdout):
+        """Test printing out-of-stock items in text format."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
+        }
+
+        results._print_out_of_stock_items(markdown=False)
+
+        output = mock_stdout.getvalue()
+        self.assertIn("Out of Stock:", output)
+        self.assertIn("Product A", output)
+        self.assertIn("example.com", output)
+        self.assertIn("store.com", output)
+        # Should use bullet points (•) instead of markdown list syntax
+        self.assertIn("  •", output)
+        # Should NOT contain markdown bold markers
+        self.assertNotIn("**", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_text_multiple_products(self, mock_stdout):
+        """Test printing out-of-stock items in text format for multiple products."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": ["https://example.com/a"],
+            "Product B": ["https://store.com/b", "https://shop.com/b"],
+        }
+
+        results._print_out_of_stock_items(markdown=False)
+
+        output = mock_stdout.getvalue()
+        self.assertIn("Product A", output)
+        self.assertIn("Product B", output)
+        self.assertIn("example.com", output)
+        self.assertIn("store.com", output)
+        self.assertIn("shop.com", output)
+        # Should use bullet points (•) instead of markdown list syntax
+        self.assertIn("  •", output)
+        # Should NOT contain markdown markers
+        self.assertNotIn("**", output)
+        self.assertNotIn("- **", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_text_few(self, mock_stdout):
+        """Test printing failed URLs in text format when 3 or fewer."""
+        results = SearchResults()
+        results.failed_urls = ["https://example.com/1", "https://example.com/2"]
+
+        results._print_failed_urls(markdown=False)
+
+        output = mock_stdout.getvalue()
+        self.assertIn("Failed URLs (2):", output)
+        self.assertIn("https://example.com/1", output)
+        self.assertIn("https://example.com/2", output)
+        # Should use bullet points (•) instead of markdown list syntax
+        self.assertIn("  •", output)
+        # Should NOT contain markdown markers
+        self.assertNotIn("**", output)
+        self.assertNotIn("`", output)  # No backticks around URLs
+        self.assertNotIn("more...", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_text_many(self, mock_stdout):
+        """Test printing failed URLs in text format with truncation (>3)."""
+        results = SearchResults()
+        results.failed_urls = [
+            "https://example.com/1",
+            "https://example.com/2",
+            "https://example.com/3",
+            "https://example.com/4",
+            "https://example.com/5",
+        ]
+
+        results._print_failed_urls(markdown=False)
+
+        output = mock_stdout.getvalue()
+        self.assertIn("Failed URLs (5):", output)
+        self.assertIn("https://example.com/1", output)
+        self.assertIn("https://example.com/2", output)
+        self.assertIn("https://example.com/3", output)
+        self.assertNotIn("https://example.com/4", output)
+        self.assertNotIn("https://example.com/5", output)
+        self.assertIn("2 more...", output)
+        # Should NOT contain markdown markers
+        self.assertNotIn("**", output)
+        self.assertNotIn("`", output)  # No backticks
+        self.assertNotIn("_", output)  # No italic markers
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_summary_text_minimal(self, mock_stdout):
+        """Test print_summary in text format with minimal data."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 1
+        results.prices_found = 1
+
+        results.print_summary(markdown=False)
+
+        output = mock_stdout.getvalue()
+        # Should have text format header with separator line
+        self.assertIn("📊 Search Summary", output)
+        self.assertIn("=" * 70, output)
+        # Should NOT have markdown header
+        self.assertNotIn("##", output)
+        self.assertIn("1/1 URL", output)
+        self.assertIn("100% success", output)
+        self.assertIn("1 product", output)
+        # Should NOT contain markdown markers
+        self.assertNotIn("**", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_summary_text_with_issues(self, mock_stdout):
+        """Test print_summary in text format with various issues."""
+        results = SearchResults()
+        results.total_products = 5
+        results.total_urls_checked = 15
+        results.prices_found = 10
+        results.out_of_stock = 2
+        results.fetch_errors = 1
+        results.extraction_errors = 2
+        results.out_of_stock_items = {"Product A": ["https://example.com/a"]}
+        results.failed_urls = [
+            "https://example.com/failed1",
+            "https://example.com/failed2",
+            "https://example.com/failed3",
+        ]
+
+        results.print_summary(markdown=False)
+
+        output = mock_stdout.getvalue()
+        # Should have text format header with separator line
+        self.assertIn("📊 Search Summary", output)
+        self.assertIn("=" * 70, output)
+        # Should NOT have markdown header
+        self.assertNotIn("##", output)
+        self.assertIn("10/15 URLs", output)
+        self.assertIn("67% success", output)
+        self.assertIn("Issues:", output)
+        self.assertIn("📦 2 out of stock", output)
+        self.assertIn("🌐 1 fetch error", output)
+        self.assertIn("🔍 2 extraction errors", output)
+        self.assertIn("Out of Stock:", output)
+        self.assertIn("Product A", output)
+        self.assertIn("Failed URLs (3):", output)
+        # Should NOT contain markdown markers
+        self.assertNotIn("**", output)
+        self.assertNotIn("_📦", output)  # No italic markers around issues
 
 
 if __name__ == "__main__":
