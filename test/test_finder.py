@@ -91,7 +91,9 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(results.total_urls_checked, 3)
         # Check out_of_stock_items tracking
         self.assertIn("Product B", results.out_of_stock_items)
-        self.assertEqual(results.out_of_stock_items["Product B"], ["https://example.com/product1"])
+        self.assertEqual(
+            results.out_of_stock_items["Product B"], ["https://example.com/product1"]
+        )
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
