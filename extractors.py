@@ -127,13 +127,17 @@ def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]
             else:
                 classes = str(class_attr).lower()
 
-            if any(keyword in classes for keyword in ["display-none", "hidden", "d-none"]):
+            if any(
+                keyword in classes for keyword in ["display-none", "hidden", "d-none"]
+            ):
                 continue
 
             # Skip elements with display:none or visibility:hidden in style
             style = element.get("style", "")
             style_str = str(style) if style else ""
-            if "display:none" in style_str.replace(" ", "") or "visibility:hidden" in style_str.replace(" ", ""):
+            if "display:none" in style_str.replace(
+                " ", ""
+            ) or "visibility:hidden" in style_str.replace(" ", ""):
                 continue
 
             # Check content attribute first
@@ -169,14 +173,25 @@ def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
 
         if any(
             keyword in classes
-            for keyword in ["old", "original", "was", "before", "regular", "display-none", "hidden", "d-none"]
+            for keyword in [
+                "old",
+                "original",
+                "was",
+                "before",
+                "regular",
+                "display-none",
+                "hidden",
+                "d-none",
+            ]
         ):
             continue
 
         # Skip elements with display:none or visibility:hidden in style
         style = element.get("style", "")
         style_str = str(style) if style else ""
-        if "display:none" in style_str.replace(" ", "") or "visibility:hidden" in style_str.replace(" ", ""):
+        if "display:none" in style_str.replace(
+            " ", ""
+        ) or "visibility:hidden" in style_str.replace(" ", ""):
             continue
 
         # Check content attribute first

@@ -139,9 +139,7 @@ class TestHttpClient(unittest.TestCase):
         mock_response_success.content = b"<html><body>Success</body></html>"
         mock_response_success.raise_for_status = Mock()
 
-        self.client.session.get = Mock(
-            side_effect=[http_error, mock_response_success]
-        )
+        self.client.session.get = Mock(side_effect=[http_error, mock_response_success])
 
         mock_soup_instance = Mock()
         mock_soup.return_value = mock_soup_instance

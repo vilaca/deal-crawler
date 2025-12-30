@@ -32,6 +32,7 @@ def main():
             price, url = result
             # Shorten URL for display (show domain)
             from urllib.parse import urlparse
+
             domain = urlparse(url).netloc.replace("www.", "")
             print(f"| **{product_name}** | €{price:.2f} | [🔗 {domain}]({url}) |")
         else:

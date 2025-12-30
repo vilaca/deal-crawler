@@ -48,6 +48,10 @@ jobs:
         run: |
           mypy *.py --ignore-missing-imports
 
+      - name: Check code formatting with black
+        run: |
+          black --check *.py > black-report.txt 2>&1 || true
+
       - name: Check code security with bandit
         run: |
           bandit -r *.py -ll > bandit-report.txt 2>&1 || true
@@ -72,17 +76,19 @@ jobs:
             const fs = require('fs');
 
             // Read reports
+            const black = fs.existsSync('black-report.txt') ? fs.readFileSync('black-report.txt', 'utf8') : 'No formatting issues';
             const bandit = fs.existsSync('bandit-report.txt') ? fs.readFileSync('bandit-report.txt', 'utf8') : 'No issues found';
             const vulture = fs.existsSync('vulture-report.txt') ? fs.readFileSync('vulture-report.txt', 'utf8') : 'No dead code found';
             const pipaudit = fs.existsSync('pip-audit-report.txt') ? fs.readFileSync('pip-audit-report.txt', 'utf8') : 'No vulnerabilities found';
 
             // Check if there are actual warnings
+            const hasBlackWarnings = black.includes('would be reformatted') || black.includes('error');
             const hasBanditWarnings = !bandit.includes('No issues identified');
             const hasVultureWarnings = vulture.trim().length > 0 && !vulture.includes('No dead code');
             const hasPipAuditWarnings = pipaudit.includes('Found') && pipaudit.includes('vulnerability');
 
             // Only post if there are warnings
-            if (!hasBanditWarnings && !hasVultureWarnings && !hasPipAuditWarnings) {
+            if (!hasBlackWarnings && !hasBanditWarnings && !hasVultureWarnings && !hasPipAuditWarnings) {
               console.log('No warnings to report');
               return;
             }
@@ -90,6 +96,12 @@ jobs:
             // Build comment
             let comment = '## ⚠️ Code Quality Warnings\n\n';
             comment += '_These warnings do not block the PR but should be reviewed._\n\n';
+
+            if (hasBlackWarnings) {
+              comment += '### ✨ Code Formatting Issues (black)\n';
+              comment += '```\n' + black + '\n```\n\n';
+              comment += '_Run `make format` to fix formatting issues._\n\n';
+            }
 
             if (hasBanditWarnings) {
               comment += '### 🔒 Security Issues (bandit)\n';
