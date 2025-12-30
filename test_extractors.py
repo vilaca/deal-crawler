@@ -50,6 +50,20 @@ class TestParsePriceString(unittest.TestCase):
         self.assertEqual(parse_price_string("0.99"), 0.99)
         self.assertEqual(parse_price_string("0,50"), 0.5)
 
+    def test_multiple_prices_in_text(self):
+        """Test parsing text with multiple prices returns first price."""
+        # Sweetcare.pt case: "€ 79,07€ 87,86-10%"
+        self.assertEqual(parse_price_string("€ 79,07€ 87,86-10%"), 79.07)
+        self.assertEqual(parse_price_string("€ 60,47€ 67,19-10%"), 60.47)
+
+    def test_prevents_price_merging(self):
+        """Test that spaces don't cause prices to merge."""
+        # This should extract 52.10, not 52.1087
+        result = parse_price_string("€ 52,10€ 87,86")
+        self.assertEqual(result, 52.10)
+        # Not 52.1087 which would happen if spaces removed before extraction
+        self.assertNotEqual(result, 52.1087)
+
 
 class TestExtractPriceNotino(unittest.TestCase):
     """Test notino.pt specific price extraction."""
@@ -209,6 +223,81 @@ class TestExtractPrice(unittest.TestCase):
         price = extract_price(soup, "https://example.com")
         # Should not return prices outside the valid range
         self.assertIsNone(price)
+
+    def test_skips_hidden_display_none_class(self):
+        """Test skips elements with display-none class."""
+        html = '''
+        <div class="price-product display-none">€ 52,10</div>
+        <div class="price-product">€ 60,47</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        # Should extract visible price, not hidden one
+        self.assertEqual(price, 60.47)
+
+    def test_skips_hidden_class(self):
+        """Test skips elements with 'hidden' class."""
+        html = '''
+        <div class="price hidden">€ 100,00</div>
+        <div class="price">€ 50,00</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        self.assertEqual(price, 50.0)
+
+    def test_skips_d_none_class(self):
+        """Test skips elements with Bootstrap d-none class."""
+        html = '''
+        <div class="price d-none">€ 100,00</div>
+        <div class="price">€ 75,00</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        self.assertEqual(price, 75.0)
+
+    def test_skips_inline_style_display_none(self):
+        """Test skips elements with inline style display:none."""
+        html = '''
+        <div class="price" style="display:none">€ 100,00</div>
+        <div class="price">€ 45,00</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        self.assertEqual(price, 45.0)
+
+    def test_skips_inline_style_visibility_hidden(self):
+        """Test skips elements with inline style visibility:hidden."""
+        html = '''
+        <div class="price" style="visibility:hidden">€ 100,00</div>
+        <div class="price">€ 35,00</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        self.assertEqual(price, 35.0)
+
+    def test_multiple_prices_picks_visible(self):
+        """Test extracts visible price when multiple prices present (sweetcare.pt case)."""
+        html = '''
+        <div class="price-product display-none">€ 52,09€ 57,88-10%</div>
+        <div class="price-product">€ 60,47€ 67,19-10%</div>
+        <div class="price-product display-none">€ 79,07€ 87,86-10%</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        # Should get the visible price (60.47), not hidden ones
+        self.assertEqual(price, 60.47)
+
+    def test_price_product_class_priority(self):
+        """Test price-product class has extraction priority."""
+        html = '''
+        <div class="some-price">€ 100,00</div>
+        <div class="price-product">€ 79,07</div>
+        <div class="generic-price">€ 50,00</div>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        # Should prioritize price-product class
+        self.assertEqual(price, 79.07)
 
 
 if __name__ == "__main__":
