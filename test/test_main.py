@@ -288,6 +288,7 @@ class TestPrintResultsMarkdown(unittest.TestCase):
                 break
 
         self.assertIsNotNone(header_line_idx, "Table header not found")
+        assert header_line_idx is not None  # Type narrowing for mypy
 
         # Next line should be separator
         separator_line = lines[header_line_idx + 1]
