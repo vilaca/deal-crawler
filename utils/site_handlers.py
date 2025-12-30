@@ -163,7 +163,7 @@ class SiteHandlerRegistry:
     whose domain pattern matches the URL is used.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize registry with empty handler list."""
         self._handlers: list[SiteHandler] = []
         self._default_handler: SiteHandler = DefaultSiteHandler()

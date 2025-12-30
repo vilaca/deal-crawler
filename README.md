@@ -9,7 +9,7 @@
 
 Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
 
-📊 **[View Latest Prices](latest_results.md)** - Updated daily at 4am UTC
+📊 **[View Best Prices](latest_results.md)** - Updated daily at 4am UTC
 
 ## Quick Start
 
@@ -29,6 +29,21 @@ pip install -r requirements.txt
 
 # Run the scraper (URLs to check are configured in data.yml)
 python main.py
+```
+
+## Usage
+
+### Basic Usage
+
+```bash
+# Run with terminal-optimized text output (default)
+python main.py
+
+# Run with markdown output (for CI/documentation)
+python main.py --markdown
+
+# View help
+python main.py --help
 ```
 
 ## Features
