@@ -4,7 +4,7 @@ import unittest
 import tempfile
 import os
 
-from data_loader import load_products
+from utils.data_loader import load_products
 
 
 class TestLoadProducts(unittest.TestCase):

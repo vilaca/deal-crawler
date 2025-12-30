@@ -19,39 +19,39 @@ install:
 	pip install -q bandit interrogate vulture pip-audit
 
 test:
-	python3 -m unittest discover -s . -p 'test_*.py' -v
+	python3 -m unittest discover -s test -p 'test_*.py' -v
 
 coverage:
-	pytest --cov=. --cov-report=html --cov-report=term
+	pytest --cov=utils --cov-report=html --cov-report=term
 	@echo "\nHTML coverage report generated in htmlcov/index.html"
 
 format:
 	@echo "Formatting code with black..."
-	black *.py
+	black main.py utils/*.py test/*.py
 
 format-check:
 	@echo "Checking code formatting with black..."
-	black --check *.py
+	black --check main.py utils/*.py test/*.py
 
 lint: format-check
 	@echo "Running flake8..."
-	flake8 *.py
+	flake8 main.py utils/*.py test/*.py
 
 typecheck:
 	@echo "Running mypy..."
-	mypy *.py --ignore-missing-imports
+	mypy main.py utils/*.py test/*.py --ignore-missing-imports
 
 security:
 	@echo "Running bandit (code security analysis)..."
-	@bandit -r *.py -ll || true
+	@bandit -r main.py utils test -ll || true
 	@echo "\nRunning pip-audit (dependency vulnerabilities)..."
 	@pip-audit || true
 
 quality:
 	@echo "Running vulture (dead code detection)..."
-	@vulture *.py --min-confidence 100 || true
+	@vulture main.py utils test --min-confidence 100 || true
 	@echo "\nRunning interrogate (docstring coverage)..."
-	@interrogate -v *.py
+	@interrogate -v main.py utils test
 
 check-all: format-check lint typecheck quality security test
 	@echo "\n✅ All checks completed!"
