@@ -131,8 +131,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            // Unique identifier to find and update existing comments
+            const commentMarker = '<!-- ci-failure-help-comment -->';
+
             // Build failure explanation comment
-            let comment = '## ❌ CI Pipeline Failed\n\n';
+            let comment = commentMarker + '\n## ❌ CI Pipeline Failed\n\n';
             comment += 'Your PR has failing quality checks. Here\'s what to do:\n\n';
 
             // Add specific guidance based on common failures
@@ -196,13 +199,37 @@ jobs:
             comment += '---\n';
             comment += '_💡 Tip: Always run `make test && make typecheck` locally before pushing!_\n';
 
-            // Post the comment
-            await github.rest.issues.createComment({
+            // Check for existing comment from this bot
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: comment
+              issue_number: context.issue.number
             });
+
+            const existingComment = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes(commentMarker)
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+              console.log('Updated existing CI failure help comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+              console.log('Created new CI failure help comment');
+            }
 
       - name: Check security with bandit
         run: |

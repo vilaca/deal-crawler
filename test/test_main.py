@@ -2,9 +2,9 @@
 
 import io
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from main import print_results_markdown, print_results_text
+from main import main, print_results_markdown, print_results_text
 from utils.finder import SearchResults
 
 
@@ -293,6 +293,127 @@ class TestPrintResultsMarkdown(unittest.TestCase):
         # Next line should be separator
         separator_line = lines[header_line_idx + 1]
         self.assertIn("|---------|-------|------|", separator_line)
+
+
+class TestMainFunction(unittest.TestCase):
+    """Test the main() function entry point."""
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_default_text_format(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() uses text format by default (no --markdown flag)."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify text format was used
+        mock_print_text.assert_called_once_with(mock_results)
+        mock_results.print_summary.assert_called_once_with(markdown=False)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_markdown")
+    @patch("sys.argv", ["main.py", "--markdown"])
+    def test_main_markdown_format(
+        self,
+        mock_print_markdown,
+        mock_http_client,
+        mock_load_products,
+        mock_find_prices,
+    ):
+        """Test main() uses markdown format with --markdown flag."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify markdown format was used
+        mock_print_markdown.assert_called_once_with(mock_results)
+        mock_results.print_summary.assert_called_once_with(markdown=True)
+
+    @patch("main.load_products")
+    @patch("sys.argv", ["main.py"])
+    def test_main_exits_when_no_products(self, mock_load_products):
+        """Test main() exits with error when no products to compare."""
+        # Setup: load_products returns empty dict
+        mock_load_products.return_value = {}
+
+        # Should exit with code 1
+        with self.assertRaises(SystemExit) as cm:
+            main()
+
+        self.assertEqual(cm.exception.code, 1)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_uses_http_client_context_manager(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() properly uses HttpClient as context manager."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        mock_http_instance = mock_http_client.return_value.__enter__.return_value
+
+        # Run main
+        main()
+
+        # Verify HttpClient was used as context manager
+        mock_http_client.return_value.__enter__.assert_called_once()
+        mock_http_client.return_value.__exit__.assert_called_once()
+
+        # Verify find_cheapest_prices was called with http_client instance
+        mock_find_prices.assert_called_once_with(mock_products, mock_http_instance)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_calls_load_products(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() calls load_products with correct filename."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify load_products was called with correct file
+        mock_load_products.assert_called_once_with("data.yml")
 
 
 if __name__ == "__main__":
