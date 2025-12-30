@@ -9,8 +9,6 @@
 
  Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
 
-**Repository**: https://github.com/vilaca/deal-crawler
-
 ## Quick Start
 
 ### Installation
@@ -27,7 +25,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the scraper (URLs to check are configured in data.yml
+# Run the scraper (URLs to check are configured in data.yml)
 python main.py
 ```
 
@@ -65,27 +63,7 @@ FISHER_MIN_PRICE=5.0 FISHER_MAX_RETRIES=5 python main.py
 
 ## Contributing
 
-Contributions are welcome! Here's how you can help:
-
-### Reporting Issues
-
-- Check existing issues before creating a new one
-- Include the full error message and stack trace
-- Provide the URL that's causing problems (if applicable)
-- Mention your Python version and OS
-
-### Pull Requests
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run the test suite: `python -m unittest discover -s . -p 'test_*.py'`
-5. Run quality checks: `./check.sh` or `make check-all`
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
-### Code Quality Standards
+Contributions are welcome! 
 
 All PRs must pass:
 - ✅ Unit tests (95%+ coverage)
