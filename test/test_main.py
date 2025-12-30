@@ -4,7 +4,13 @@ import io
 import unittest
 from unittest.mock import MagicMock, patch
 
-from main import main, print_results_markdown, print_results_text
+from main import (
+    main,
+    print_results_markdown,
+    print_results_text,
+    filter_by_sites,
+    filter_by_products,
+)
 from utils.finder import SearchResults
 
 
@@ -414,6 +420,347 @@ class TestMainFunction(unittest.TestCase):
 
         # Verify load_products was called with correct file
         mock_load_products.assert_called_once_with("data.yml")
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--sites", "notino.pt"])
+    def test_main_with_sites_filter(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() applies --sites filter correctly."""
+        # Setup mocks with multiple sites
+        mock_products = {
+            "Product A": [
+                "https://www.notino.pt/product-a",
+                "https://wells.pt/product-a",
+            ],
+            "Product B": ["https://atida.com/product-b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://www.notino.pt/product-a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with filtered products
+        # Should only include Product A (has notino.pt URL) with only notino.pt URL
+        call_args = mock_find_prices.call_args[0][0]
+        self.assertIn("Product A", call_args)
+        self.assertNotIn("Product B", call_args)
+        self.assertEqual(len(call_args["Product A"]), 1)
+        self.assertIn("notino.pt", call_args["Product A"][0])
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--products", "Product A"])
+    def test_main_with_products_filter(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() applies --products filter correctly."""
+        # Setup mocks
+        mock_products = {
+            "Product A": ["https://example.com/a"],
+            "Product B": ["https://example.com/b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with filtered products
+        # Should only include Product A
+        call_args = mock_find_prices.call_args[0][0]
+        self.assertIn("Product A", call_args)
+        self.assertNotIn("Product B", call_args)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--sites", "notino.pt", "--products", "Product A"])
+    def test_main_with_combined_filters(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() applies both --sites and --products filters together."""
+        # Setup mocks
+        mock_products = {
+            "Product A": [
+                "https://www.notino.pt/product-a",
+                "https://wells.pt/product-a",
+            ],
+            "Product B": ["https://www.notino.pt/product-b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://www.notino.pt/product-a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with both filters applied
+        # Should only include Product A with only notino.pt URL
+        call_args = mock_find_prices.call_args[0][0]
+        self.assertIn("Product A", call_args)
+        self.assertNotIn("Product B", call_args)
+        self.assertEqual(len(call_args["Product A"]), 1)
+        self.assertIn("notino.pt", call_args["Product A"][0])
+
+    @patch("main.load_products")
+    @patch("sys.argv", ["main.py", "--sites", "nonexistent.com"])
+    def test_main_exits_when_sites_filter_has_no_matches(self, mock_load_products):
+        """Test main() exits with error when --sites filter has no matches."""
+        # Setup: products exist but none match the site filter
+        mock_products = {
+            "Product A": ["https://www.notino.pt/product-a"],
+            "Product B": ["https://wells.pt/product-b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        # Should exit with code 1
+        with self.assertRaises(SystemExit) as cm:
+            main()
+
+        self.assertEqual(cm.exception.code, 1)
+
+    @patch("main.load_products")
+    @patch("sys.argv", ["main.py", "--products", "NonExistent"])
+    def test_main_exits_when_products_filter_has_no_matches(self, mock_load_products):
+        """Test main() exits with error when --products filter has no matches."""
+        # Setup: products exist but none match the product filter
+        mock_products = {
+            "Product A": ["https://example.com/a"],
+            "Product B": ["https://example.com/b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        # Should exit with code 1
+        with self.assertRaises(SystemExit) as cm:
+            main()
+
+        self.assertEqual(cm.exception.code, 1)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--sites", "notino.pt,wells.pt"])
+    def test_main_with_multiple_sites(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() handles comma-separated sites correctly."""
+        # Setup mocks
+        mock_products = {
+            "Product A": [
+                "https://www.notino.pt/product-a",
+                "https://wells.pt/product-a",
+                "https://atida.com/product-a",
+            ]
+        }
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://www.notino.pt/product-a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with filtered products
+        # Should include notino.pt and wells.pt URLs, but not atida.com
+        call_args = mock_find_prices.call_args[0][0]
+        self.assertEqual(len(call_args["Product A"]), 2)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--products", "Product A,Product B"])
+    def test_main_with_multiple_products(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() handles comma-separated products correctly."""
+        # Setup mocks
+        mock_products = {
+            "Product A": ["https://example.com/a"],
+            "Product B": ["https://example.com/b"],
+            "Product C": ["https://example.com/c"],
+        }
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {
+            "Product A": (29.99, "https://example.com/a"),
+            "Product B": (19.99, "https://example.com/b"),
+        }
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with filtered products
+        # Should include Product A and B, but not C
+        call_args = mock_find_prices.call_args[0][0]
+        self.assertIn("Product A", call_args)
+        self.assertIn("Product B", call_args)
+        self.assertNotIn("Product C", call_args)
+
+
+class TestFilterBySites(unittest.TestCase):
+    """Test site filtering functionality."""
+
+    def test_filter_single_site(self):
+        """Test filtering by a single site."""
+        products = {
+            "Product A": [
+                "https://www.notino.pt/product-a",
+                "https://wells.pt/product-a",
+                "https://atida.com/product-a",
+            ],
+            "Product B": ["https://www.notino.pt/product-b"],
+        }
+        result = filter_by_sites(products, ["notino.pt"])
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result["Product A"]), 1)
+        self.assertIn("notino.pt", result["Product A"][0])
+        self.assertEqual(len(result["Product B"]), 1)
+
+    def test_filter_multiple_sites(self):
+        """Test filtering by multiple sites."""
+        products = {
+            "Product A": [
+                "https://www.notino.pt/product-a",
+                "https://wells.pt/product-a",
+                "https://atida.com/product-a",
+            ]
+        }
+        result = filter_by_sites(products, ["notino.pt", "wells.pt"])
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result["Product A"]), 2)
+
+    def test_filter_no_matches(self):
+        """Test filtering when no URLs match."""
+        products = {
+            "Product A": ["https://www.notino.pt/product-a"],
+            "Product B": ["https://wells.pt/product-b"],
+        }
+        result = filter_by_sites(products, ["amazon.com"])
+
+        self.assertEqual(len(result), 0)
+
+    def test_filter_case_insensitive(self):
+        """Test filtering is case-insensitive."""
+        products = {"Product A": ["https://www.NOTINO.PT/product-a"]}
+        result = filter_by_sites(products, ["notino.pt"])
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result["Product A"]), 1)
+
+    def test_filter_partial_domain_match(self):
+        """Test filtering matches partial domains."""
+        products = {"Product A": ["https://subdomain.notino.pt/product-a"]}
+        result = filter_by_sites(products, ["notino.pt"])
+
+        self.assertEqual(len(result), 1)
+
+    def test_filter_removes_products_with_no_matching_urls(self):
+        """Test products with no matching URLs are removed."""
+        products = {
+            "Product A": ["https://www.notino.pt/product-a"],
+            "Product B": ["https://atida.com/product-b"],
+        }
+        result = filter_by_sites(products, ["notino.pt"])
+
+        self.assertEqual(len(result), 1)
+        self.assertIn("Product A", result)
+        self.assertNotIn("Product B", result)
+
+
+class TestFilterByProducts(unittest.TestCase):
+    """Test product name filtering functionality."""
+
+    def test_filter_single_substring(self):
+        """Test filtering by a single substring."""
+        products = {
+            "Medik8 Crystal Retinal 6": ["https://example.com/1"],
+            "LRP Anthelios SPF50": ["https://example.com/2"],
+            "Medik8 Super Ferrulic": ["https://example.com/3"],
+        }
+        result = filter_by_products(products, ["Crystal"])
+
+        self.assertEqual(len(result), 1)
+        self.assertIn("Medik8 Crystal Retinal 6", result)
+
+    def test_filter_multiple_substrings(self):
+        """Test filtering by multiple substrings (OR logic)."""
+        products = {
+            "Medik8 Crystal Retinal 6": ["https://example.com/1"],
+            "LRP Anthelios SPF50": ["https://example.com/2"],
+            "Medik8 Super Ferrulic": ["https://example.com/3"],
+        }
+        result = filter_by_products(products, ["Crystal", "SPF50"])
+
+        self.assertEqual(len(result), 2)
+        self.assertIn("Medik8 Crystal Retinal 6", result)
+        self.assertIn("LRP Anthelios SPF50", result)
+
+    def test_filter_case_insensitive(self):
+        """Test filtering is case-insensitive."""
+        products = {
+            "Medik8 Crystal Retinal 6": ["https://example.com/1"],
+            "LRP Anthelios SPF50": ["https://example.com/2"],
+        }
+        result = filter_by_products(products, ["crystal", "spf50"])
+
+        self.assertEqual(len(result), 2)
+
+    def test_filter_no_matches(self):
+        """Test filtering when no products match."""
+        products = {
+            "Medik8 Crystal Retinal 6": ["https://example.com/1"],
+            "LRP Anthelios SPF50": ["https://example.com/2"],
+        }
+        result = filter_by_products(products, ["NonExistent"])
+
+        self.assertEqual(len(result), 0)
+
+    def test_filter_partial_match(self):
+        """Test filtering matches partial product names."""
+        products = {
+            "Medik8 Crystal Retinal 6": ["https://example.com/1"],
+            "Medik8 Crystal Retinal 3": ["https://example.com/2"],
+        }
+        result = filter_by_products(products, ["Retinal 6"])
+
+        self.assertEqual(len(result), 1)
+        self.assertIn("Medik8 Crystal Retinal 6", result)
+
+    def test_filter_preserves_urls(self):
+        """Test filtering preserves all URLs for matched products."""
+        products = {
+            "Medik8 Crystal Retinal 6": [
+                "https://example.com/1",
+                "https://example.com/2",
+                "https://example.com/3",
+            ]
+        }
+        result = filter_by_products(products, ["Crystal"])
+
+        self.assertEqual(len(result["Medik8 Crystal Retinal 6"]), 3)
 
 
 if __name__ == "__main__":
