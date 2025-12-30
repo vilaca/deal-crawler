@@ -31,9 +31,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # FAILURE POINT 1: Tests failed
+      # Possible causes:
+      #   - Test assertion failures (code behavior doesn't match expectations)
+      #   - Import errors or missing dependencies
+      #   - Test setup/teardown issues
+      # Fix: Run 'make test' locally to see which tests fail, fix the code, ensure all tests pass
       - name: Run tests
         run: make test
 
+      # FAILURE POINT 2: Coverage check failed
+      # Possible causes:
+      #   - Test coverage below threshold (check Makefile for minimum percentage)
+      #   - New code added without tests
+      #   - Tests not running or not detecting code paths
+      # Fix: Run 'make coverage' locally, add tests for uncovered code, aim for >95% coverage
       - name: Run coverage
         run: |
           make coverage | tee coverage-output.txt
@@ -89,6 +101,12 @@ jobs:
           # Extract just pylint output for PR comments
           grep -A9999 "Running pylint" lint-full-report.txt | tail -n +2 > pylint-report.txt || true
 
+      # FAILURE POINT 3: Type checking failed
+      # Possible causes:
+      #   - Type annotation errors (wrong types, missing types)
+      #   - mypy configuration issues
+      #   - Incompatible type operations (e.g., int + None)
+      # Fix: Run 'make typecheck' locally, add/fix type hints, use 'assert' for type narrowing
       - name: Type check with mypy
         run: make typecheck
 
@@ -96,12 +114,104 @@ jobs:
         run: |
           vulture main.py utils test --min-confidence 100 > vulture-report.txt 2>&1 || true
 
+      # FAILURE POINT 4: Missing docstrings
+      # Possible causes:
+      #   - Functions/classes/methods missing docstrings
+      #   - Docstring coverage below 100%
+      # Fix: Run 'interrogate -v main.py utils test' locally, add docstrings to all functions/classes
       - name: Check docstring coverage
         run: |
           interrogate -v main.py utils test --fail-under 100
 
       - name: Check code complexity
         run: make complexity > complexity-report.txt 2>&1 || true
+
+      - name: Post failure explanation as PR comment
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Determine which step failed by checking job status
+            const workflow = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+
+            // Build failure explanation comment
+            let comment = '## ❌ CI Pipeline Failed\n\n';
+            comment += 'Your PR has failing quality checks. Here\'s what to do:\n\n';
+
+            // Add specific guidance based on common failures
+            comment += '### 🔍 Debugging Steps\n\n';
+            comment += '1. **Check the failed step** in the Actions tab above\n';
+            comment += '2. **Look at the error output** in the logs\n';
+            comment += '3. **Run the corresponding command locally** to reproduce the issue\n\n';
+
+            comment += '### 🛠️ Common Failure Points & Fixes\n\n';
+
+            comment += '#### ❌ Tests Failed\n';
+            comment += '**Symptoms:** Test assertion errors, import errors, or setup issues\n\n';
+            comment += '**Fix:**\n';
+            comment += '```bash\n';
+            comment += 'make test  # Run locally to see which tests fail\n';
+            comment += '```\n';
+            comment += '- Fix failing test assertions by correcting the code logic\n';
+            comment += '- Ensure all imports are correct and dependencies installed\n';
+            comment += '- Update tests if behavior intentionally changed\n\n';
+
+            comment += '#### 📊 Coverage Failed\n';
+            comment += '**Symptoms:** Coverage below threshold (check Makefile for minimum %)\n\n';
+            comment += '**Fix:**\n';
+            comment += '```bash\n';
+            comment += 'make coverage  # See which lines are uncovered\n';
+            comment += '```\n';
+            comment += '- Add tests for new functions/classes you created\n';
+            comment += '- Add tests for uncovered branches (if/else, error paths)\n';
+            comment += '- Target: >95% coverage for all new code\n\n';
+
+            comment += '#### 🔤 Type Check Failed\n';
+            comment += '**Symptoms:** mypy errors about type mismatches or missing annotations\n\n';
+            comment += '**Fix:**\n';
+            comment += '```bash\n';
+            comment += 'make typecheck  # See type errors\n';
+            comment += '```\n';
+            comment += '- Add type hints to function parameters and return types\n';
+            comment += '- Use `assert x is not None` for type narrowing\n';
+            comment += '- Fix incompatible type operations (e.g., `Optional[int] + int`)\n\n';
+
+            comment += '#### 📝 Docstrings Missing\n';
+            comment += '**Symptoms:** interrogate reports missing docstrings\n\n';
+            comment += '**Fix:**\n';
+            comment += '```bash\n';
+            comment += 'interrogate -v main.py utils test  # See what needs docs\n';
+            comment += '```\n';
+            comment += '- Add docstrings to all public functions and classes\n';
+            comment += '- Follow format: `"""Brief description.\\n\\nDetailed explanation."""`\n';
+            comment += '- Document parameters using Args: section if needed\n\n';
+
+            comment += '### 📚 Quick Reference\n\n';
+            comment += '| Command | Purpose |\n';
+            comment += '|---------|----------|\n';
+            comment += '| `make test` | Run all tests |\n';
+            comment += '| `make coverage` | Check test coverage |\n';
+            comment += '| `make typecheck` | Check type hints |\n';
+            comment += '| `make lint` | Run pylint & flake8 |\n';
+            comment += '| `make format` | Auto-fix formatting |\n';
+            comment += '| `make help` | See all available commands |\n\n';
+
+            comment += '---\n';
+            comment += '_💡 Tip: Always run `make test && make typecheck` locally before pushing!_\n';
+
+            // Post the comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
 
       - name: Check security with bandit
         run: |
@@ -228,11 +338,24 @@ jobs:
     if: always()
 
     steps:
+      # FAILURE POINT 5: Quality checks failed
+      # This step fails if ANY of the previous steps failed
+      # What to check:
+      #   1. Look at the failed step name in the Actions UI
+      #   2. Read the failure point comment for that specific step above
+      #   3. Check the error output in that step's logs
+      #   4. Run the corresponding 'make' command locally to reproduce
+      # Common fixes:
+      #   - Tests failed → Fix code logic, update tests
+      #   - Coverage failed → Add tests for new code
+      #   - Type check failed → Fix type annotations
+      #   - Docstrings failed → Add missing docstrings
       - name: Check test results
         run: |
           if [ "${{ needs.test.result }}" == "success" ]; then
             echo "✅ All quality checks passed!"
           else
             echo "❌ Some quality checks failed"
+            echo "Check the failed step above and follow the FAILURE POINT comments for guidance"
             exit 1
           fi
