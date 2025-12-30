@@ -9,6 +9,8 @@
 
 Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
 
+📊 **[View Latest Prices](latest_results.md)** - Updated daily at 4am UTC
+
 ## Quick Start
 
 ### Installation

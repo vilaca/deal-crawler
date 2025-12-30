@@ -1,5 +1,7 @@
 """CLI entry point for Deal Crawler price scraper."""
 
+import sys
+
 from data_loader import load_products
 from finder import find_cheapest_prices
 from http_client import HttpClient
@@ -11,8 +13,8 @@ def main():
     products = load_products("data.yml")
 
     if not products:
-        print("\nNo products to compare. Exiting.")
-        return
+        print("\nNo products to compare. Exiting.", file=sys.stderr)
+        sys.exit(1)
 
     # Find cheapest prices using HttpClient context manager
     with HttpClient() as http_client:
