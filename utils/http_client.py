@@ -3,7 +3,7 @@
 import random
 import sys
 import time
-from typing import Optional, Self
+from typing import Literal, Optional, Self
 from urllib.parse import urlparse
 
 import requests
@@ -42,9 +42,16 @@ class HttpClient:
         """Context manager entry."""
         return self
 
-    def __exit__(self, _exc_type: object, _exc_val: object, _exc_tb: object) -> None:
-        """Context manager exit - ensures session is closed."""
+    def __exit__(
+        self, _exc_type: object, _exc_val: object, _exc_tb: object
+    ) -> Literal[False]:
+        """Context manager exit - ensures session is closed.
+
+        Returns:
+            False to propagate any exceptions (never suppresses exceptions)
+        """
         self.close()
+        return False
 
     def close(self) -> None:
         """Close the HTTP session and release resources."""
