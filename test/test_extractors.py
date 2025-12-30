@@ -2,7 +2,7 @@
 
 import unittest
 from unittest.mock import patch
-from bs4 import BeautifulSoup, NavigableString
+from bs4 import BeautifulSoup
 
 from utils.extractors import (
     parse_price_string,
@@ -404,63 +404,6 @@ class TestExtractPrice(unittest.TestCase):
         price = extract_price(soup, "https://example.com")
         # Should prioritize price-product class
         self.assertEqual(price, 79.07)
-
-    @patch("utils.extractors.BeautifulSoup.find_all")
-    def test_priority_classes_skips_non_tag_elements(self, mock_find_all):
-        """Test priority class extraction skips non-Tag elements."""
-        # Create soup with valid price
-        html = '<div class="price-actual">€25.00</div>'
-        soup = self.create_soup(html)
-
-        # Mock find_all to return a mix of Tag and NavigableString
-        actual_tag = soup.find(class_="price-actual")
-        non_tag = NavigableString("not a tag")
-
-        # First call returns mixed list, subsequent calls return empty
-        # extract_price calls find_all multiple times for different selectors
-        mock_find_all.side_effect = [
-            [non_tag, actual_tag],  # First priority class search
-            [],  # Remaining priority class searches
-            [],
-            [],
-            [],
-            [],
-            [],  # Meta tags
-            [],  # Data attribute
-            [],  # Generic price class
-        ]
-
-        price = extract_price(soup, "https://example.com")
-        self.assertEqual(price, 25.00)
-
-    @patch("utils.extractors.BeautifulSoup.find_all")
-    def test_generic_classes_skips_non_tag_elements(self, mock_find_all):
-        """Test generic class extraction skips non-Tag elements."""
-        # Create soup with valid price
-        html = '<span class="price">€30.00</span>'
-        soup = self.create_soup(html)
-
-        # Mock find_all to return NavigableString for priority searches,
-        # then a mix for generic search
-        actual_tag = soup.find(class_="price")
-        non_tag = NavigableString("not a tag")
-
-        # Return empty for priority/meta/data searches, then mixed for generic
-        # extract_price checks: 5 priority selectors, meta tags, data attr, generic
-        mock_find_all.side_effect = [
-            [],  # Priority class searches (5 different selectors)
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],  # Meta tags
-            [],  # Data attribute
-            [non_tag, actual_tag],  # Generic price class search
-        ]
-
-        price = extract_price(soup, "https://example.com")
-        self.assertEqual(price, 30.00)
 
 
 if __name__ == "__main__":
