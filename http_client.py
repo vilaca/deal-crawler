@@ -117,13 +117,19 @@ class HttpClient:
                     "Origin": f"https://{domain}",
                     "Sec-Fetch-Site": "same-origin",
                     "DNT": "1",
-                    "sec-ch-ua-arch": '"arm"',
+                    "Priority": "u=0, i",
+                    # All Client Hints headers that Cloudflare requests
+                    "sec-ch-ua-arch": '"x86"',
                     "sec-ch-ua-bitness": '"64"',
+                    "sec-ch-ua-full-version": '"131.0.6778.109"',
                     "sec-ch-ua-full-version-list": (
                         '"Google Chrome";v="131.0.6778.109", '
                         '"Chromium";v="131.0.6778.109", '
                         '"Not_A Brand";v="24.0.0.0"'
                     ),
+                    "sec-ch-ua-model": '""',
+                    "sec-ch-ua-platform-version": '"15.1.0"',
+                    "sec-ch-ua-wow64": "?0",
                     "Viewport-Width": "1920",
                 }
             )
