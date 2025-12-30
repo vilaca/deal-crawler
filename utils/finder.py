@@ -33,7 +33,7 @@ class SearchResults:
 
     def print_summary(self) -> None:
         """Print a concise markdown summary of the search results."""
-        print("\n## 📊 Search Summary\n", file=sys.stderr)
+        print("\n## 📊 Search Summary\n")
 
         # Success rate with emoji
         if self.total_urls_checked > 0:
@@ -42,13 +42,10 @@ class SearchResults:
             print(
                 f"**{emoji} {self.prices_found}/{self.total_urls_checked} URLs** "
                 f"({success_rate:.0f}% success) · "
-                f"**{self.total_products} products**",
-                file=sys.stderr,
+                f"**{self.total_products} products**"
             )
         else:
-            print(
-                f"**{self.total_products} products** · No URLs checked", file=sys.stderr
-            )
+            print(f"**{self.total_products} products** · No URLs checked")
 
         # Issues section (only if there are any)
         issues = []
@@ -60,26 +57,26 @@ class SearchResults:
             issues.append(f"🔍 {self.extraction_errors} extraction errors")
 
         if issues:
-            print(f"\n_{' · '.join(issues)}_", file=sys.stderr)
+            print(f"\n_{' · '.join(issues)}_")
 
         # Show out of stock items grouped by product
         if self.out_of_stock_items:
-            print("\n**Out of Stock:**", file=sys.stderr)
+            print("\n**Out of Stock:**")
             for product, urls in self.out_of_stock_items.items():
                 # Get domains from URLs
                 domains = [urlparse(url).netloc.replace("www.", "") for url in urls]
                 domains_str = ", ".join(domains)
-                print(f"- **{product}**: {domains_str}", file=sys.stderr)
+                print(f"- **{product}**: {domains_str}")
 
         # Show failed URLs if any (compact list)
         if self.failed_urls:
-            print(f"\n**Failed URLs** ({len(self.failed_urls)}):", file=sys.stderr)
+            print(f"\n**Failed URLs** ({len(self.failed_urls)}):")
             for url in self.failed_urls[:3]:  # Show first 3 only
-                print(f"- `{url}`", file=sys.stderr)
+                print(f"- `{url}`")
             if len(self.failed_urls) > 3:
-                print(f"- _{len(self.failed_urls) - 3} more..._", file=sys.stderr)
+                print(f"- _{len(self.failed_urls) - 3} more..._")
 
-        print("", file=sys.stderr)  # Empty line at end
+        print()  # Empty line at end
 
 
 def find_cheapest_prices(
