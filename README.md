@@ -1,7 +1,7 @@
 # Deal Crawler
 
 [![CI](https://github.com/vilaca/deal-crawler/actions/workflows/ci.yml/badge.svg)](https://github.com/vilaca/deal-crawler/actions/workflows/ci.yml)
-[![Python 3.14](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 
 Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
 
@@ -80,7 +80,7 @@ pre-commit run --all-files                             # Run pre-commit checks m
 The project uses GitHub Actions for automated testing and quality checks on every push and pull request.
 
 **CI Pipeline includes:**
-- ✅ Tests on Python 3.14
+- ✅ Tests on Python 3.13 (compatible with 3.13+)
 - ✅ Code coverage reporting (target: 95%)
 - ✅ Linting (flake8)
 - ✅ Type checking (mypy)
