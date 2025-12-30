@@ -16,6 +16,15 @@ PRIORITY_PRICE_CLASS_PATTERN = re.compile(
 
 GENERIC_PRICE_CLASS_PATTERN = re.compile(r"price", re.IGNORECASE)
 
+# Keywords that indicate delivery/shipping containers
+DELIVERY_KEYWORDS = [
+    "delivery",
+    "shipping",
+    "ship",
+    "freight",
+    "postage",
+]
+
 
 def parse_price_string(price_str: Optional[str]) -> Optional[float]:
     """Parse a price string and return float value.
@@ -80,6 +89,44 @@ def _is_element_hidden(
         " ", ""
     ) or "visibility:hidden" in style_str.replace(" ", ""):
         return True
+
+    return False
+
+
+def _is_inside_delivery_container(element: Tag) -> bool:
+    """Check if element is inside a delivery/shipping-related container.
+
+    Args:
+        element: BeautifulSoup Tag element to check
+
+    Returns:
+        True if element is inside delivery container, False otherwise
+    """
+    # Check element and all ancestors up to 5 levels up
+    current: Optional[Tag] = element
+    for _ in range(6):  # Check element + 5 ancestors
+        if not current or not hasattr(current, "get"):
+            break
+
+        # Check classes
+        class_attr = current.get("class", [])
+        if isinstance(class_attr, list):
+            classes = " ".join(class_attr).lower()
+        else:
+            classes = str(class_attr).lower()
+
+        # Check ID
+        elem_id = current.get("id", "")
+        if elem_id:
+            elem_id = str(elem_id).lower()
+
+        # Check if any delivery keyword is present
+        if any(
+            keyword in classes or keyword in elem_id for keyword in DELIVERY_KEYWORDS
+        ):
+            return True
+
+        current = current.parent
 
     return False
 
@@ -155,7 +202,7 @@ def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]
 def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
     """Extract price from generic price classes (Strategy 4).
 
-    Excludes classes that indicate old/original prices.
+    Excludes classes that indicate old/original prices and delivery-related prices.
     """
     generic_price_elements = soup.find_all(class_=GENERIC_PRICE_CLASS_PATTERN)
     for element in generic_price_elements:
@@ -164,6 +211,10 @@ def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
 
         # Skip elements with classes indicating old/original prices or hidden elements
         if _is_element_hidden(element, ["old", "original", "was", "before", "regular"]):
+            continue
+
+        # Skip elements inside delivery/shipping containers
+        if _is_inside_delivery_container(element):
             continue
 
         # Check content attribute first
