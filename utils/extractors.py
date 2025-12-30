@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup, Tag
 from typing import Any, Dict, List, Optional
 
-from src.config import config
+from .config import config
 
 # Compile regex patterns at module level for better performance
 PRIORITY_PRICE_CLASS_PATTERN = re.compile(
