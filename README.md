@@ -46,13 +46,40 @@ python main.py --markdown
 python main.py --help
 ```
 
+### Filtering Options
+
+You can filter which products and sites to check using CLI parameters:
+
+```bash
+# Filter by site domains (comma-separated)
+python main.py --sites "notino.pt,wells.pt"
+
+# Filter by product names (substring match, comma-separated)
+python main.py --products "Crystal Retinal,SPF50"
+
+# Combine filters (only check notino.pt for Crystal Retinal products)
+python main.py --sites "notino.pt" --products "Crystal Retinal"
+
+# Use with markdown output
+python main.py --products "Medik8" --sites "notino.pt,atida.com" --markdown
+```
+
+**Filter Features:**
+- 🔍 Case-insensitive matching
+- 🌐 Site filter matches partial domains (e.g., "notino.pt" matches "www.notino.pt")
+- 📝 Product filter uses substring matching (e.g., "Crystal" matches "Medik8 Crystal Retinal 6")
+- ➕ Multiple values use OR logic (matches any of the specified values)
+- 🔗 Filters can be combined (AND logic between --sites and --products)
+
 ## Features
 
 - 🛒 Scrapes prices from multiple retailers with automatic retry on failures
 - 💰 Prioritizes discounted prices over original prices
 - 📦 Excludes out-of-stock products from comparison
+- 🔍 Filter by sites and products via CLI parameters
 - ⚙️ Configurable via environment variables
 - 🤖 Smart bot detection evasion with randomized delays
+- 📊 Dual output formats (text and markdown)
 
 ## Configuration
 
