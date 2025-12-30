@@ -311,7 +311,7 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
     def test_too_deep_not_detected(self):
         """Test element more than 5 levels deep not detected."""
         # 6 levels deep - should not be detected
-        # (element + 6 ancestors = 7 total checks needed)
+        # (element + 5 ancestors = 6 total checks)
         html = (
             '<div class="delivery"><div><div><div><div><div><div>'
             "<span>50€</span>"
