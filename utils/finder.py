@@ -70,9 +70,6 @@ class SearchResults:
         if self.total_urls_checked == 0:
             return f"**{self.total_products} {products_text}** · No URLs checked"
 
-        assert (
-            self.total_urls_checked > 0
-        ), "total_urls_checked must be > 0 before computing success rate"
         success_rate = (self.prices_found / self.total_urls_checked) * 100
         emoji = self._get_success_emoji(success_rate)
         urls_text = self._pluralize(self.total_urls_checked, "URL", "URLs")
