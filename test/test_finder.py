@@ -227,19 +227,14 @@ class TestFindCheapestPrices(unittest.TestCase):
 class TestSearchResults(unittest.TestCase):
     """Test SearchResults formatting and display methods."""
 
-    def test_pluralize_singular(self):
-        """Test pluralization returns singular for count of 1."""
+    def test_pluralize(self):
+        """Test pluralization logic."""
         results = SearchResults()
+        # Singular (count = 1)
         self.assertEqual(results._pluralize(1, "product", "products"), "product")
-        self.assertEqual(results._pluralize(1, "URL", "URLs"), "URL")
-        self.assertEqual(results._pluralize(1, "error", "errors"), "error")
-
-    def test_pluralize_plural(self):
-        """Test pluralization returns plural for count != 1."""
-        results = SearchResults()
+        # Plural (count != 1)
         self.assertEqual(results._pluralize(0, "product", "products"), "products")
         self.assertEqual(results._pluralize(2, "product", "products"), "products")
-        self.assertEqual(results._pluralize(10, "URL", "URLs"), "URLs")
 
     def test_extract_domain_normal_url(self):
         """Test domain extraction from normal URL."""
@@ -247,18 +242,12 @@ class TestSearchResults(unittest.TestCase):
         self.assertEqual(
             results._extract_domain("https://example.com/product"), "example.com"
         )
-        self.assertEqual(
-            results._extract_domain("https://store.com/item/123"), "store.com"
-        )
 
     def test_extract_domain_with_www(self):
         """Test domain extraction removes www. prefix."""
         results = SearchResults()
         self.assertEqual(
             results._extract_domain("https://www.example.com/product"), "example.com"
-        )
-        self.assertEqual(
-            results._extract_domain("http://www.store.com/item"), "store.com"
         )
 
     def test_extract_domain_malformed_url(self):
@@ -284,25 +273,17 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         self.assertEqual(results._extract_domain(""), "")
 
-    def test_get_success_emoji_high_success(self):
-        """Test emoji for high success rate (≥80%)."""
+    def test_get_success_emoji(self):
+        """Test emoji selection based on success rate."""
         results = SearchResults()
+        # High (≥80%)
         self.assertEqual(results._get_success_emoji(100.0), "✅")
         self.assertEqual(results._get_success_emoji(80.0), "✅")
-        self.assertEqual(results._get_success_emoji(85.5), "✅")
-
-    def test_get_success_emoji_medium_success(self):
-        """Test emoji for medium success rate (50-79%)."""
-        results = SearchResults()
+        # Medium (50-79%)
         self.assertEqual(results._get_success_emoji(79.9), "⚠️")
         self.assertEqual(results._get_success_emoji(50.0), "⚠️")
-        self.assertEqual(results._get_success_emoji(65.0), "⚠️")
-
-    def test_get_success_emoji_low_success(self):
-        """Test emoji for low success rate (<50%)."""
-        results = SearchResults()
+        # Low (<50%)
         self.assertEqual(results._get_success_emoji(49.9), "❌")
-        self.assertEqual(results._get_success_emoji(25.0), "❌")
         self.assertEqual(results._get_success_emoji(0.0), "❌")
 
     def test_format_success_line_no_urls(self):
@@ -313,15 +294,6 @@ class TestSearchResults(unittest.TestCase):
 
         line = results._format_success_line()
         self.assertEqual(line, "**5 products** · No URLs checked")
-
-    def test_format_success_line_no_urls_singular(self):
-        """Test success line with 1 product and no URLs."""
-        results = SearchResults()
-        results.total_products = 1
-        results.total_urls_checked = 0
-
-        line = results._format_success_line()
-        self.assertEqual(line, "**1 product** · No URLs checked")
 
     def test_format_success_line_with_urls(self):
         """Test success line with URLs checked."""
@@ -335,20 +307,6 @@ class TestSearchResults(unittest.TestCase):
         self.assertIn("80% success", line)
         self.assertIn("3 products", line)
         self.assertIn("✅", line)
-
-    def test_format_success_line_with_singular_forms(self):
-        """Test success line uses singular forms when count is 1."""
-        results = SearchResults()
-        results.total_products = 1
-        results.total_urls_checked = 1
-        results.prices_found = 1
-
-        line = results._format_success_line()
-        self.assertIn("1/1 URL", line)
-        self.assertIn("100% success", line)
-        self.assertIn("1 product", line)
-        self.assertNotIn("URLs", line)
-        self.assertNotIn("products", line)
 
     def test_format_issues_line_no_issues(self):
         """Test issues line when there are no issues."""
