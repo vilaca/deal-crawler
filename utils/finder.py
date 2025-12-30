@@ -150,9 +150,7 @@ def find_cheapest_prices(
                 print("    Out of stock - skipping", file=sys.stderr)
                 results.out_of_stock += 1
                 # Track which product is out of stock at which URL
-                if product_name not in results.out_of_stock_items:
-                    results.out_of_stock_items[product_name] = []
-                results.out_of_stock_items[product_name].append(url)
+                results.out_of_stock_items.setdefault(product_name, []).append(url)
                 continue
 
             price = extract_price(soup, url)
