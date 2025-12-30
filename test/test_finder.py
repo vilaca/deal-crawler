@@ -43,6 +43,7 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         self.assertIn("Product A", results)
         self.assertIsNotNone(results["Product A"])
+        assert results["Product A"] is not None  # Type narrowing for mypy
         price, url = results["Product A"]
         self.assertEqual(price, 30.00)
         self.assertEqual(url, "https://example.com/product2")
@@ -71,6 +72,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         results = find_cheapest_prices(products, mock_client)
 
         self.assertIn("Product B", results)
+        self.assertIsNotNone(results["Product B"])
+        assert results["Product B"] is not None  # Type narrowing for mypy
         price, url = results["Product B"]
         # Should get cheapest in-stock price (60.00), not the out-of-stock one
         self.assertEqual(price, 60.00)
@@ -162,17 +165,19 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product A", results)
         self.assertIn("Product B", results)
 
+        assert results["Product A"] is not None  # Type narrowing for mypy
         price_a, url_a = results["Product A"]
         self.assertEqual(price_a, 20.00)
         self.assertEqual(url_a, "https://example.com/a2")
 
+        assert results["Product B"] is not None  # Type narrowing for mypy
         price_b, url_b = results["Product B"]
         self.assertEqual(price_b, 15.00)
         self.assertEqual(url_b, "https://example.com/b1")
 
     def test_handles_empty_products(self):
         """Test handles empty products dictionary."""
-        products = {}
+        products: dict[str, list[str]] = {}
 
         # Mock HttpClient (won't be used)
         mock_client = self.create_mock_http_client()
