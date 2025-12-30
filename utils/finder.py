@@ -29,7 +29,7 @@ class SearchResults:
     out_of_stock_items: Dict[str, List[str]] = field(
         default_factory=dict
     )  # product -> URLs
-    failed_urls: List[str] = field(default_factory=list)
+    failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
 
     def _get_success_emoji(self, success_rate: float) -> str:
         """Get emoji based on success rate."""
