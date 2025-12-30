@@ -74,7 +74,7 @@ jobs:
 
       - name: Lint with pylint
         run: |
-          pylint main.py utils/*.py --score=y > pylint-report.txt 2>&1 || true
+          pylint main.py utils/*.py test/*.py --score=y > pylint-report.txt 2>&1 || true
 
       - name: Type check with mypy
         run: |

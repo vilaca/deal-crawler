@@ -36,7 +36,7 @@ lint: format-check
 	@echo "Running flake8..."
 	flake8 main.py utils/*.py test/*.py
 	@echo "\nRunning pylint..."
-	@pylint main.py utils/*.py --score=y || true
+	@pylint main.py utils/*.py test/*.py --score=y || true
 
 typecheck:
 	@echo "Running mypy..."

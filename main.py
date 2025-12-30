@@ -1,6 +1,7 @@
 """CLI entry point for Deal Crawler price scraper."""
 
 import sys
+from urllib.parse import urlparse
 
 from utils.data_loader import load_products
 from utils.finder import find_cheapest_prices
@@ -31,8 +32,6 @@ def main():
         if result:
             price, url = result
             # Shorten URL for display (show domain)
-            from urllib.parse import urlparse
-
             domain = urlparse(url).netloc.replace("www.", "")
             print(f"| **{product_name}** | €{price:.2f} | [🔗 {domain}]({url}) |")
         else:
