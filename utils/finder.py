@@ -29,7 +29,13 @@ class SearchResults:
     out_of_stock_items: Dict[str, List[str]] = field(
         default_factory=dict
     )  # product -> URLs
-    failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
+    failed_urls: List[str] = field(
+        default_factory=list
+    )  # URLs that failed (fetch or extraction errors)
+
+    def _pluralize(self, count: int, singular: str, plural: str) -> str:
+        """Return singular or plural form based on count."""
+        return singular if count == 1 else plural
 
     def _get_success_emoji(self, success_rate: float) -> str:
         """Get emoji based on success rate."""
@@ -41,15 +47,19 @@ class SearchResults:
 
     def _format_success_line(self) -> str:
         """Format the success rate summary line."""
+        products_text = self._pluralize(self.total_products, "product", "products")
+
         if self.total_urls_checked == 0:
-            return f"**{self.total_products} products** · No URLs checked"
+            return f"**{self.total_products} {products_text}** · No URLs checked"
 
         success_rate = (self.prices_found / self.total_urls_checked) * 100
         emoji = self._get_success_emoji(success_rate)
+        urls_text = self._pluralize(self.total_urls_checked, "URL", "URLs")
+
         return (
-            f"**{emoji} {self.prices_found}/{self.total_urls_checked} URLs** "
+            f"**{emoji} {self.prices_found}/{self.total_urls_checked} {urls_text}** "
             f"({success_rate:.0f}% success) · "
-            f"**{self.total_products} products**"
+            f"**{self.total_products} {products_text}**"
         )
 
     def _format_issues_line(self) -> Optional[str]:
@@ -58,9 +68,15 @@ class SearchResults:
         if self.out_of_stock > 0:
             issues.append(f"📦 {self.out_of_stock} out of stock")
         if self.fetch_errors > 0:
-            issues.append(f"🌐 {self.fetch_errors} fetch errors")
+            error_text = self._pluralize(
+                self.fetch_errors, "fetch error", "fetch errors"
+            )
+            issues.append(f"🌐 {self.fetch_errors} {error_text}")
         if self.extraction_errors > 0:
-            issues.append(f"🔍 {self.extraction_errors} extraction errors")
+            error_text = self._pluralize(
+                self.extraction_errors, "extraction error", "extraction errors"
+            )
+            issues.append(f"🔍 {self.extraction_errors} {error_text}")
 
         return f"_{' · '.join(issues)}_" if issues else None
 
