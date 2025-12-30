@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .config import config
+from .site_handlers import get_site_handler
 
 # Transient errors that should trigger retries
 RETRYABLE_EXCEPTIONS = (
@@ -60,9 +61,9 @@ class HttpClient:
         Returns:
             Delay time in seconds
         """
-        if "notino.pt" in url:
-            return random.uniform(config.notino_delay_min, config.notino_delay_max)
-        return random.uniform(config.default_delay_min, config.default_delay_max)
+        handler = get_site_handler(url)
+        min_delay, max_delay = handler.get_delay_range()
+        return random.uniform(min_delay, max_delay)
 
     def get_headers_for_site(self, url: str) -> dict:
         """Get appropriate headers for the given site.
@@ -101,30 +102,10 @@ class HttpClient:
             "sec-ch-ua-platform": '"macOS"',
         }
 
-        # Enhanced headers for notino.pt (aggressive bot detection)
-        if "notino.pt" in domain:
-            # Vary referer to look more natural
-            referers = [
-                "https://www.google.com/",
-                "https://www.google.pt/",
-                f"https://{domain}/",
-            ]
-            base_headers.update(
-                {
-                    "Referer": random.choice(referers),
-                    "Origin": f"https://{domain}",
-                    "Sec-Fetch-Site": "same-origin",
-                    "DNT": "1",
-                    "sec-ch-ua-arch": '"arm"',
-                    "sec-ch-ua-bitness": '"64"',
-                    "sec-ch-ua-full-version-list": (
-                        '"Google Chrome";v="131.0.6778.109", '
-                        '"Chromium";v="131.0.6778.109", '
-                        '"Not_A Brand";v="24.0.0.0"'
-                    ),
-                    "Viewport-Width": "1920",
-                }
-            )
+        # Get site-specific headers and merge
+        handler = get_site_handler(url)
+        custom_headers = handler.get_custom_headers(domain)
+        base_headers.update(custom_headers)
 
         return base_headers
 

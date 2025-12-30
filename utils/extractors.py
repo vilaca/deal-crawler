@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup, Tag
 from typing import Any, Dict, List, Optional
 
 from .config import config
+from .site_handlers import get_site_handler
 
 # Compile regex patterns at module level for better performance
 PRIORITY_PRICE_CLASS_PATTERN = re.compile(
@@ -16,8 +17,15 @@ PRIORITY_PRICE_CLASS_PATTERN = re.compile(
 GENERIC_PRICE_CLASS_PATTERN = re.compile(r"price", re.IGNORECASE)
 
 
-def parse_price_string(price_str: str) -> Optional[float]:
-    """Parse a price string and return float value."""
+def parse_price_string(price_str: Optional[str]) -> Optional[float]:
+    """Parse a price string and return float value.
+
+    Args:
+        price_str: String containing a price, or None
+
+    Returns:
+        Parsed price as float, or None if invalid/empty
+    """
     if not price_str:
         return None
 
@@ -74,39 +82,6 @@ def _is_element_hidden(
         return True
 
     return False
-
-
-def extract_price_notino(soup: BeautifulSoup) -> Optional[float]:
-    """Extract price from notino.pt JSON data."""
-    if not soup:
-        return None
-
-    # Look for JSON data with price information
-    all_scripts = soup.find_all("script")
-
-    for script in all_scripts:
-        if not script.string:
-            continue
-
-        script_content = str(script.string)
-
-        # Look for price in JSON format
-        if '"price"' in script_content:
-            try:
-                # Try to extract price value from JSON-like structures
-                # Look for "price":NUMBER pattern
-                price_matches = re.findall(
-                    r'"price"\s*:\s*([0-9]+\.?[0-9]*)', script_content
-                )
-                for price_str in price_matches:
-                    price = float(price_str)
-                    # Sanity check: price should be reasonable
-                    if config.min_price < price < config.max_price:
-                        return price
-            except ValueError:
-                continue
-
-    return None
 
 
 def _extract_price_from_meta_tags(soup: BeautifulSoup) -> Optional[float]:
@@ -226,27 +201,34 @@ def _extract_price_from_text_patterns(soup: BeautifulSoup) -> Optional[float]:
     return None
 
 
-def extract_price(soup: BeautifulSoup, url: str) -> Optional[float]:
+def extract_price(soup: Optional[BeautifulSoup], url: str) -> Optional[float]:
     """Extract price from HTML using multiple strategies.
 
     Tries strategies in order of reliability:
-    1. Site-specific extraction (notino.pt)
+    1. Site-specific extraction (if handler provides it)
     2. Meta tags
     3. Data attributes
     4. Priority CSS classes
     5. Generic price classes
     6. Text patterns
+
+    Args:
+        soup: BeautifulSoup object to extract price from (or None)
+        url: URL of the page (for site-specific handling)
+
+    Returns:
+        Extracted price as float, or None if not found
     """
     if not soup:
         return None
 
-    # Special handling for notino.pt
-    if "notino.pt" in url:
-        price = extract_price_notino(soup)
-        if price:
-            return price
+    # Try site-specific extraction first
+    handler = get_site_handler(url)
+    price = handler.extract_price(soup)
+    if price:
+        return price
 
-    # Try each extraction strategy in order
+    # Fallback to generic extraction strategies
     strategies = [
         _extract_price_from_meta_tags,
         _extract_price_from_data_attribute,
