@@ -7,7 +7,7 @@ help:
 	@echo "  make coverage     - Run tests with coverage report"
 	@echo "  make format       - Format code with black"
 	@echo "  make format-check - Check if code is black-formatted (no changes)"
-	@echo "  make lint         - Run code style checks (flake8 + black)"
+	@echo "  make lint         - Run code style checks (flake8 + black + pylint)"
 	@echo "  make typecheck    - Run type checking (mypy)"
 	@echo "  make security     - Run security checks (bandit, pip-audit)"
 	@echo "  make quality      - Run code quality checks (vulture, interrogate)"
@@ -16,7 +16,6 @@ help:
 
 install:
 	pip install -r requirements.txt
-	pip install -q bandit interrogate vulture pip-audit
 
 test:
 	python3 -m unittest discover -s test -p 'test_*.py' -v
@@ -36,6 +35,8 @@ format-check:
 lint: format-check
 	@echo "Running flake8..."
 	flake8 main.py utils/*.py test/*.py
+	@echo "\nRunning pylint..."
+	@pylint main.py utils/*.py --score=y || true
 
 typecheck:
 	@echo "Running mypy..."
