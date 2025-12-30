@@ -39,20 +39,20 @@ python main.py
 
 ## Configuration
 
-All settings can be customized using environment variables with the `FISHER_` prefix:
+All settings can be customized using environment variables with the `DEAL_CRAWLER_` prefix:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `FISHER_MIN_PRICE` | `1.0` | Minimum valid price (filters out parsing errors) |
-| `FISHER_MAX_PRICE` | `1000.0` | Maximum valid price (filters out parsing errors) |
-| `FISHER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
-| `FISHER_MAX_RETRIES` | `2` | Number of retry attempts for failed requests |
-| `FISHER_NOTINO_DELAY_MIN` | `4.0` | Minimum delay before Notino requests (seconds) |
-| `FISHER_NOTINO_DELAY_MAX` | `7.0` | Maximum delay before Notino requests (seconds) |
-| `FISHER_DEFAULT_DELAY_MIN` | `1.0` | Minimum delay before other site requests (seconds) |
-| `FISHER_DEFAULT_DELAY_MAX` | `2.0` | Maximum delay before other site requests (seconds) |
-| `FISHER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
-| `FISHER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
+| `DEAL_CRAWLER_MIN_PRICE` | `1.0` | Minimum valid price (filters out parsing errors) |
+| `DEAL_CRAWLER_MAX_PRICE` | `1000.0` | Maximum valid price (filters out parsing errors) |
+| `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
+| `DEAL_CRAWLER_MAX_RETRIES` | `2` | Number of retry attempts for failed requests |
+| `DEAL_CRAWLER_NOTINO_DELAY_MIN` | `4.0` | Minimum delay before Notino requests (seconds) |
+| `DEAL_CRAWLER_NOTINO_DELAY_MAX` | `7.0` | Maximum delay before Notino requests (seconds) |
+| `DEAL_CRAWLER_DEFAULT_DELAY_MIN` | `1.0` | Minimum delay before other site requests (seconds) |
+| `DEAL_CRAWLER_DEFAULT_DELAY_MAX` | `2.0` | Maximum delay before other site requests (seconds) |
+| `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
+| `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
 
 
 ## Contributing
