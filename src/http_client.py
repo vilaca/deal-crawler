@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
-from config import config
+from src.config import config
 
 # Transient errors that should trigger retries
 RETRYABLE_EXCEPTIONS = (

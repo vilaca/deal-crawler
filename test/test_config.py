@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from config import Config, config
+from src.config import Config, config
 
 
 class TestConfig(unittest.TestCase):
