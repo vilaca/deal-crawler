@@ -1,0 +1,34 @@
+"""Configuration with defaults and environment variable support."""
+
+import os
+
+
+class Config:
+    """Configuration class with default values and environment variable overrides.
+
+    All environment variables use the FISHER_ prefix (kept for backward compatibility).
+    Example: FISHER_MIN_PRICE=5.0 FISHER_MAX_RETRIES=5 python main.py
+    """
+
+    def __init__(self):
+        """Initialize configuration from environment variables with defaults."""
+        # Price range validation
+        self.min_price = float(os.getenv("FISHER_MIN_PRICE", "1.0"))
+        self.max_price = float(os.getenv("FISHER_MAX_PRICE", "1000.0"))
+
+        # HTTP request settings
+        self.request_timeout = int(os.getenv("FISHER_REQUEST_TIMEOUT", "15"))
+        self.max_retries = int(os.getenv("FISHER_MAX_RETRIES", "2"))
+
+        # Delay settings for different sites (in seconds)
+        # Notino has aggressive bot detection, use longer delays
+        self.notino_delay_min = float(os.getenv("FISHER_NOTINO_DELAY_MIN", "4.0"))
+        self.notino_delay_max = float(os.getenv("FISHER_NOTINO_DELAY_MAX", "7.0"))
+        self.default_delay_min = float(os.getenv("FISHER_DEFAULT_DELAY_MIN", "1.0"))
+        self.default_delay_max = float(os.getenv("FISHER_DEFAULT_DELAY_MAX", "2.0"))
+        self.retry_delay_min = float(os.getenv("FISHER_RETRY_DELAY_MIN", "5.0"))
+        self.retry_delay_max = float(os.getenv("FISHER_RETRY_DELAY_MAX", "8.0"))
+
+
+# Default configuration instance for convenient importing
+config = Config()
