@@ -88,6 +88,10 @@ class TestFindCheapestPrices(unittest.TestCase):
         # Check summary statistics
         self.assertEqual(results.out_of_stock, 1)
         self.assertEqual(results.prices_found, 2)
+        self.assertEqual(results.total_urls_checked, 3)
+        # Check out_of_stock_items tracking
+        self.assertIn("Product B", results.out_of_stock_items)
+        self.assertEqual(results.out_of_stock_items["Product B"], ["https://example.com/product1"])
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -115,6 +119,10 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         # Check summary statistics
         self.assertEqual(results.extraction_errors, 2)
+        # Check failed_urls tracking
+        self.assertEqual(len(results.failed_urls), 2)
+        self.assertIn("https://example.com/product1", results.failed_urls)
+        self.assertIn("https://example.com/product2", results.failed_urls)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -157,6 +165,9 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         # Check summary statistics
         self.assertEqual(results.fetch_errors, 1)
+        # Check failed_urls tracking
+        self.assertEqual(len(results.failed_urls), 1)
+        self.assertIn("https://example.com/product1", results.failed_urls)
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -456,11 +467,11 @@ class TestSearchResults(unittest.TestCase):
         results.fetch_errors = 1
         results.extraction_errors = 2
         results.out_of_stock_items = {"Product A": ["https://example.com/a"]}
+        # failed_urls should match fetch_errors + extraction_errors = 1 + 2 = 3
         results.failed_urls = [
             "https://example.com/failed1",
             "https://example.com/failed2",
             "https://example.com/failed3",
-            "https://example.com/failed4",
         ]
 
         results.print_summary()
@@ -474,7 +485,7 @@ class TestSearchResults(unittest.TestCase):
         self.assertIn("🔍 2 extraction errors", output)
         self.assertIn("**Out of Stock:**", output)
         self.assertIn("**Product A**", output)
-        self.assertIn("**Failed URLs** (4):", output)
+        self.assertIn("**Failed URLs** (3):", output)
 
 
 if __name__ == "__main__":
