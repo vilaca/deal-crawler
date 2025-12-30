@@ -96,7 +96,7 @@ class TestHttpClient(unittest.TestCase):
         mock_response = Mock()
         mock_response.content = b"<html><body>Test</body></html>"
         mock_response.raise_for_status = Mock()
-        self.client.session.get = Mock(return_value=mock_response)
+        self.client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
 
         # Mock BeautifulSoup
         mock_soup_instance = Mock()
@@ -118,7 +118,7 @@ class TestHttpClient(unittest.TestCase):
         http_error = requests.exceptions.HTTPError()
         http_error.response = mock_response
 
-        self.client.session.get = Mock(side_effect=http_error)
+        self.client.session.get = Mock(side_effect=http_error)  # type: ignore[method-assign]
 
         result = self.client.fetch_page("https://example.com/product")
 
@@ -139,7 +139,7 @@ class TestHttpClient(unittest.TestCase):
         mock_response_success.content = b"<html><body>Success</body></html>"
         mock_response_success.raise_for_status = Mock()
 
-        self.client.session.get = Mock(side_effect=[http_error, mock_response_success])
+        self.client.session.get = Mock(side_effect=[http_error, mock_response_success])  # type: ignore[method-assign]
 
         mock_soup_instance = Mock()
         mock_soup.return_value = mock_soup_instance
@@ -160,7 +160,7 @@ class TestHttpClient(unittest.TestCase):
         http_error = requests.exceptions.HTTPError()
         http_error.response = mock_response_403
 
-        self.client.session.get = Mock(side_effect=http_error)
+        self.client.session.get = Mock(side_effect=http_error)  # type: ignore[method-assign]
 
         result = self.client.fetch_page("https://example.com/product", retry_count=2)
 
@@ -171,7 +171,7 @@ class TestHttpClient(unittest.TestCase):
     @patch("utils.http_client.time.sleep")
     def test_fetch_page_generic_exception(self, mock_sleep):
         """Test fetch_page handles generic exceptions."""
-        self.client.session.get = Mock(side_effect=Exception("Network error"))
+        self.client.session.get = Mock(side_effect=Exception("Network error"))  # type: ignore[method-assign]
 
         result = self.client.fetch_page("https://example.com/product")
 
@@ -187,7 +187,7 @@ class TestHttpClient(unittest.TestCase):
         mock_response_403.status_code = 403
         http_error = requests.exceptions.HTTPError()
         http_error.response = mock_response_403
-        self.client.session.get = Mock(side_effect=http_error)
+        self.client.session.get = Mock(side_effect=http_error)  # type: ignore[method-assign]
 
         result = self.client.fetch_page("https://example.com/product")
 
@@ -200,7 +200,7 @@ class TestHttpClient(unittest.TestCase):
     def test_fetch_page_retries_on_connection_error(self, mock_sleep, mock_soup):
         """Test fetch_page retries on ConnectionError."""
         # Fail twice, then succeed
-        self.client.session.get = Mock(
+        self.client.session.get = Mock(  # type: ignore[method-assign]
             side_effect=[
                 requests.exceptions.ConnectionError("Connection failed"),
                 requests.exceptions.ConnectionError("Connection failed"),
@@ -218,7 +218,7 @@ class TestHttpClient(unittest.TestCase):
     def test_fetch_page_retries_on_timeout(self, mock_sleep, mock_soup):
         """Test fetch_page retries on Timeout."""
         # Timeout once, then succeed
-        self.client.session.get = Mock(
+        self.client.session.get = Mock(  # type: ignore[method-assign]
             side_effect=[
                 requests.exceptions.Timeout("Request timed out"),
                 Mock(status_code=200, content=b"<html>Success</html>"),
@@ -233,7 +233,7 @@ class TestHttpClient(unittest.TestCase):
     @patch("utils.http_client.time.sleep")
     def test_fetch_page_retries_on_chunked_encoding_error(self, mock_sleep):
         """Test fetch_page retries on ChunkedEncodingError."""
-        self.client.session.get = Mock(
+        self.client.session.get = Mock(  # type: ignore[method-assign]
             side_effect=requests.exceptions.ChunkedEncodingError("Incomplete read")
         )
 
@@ -246,7 +246,7 @@ class TestHttpClient(unittest.TestCase):
     @patch("utils.http_client.time.sleep")
     def test_fetch_page_exhausts_retries_on_connection_error(self, mock_sleep):
         """Test fetch_page gives up after max retries on connection errors."""
-        self.client.session.get = Mock(
+        self.client.session.get = Mock(  # type: ignore[method-assign]
             side_effect=requests.exceptions.ConnectionError("Connection failed")
         )
 
@@ -260,7 +260,7 @@ class TestHttpClient(unittest.TestCase):
     def test_fetch_page_does_not_retry_on_non_transient_errors(self, mock_sleep):
         """Test fetch_page does not retry on non-transient errors."""
         # ValueError is not a transient error
-        self.client.session.get = Mock(side_effect=ValueError("Invalid URL"))
+        self.client.session.get = Mock(side_effect=ValueError("Invalid URL"))  # type: ignore[method-assign]
 
         result = self.client.fetch_page("https://example.com/product")
 
