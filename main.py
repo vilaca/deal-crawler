@@ -14,7 +14,7 @@ def main():
 
     if not products:
         print("\nNo products to compare. Exiting.", file=sys.stderr)
-        return
+        sys.exit(1)
 
     # Find cheapest prices using HttpClient context manager
     with HttpClient() as http_client:
