@@ -37,6 +37,24 @@ class SearchResults:
         """Return singular or plural form based on count."""
         return singular if count == 1 else plural
 
+    def _extract_domain(self, url: str) -> str:
+        """Extract domain from URL with fallback for malformed URLs.
+
+        Args:
+            url: URL to extract domain from
+
+        Returns:
+            Domain without 'www.' prefix, or full URL if parsing fails
+        """
+        parsed = urlparse(url)
+        domain = parsed.netloc.replace("www.", "")
+
+        # If netloc is empty (malformed URL), return the full URL as fallback
+        if not domain:
+            return url
+
+        return domain
+
     def _get_success_emoji(self, success_rate: float) -> str:
         """Get emoji based on success rate."""
         if success_rate >= 80:
@@ -90,7 +108,7 @@ class SearchResults:
 
         print("\n**Out of Stock:**")
         for product, urls in self.out_of_stock_items.items():
-            domains = [urlparse(url).netloc.replace("www.", "") for url in urls]
+            domains = [self._extract_domain(url) for url in urls]
             print(f"- **{product}**: {', '.join(domains)}")
 
     def _print_failed_urls(self) -> None:

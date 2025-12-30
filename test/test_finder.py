@@ -241,6 +241,49 @@ class TestSearchResults(unittest.TestCase):
         self.assertEqual(results._pluralize(2, "product", "products"), "products")
         self.assertEqual(results._pluralize(10, "URL", "URLs"), "URLs")
 
+    def test_extract_domain_normal_url(self):
+        """Test domain extraction from normal URL."""
+        results = SearchResults()
+        self.assertEqual(
+            results._extract_domain("https://example.com/product"), "example.com"
+        )
+        self.assertEqual(
+            results._extract_domain("https://store.com/item/123"), "store.com"
+        )
+
+    def test_extract_domain_with_www(self):
+        """Test domain extraction removes www. prefix."""
+        results = SearchResults()
+        self.assertEqual(
+            results._extract_domain("https://www.example.com/product"), "example.com"
+        )
+        self.assertEqual(
+            results._extract_domain("http://www.store.com/item"), "store.com"
+        )
+
+    def test_extract_domain_malformed_url(self):
+        """Test domain extraction with malformed URLs returns full URL."""
+        results = SearchResults()
+        # Relative path (no netloc)
+        self.assertEqual(
+            results._extract_domain("/path/to/resource"), "/path/to/resource"
+        )
+        # Just a path
+        self.assertEqual(results._extract_domain("product/123"), "product/123")
+
+    def test_extract_domain_no_scheme(self):
+        """Test domain extraction from URL without scheme."""
+        results = SearchResults()
+        # Without scheme, urlparse might not extract netloc correctly
+        result = results._extract_domain("example.com/product")
+        # Should return the full string as fallback
+        self.assertIn("example.com", result)
+
+    def test_extract_domain_empty_string(self):
+        """Test domain extraction with empty string."""
+        results = SearchResults()
+        self.assertEqual(results._extract_domain(""), "")
+
     def test_get_success_emoji_high_success(self):
         """Test emoji for high success rate (≥80%)."""
         results = SearchResults()
@@ -392,6 +435,28 @@ class TestSearchResults(unittest.TestCase):
         self.assertIn("example.com", output)
         self.assertIn("store.com", output)
         self.assertIn("shop.com", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_with_malformed_urls(self, mock_stdout):
+        """Test printing out-of-stock items handles malformed URLs gracefully."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": [
+                "https://example.com/product",
+                "/relative/path",
+                "malformed-url",
+            ]
+        }
+
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Out of Stock:**", output)
+        self.assertIn("**Product A**", output)
+        self.assertIn("example.com", output)
+        # Malformed URLs should show the full URL as fallback
+        self.assertIn("/relative/path", output)
+        self.assertIn("malformed-url", output)
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_failed_urls_empty(self, mock_stdout):
