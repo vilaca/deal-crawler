@@ -252,9 +252,7 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
 
     def test_parent_has_delivery_class(self):
         """Test element inside parent with delivery class."""
-        soup = self.create_soup(
-            '<div class="delivery_info"><span>50.00€</span></div>'
-        )
+        soup = self.create_soup('<div class="delivery_info"><span>50.00€</span></div>')
         element = soup.find("span")
         self.assertTrue(_is_inside_delivery_container(element))
 
@@ -312,10 +310,14 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
 
     def test_too_deep_not_detected(self):
         """Test element more than 5 levels deep not detected."""
-        # 6 levels deep - should not be detected (element + 6 ancestors = 7 total checks needed)
-        soup = self.create_soup(
-            '<div class="delivery"><div><div><div><div><div><div><span>50€</span></div></div></div></div></div></div></div>'
+        # 6 levels deep - should not be detected
+        # (element + 6 ancestors = 7 total checks needed)
+        html = (
+            '<div class="delivery"><div><div><div><div><div><div>'
+            "<span>50€</span>"
+            "</div></div></div></div></div></div></div>"
         )
+        soup = self.create_soup(html)
         element = soup.find("span")
         # The element is 6 levels away from delivery div
         # (we only check element + 5 ancestors = 6 checks)

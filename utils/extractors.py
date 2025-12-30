@@ -120,7 +120,9 @@ def _is_inside_delivery_container(element: Tag) -> bool:
             "postage",
         ]
 
-        if any(keyword in classes or keyword in elem_id for keyword in delivery_keywords):
+        if any(
+            keyword in classes or keyword in elem_id for keyword in delivery_keywords
+        ):
             return True
 
         current = current.parent
