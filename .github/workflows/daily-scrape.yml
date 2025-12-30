@@ -31,7 +31,35 @@ jobs:
 
       - name: Run scraper
         run: |
+          # Run scraper and capture exit code
           python main.py > latest_results.md
+          EXIT_CODE=$?
+
+          # Check if scraper completed successfully
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Error: Scraper failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+          # Verify output file exists and has content
+          if [ ! -f latest_results.md ]; then
+            echo "Error: Output file was not created"
+            exit 1
+          fi
+
+          if [ ! -s latest_results.md ]; then
+            echo "Error: Output file is empty"
+            exit 1
+          fi
+
+          # Verify file contains the expected markdown table structure
+          if ! grep -q "| Product | Price | Link |" latest_results.md; then
+            echo "Error: Output file does not contain expected price table"
+            cat latest_results.md
+            exit 1
+          fi
+
+          echo "✓ Scraper completed successfully"
 
       - name: Commit and push results
         run: |
