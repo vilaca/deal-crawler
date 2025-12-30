@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   issues: write
 
@@ -38,7 +38,36 @@ jobs:
 
       - name: Run coverage
         run: |
-          pytest --cov=. --cov-report=term
+          pytest --cov=. --cov-report=term | tee coverage-output.txt
+
+      - name: Update coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # Extract coverage percentage from output
+          COVERAGE=$(grep "TOTAL" coverage-output.txt | awk '{print $4}' | sed 's/%//')
+
+          if [ -n "$COVERAGE" ]; then
+            echo "Coverage: $COVERAGE%"
+
+            # Update README badge
+            sed -i "s/coverage-[0-9]*%25/coverage-${COVERAGE}%25/" README.md
+
+            # Check if README was modified
+            if git diff --quiet README.md; then
+              echo "Coverage badge already up to date"
+            else
+              # Configure git
+              git config --local user.email "github-actions[bot]@users.noreply.github.com"
+              git config --local user.name "github-actions[bot]"
+
+              # Commit and push
+              git add README.md
+              git commit -m "Update coverage badge to ${COVERAGE}% [skip ci]"
+              git push
+            fi
+          else
+            echo "Could not extract coverage percentage"
+          fi
 
       - name: Lint with flake8
         run: |
