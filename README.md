@@ -54,24 +54,7 @@ All settings can be customized using environment variables with the `FISHER_` pr
 | `FISHER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
 | `FISHER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
 
-**Example usage:**
-
-```bash
-# Run with custom settings
-FISHER_MIN_PRICE=5.0 FISHER_MAX_RETRIES=5 python main.py
-```
 
 ## Contributing
 
 Contributions are welcome! 
-
-All PRs must pass:
-- ✅ Unit tests (95%+ coverage)
-- ✅ Flake8 linting
-- ✅ MyPy type checking
-- ✅ 100% docstring coverage (interrogate)
-
-Warnings (non-blocking but reviewed):
-- ⚠️ Bandit security checks
-- ⚠️ Vulture dead code detection
-- ⚠️ Pip-audit dependency vulnerabilities
