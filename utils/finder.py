@@ -115,7 +115,7 @@ class SearchResults:
         if not issues:
             return None
 
-        joined = ' · '.join(issues)
+        joined = " · ".join(issues)
         return f"_{joined}_" if markdown else f"Issues: {joined}"
 
     def _print_out_of_stock_items(self, markdown: bool = False) -> None:
