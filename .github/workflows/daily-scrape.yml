@@ -32,7 +32,7 @@ jobs:
       - name: Run scraper
         run: |
           # Run scraper and capture exit code
-          python main.py > latest_results.md
+          python main.py --markdown > latest_results.md
           EXIT_CODE=$?
 
           # Check if scraper completed successfully
