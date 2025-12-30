@@ -8,7 +8,7 @@ from config import config
 
 # Compile regex patterns at module level for better performance
 PRIORITY_PRICE_CLASS_PATTERN = re.compile(
-    r"(price.*actual|actual.*price|price.*current|current.*price|"
+    r"(price-product|price.*actual|actual.*price|price.*current|current.*price|"
     r"price.*final|final.*price|price.*sale|sale.*price)",
     re.IGNORECASE,
 )
@@ -22,14 +22,16 @@ def parse_price_string(price_str: str) -> Optional[float]:
         return None
 
     try:
-        # Remove currency symbols and clean up
-        cleaned = re.sub(r"[€$£\s]", "", str(price_str))
-        # Replace comma with dot for decimal
-        cleaned = cleaned.replace(",", ".")
-        # Extract number
-        match = re.search(r"(\d+\.?\d*)", cleaned)
+        # First, extract price pattern (digits with comma or dot as decimal)
+        # This prevents multiple prices from merging when spaces are removed
+        match = re.search(r"(\d+[,.]?\d{0,2})", str(price_str))
         if match:
-            return float(match.group(1))
+            price_text = match.group(1)
+            # Remove currency symbols and spaces from extracted price
+            cleaned = re.sub(r"[€$£\s]", "", price_text)
+            # Replace comma with dot for decimal
+            cleaned = cleaned.replace(",", ".")
+            return float(cleaned)
     except (ValueError, AttributeError):
         pass
 
@@ -117,6 +119,22 @@ def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]
         for element in elements:
             if not isinstance(element, Tag):
                 continue
+
+            # Skip hidden elements (e.g., alternative variants)
+            class_attr = element.get("class", [])
+            if isinstance(class_attr, list):
+                classes = " ".join(class_attr).lower()
+            else:
+                classes = str(class_attr).lower()
+
+            if any(keyword in classes for keyword in ["display-none", "hidden", "d-none"]):
+                continue
+
+            # Skip elements with display:none or visibility:hidden in style
+            style = element.get("style", "")
+            if "display:none" in style.replace(" ", "") or "visibility:hidden" in style.replace(" ", ""):
+                continue
+
             # Check content attribute first
             content = element.get("content")
             if content and isinstance(content, str):
@@ -150,8 +168,13 @@ def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
 
         if any(
             keyword in classes
-            for keyword in ["old", "original", "was", "before", "regular"]
+            for keyword in ["old", "original", "was", "before", "regular", "display-none", "hidden", "d-none"]
         ):
+            continue
+
+        # Skip elements with display:none or visibility:hidden in style
+        style = element.get("style", "")
+        if "display:none" in style.replace(" ", "") or "visibility:hidden" in style.replace(" ", ""):
             continue
 
         # Check content attribute first
