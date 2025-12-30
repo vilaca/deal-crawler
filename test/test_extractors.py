@@ -2,7 +2,7 @@
 
 import unittest
 from unittest.mock import patch
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 
 from utils.extractors import (
     parse_price_string,
@@ -408,8 +408,6 @@ class TestExtractPrice(unittest.TestCase):
     @patch("utils.extractors.BeautifulSoup.find_all")
     def test_priority_classes_skips_non_tag_elements(self, mock_find_all):
         """Test priority class extraction skips non-Tag elements."""
-        from bs4 import NavigableString
-
         # Create soup with valid price
         html = '<div class="price-actual">€25.00</div>'
         soup = self.create_soup(html)
@@ -438,8 +436,6 @@ class TestExtractPrice(unittest.TestCase):
     @patch("utils.extractors.BeautifulSoup.find_all")
     def test_generic_classes_skips_non_tag_elements(self, mock_find_all):
         """Test generic class extraction skips non-Tag elements."""
-        from bs4 import NavigableString
-
         # Create soup with valid price
         html = '<span class="price">€30.00</span>'
         soup = self.create_soup(html)

@@ -214,6 +214,20 @@ class TestFindCheapestPrices(unittest.TestCase):
 class TestSearchResults(unittest.TestCase):
     """Test SearchResults formatting and display methods."""
 
+    def test_pluralize_singular(self):
+        """Test pluralization returns singular for count of 1."""
+        results = SearchResults()
+        self.assertEqual(results._pluralize(1, "product", "products"), "product")
+        self.assertEqual(results._pluralize(1, "URL", "URLs"), "URL")
+        self.assertEqual(results._pluralize(1, "error", "errors"), "error")
+
+    def test_pluralize_plural(self):
+        """Test pluralization returns plural for count != 1."""
+        results = SearchResults()
+        self.assertEqual(results._pluralize(0, "product", "products"), "products")
+        self.assertEqual(results._pluralize(2, "product", "products"), "products")
+        self.assertEqual(results._pluralize(10, "URL", "URLs"), "URLs")
+
     def test_get_success_emoji_high_success(self):
         """Test emoji for high success rate (≥80%)."""
         results = SearchResults()
@@ -244,6 +258,15 @@ class TestSearchResults(unittest.TestCase):
         line = results._format_success_line()
         self.assertEqual(line, "**5 products** · No URLs checked")
 
+    def test_format_success_line_no_urls_singular(self):
+        """Test success line with 1 product and no URLs."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 0
+
+        line = results._format_success_line()
+        self.assertEqual(line, "**1 product** · No URLs checked")
+
     def test_format_success_line_with_urls(self):
         """Test success line with URLs checked."""
         results = SearchResults()
@@ -256,6 +279,20 @@ class TestSearchResults(unittest.TestCase):
         self.assertIn("80% success", line)
         self.assertIn("3 products", line)
         self.assertIn("✅", line)
+
+    def test_format_success_line_with_singular_forms(self):
+        """Test success line uses singular forms when count is 1."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 1
+        results.prices_found = 1
+
+        line = results._format_success_line()
+        self.assertIn("1/1 URL", line)
+        self.assertIn("100% success", line)
+        self.assertIn("1 product", line)
+        self.assertNotIn("URLs", line)
+        self.assertNotIn("products", line)
 
     def test_format_issues_line_no_issues(self):
         """Test issues line when there are no issues."""
@@ -284,9 +321,21 @@ class TestSearchResults(unittest.TestCase):
         line = results._format_issues_line()
         assert line is not None  # Type narrowing for mypy
         self.assertIn("📦 2 out of stock", line)
-        self.assertIn("🌐 1 fetch errors", line)
+        self.assertIn("🌐 1 fetch error", line)
         self.assertIn("🔍 3 extraction errors", line)
         self.assertIn(" · ", line)  # Should have separators
+
+    def test_format_issues_line_singular_forms(self):
+        """Test issues line uses singular forms when count is 1."""
+        results = SearchResults()
+        results.fetch_errors = 1
+        results.extraction_errors = 1
+
+        line = results._format_issues_line()
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("🌐 1 fetch error", line)
+        self.assertIn("🔍 1 extraction error", line)
+        self.assertNotIn("errors", line)
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_out_of_stock_items_empty(self, mock_stdout):
@@ -302,10 +351,7 @@ class TestSearchResults(unittest.TestCase):
         """Test printing out-of-stock items for single product."""
         results = SearchResults()
         results.out_of_stock_items = {
-            "Product A": [
-                "https://www.example.com/product1",
-                "https://store.com/item"
-            ]
+            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
         }
 
         results._print_out_of_stock_items()
@@ -322,7 +368,7 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.out_of_stock_items = {
             "Product A": ["https://example.com/a"],
-            "Product B": ["https://store.com/b", "https://shop.com/b"]
+            "Product B": ["https://store.com/b", "https://shop.com/b"],
         }
 
         results._print_out_of_stock_items()
@@ -347,10 +393,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_few(self, mock_stdout):
         """Test printing failed URLs when 3 or fewer."""
         results = SearchResults()
-        results.failed_urls = [
-            "https://example.com/1",
-            "https://example.com/2"
-        ]
+        results.failed_urls = ["https://example.com/1", "https://example.com/2"]
 
         results._print_failed_urls()
 
@@ -369,7 +412,7 @@ class TestSearchResults(unittest.TestCase):
             "https://example.com/2",
             "https://example.com/3",
             "https://example.com/4",
-            "https://example.com/5"
+            "https://example.com/5",
         ]
 
         results._print_failed_urls()
@@ -385,7 +428,7 @@ class TestSearchResults(unittest.TestCase):
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_summary_minimal(self, mock_stdout):
-        """Test print_summary with minimal data."""
+        """Test print_summary with minimal data (uses singular forms)."""
         results = SearchResults()
         results.total_products = 1
         results.total_urls_checked = 1
@@ -395,9 +438,12 @@ class TestSearchResults(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         self.assertIn("## 📊 Search Summary", output)
-        self.assertIn("1/1 URLs", output)
+        self.assertIn("1/1 URL", output)
         self.assertIn("100% success", output)
-        self.assertIn("1 products", output)
+        self.assertIn("1 product", output)
+        # Should not contain plural forms
+        self.assertNotIn("URLs", output)
+        self.assertNotIn("products", output)
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_summary_with_issues(self, mock_stdout):
@@ -409,14 +455,12 @@ class TestSearchResults(unittest.TestCase):
         results.out_of_stock = 2
         results.fetch_errors = 1
         results.extraction_errors = 2
-        results.out_of_stock_items = {
-            "Product A": ["https://example.com/a"]
-        }
+        results.out_of_stock_items = {"Product A": ["https://example.com/a"]}
         results.failed_urls = [
             "https://example.com/failed1",
             "https://example.com/failed2",
             "https://example.com/failed3",
-            "https://example.com/failed4"
+            "https://example.com/failed4",
         ]
 
         results.print_summary()
@@ -426,7 +470,7 @@ class TestSearchResults(unittest.TestCase):
         self.assertIn("10/15 URLs", output)
         self.assertIn("67% success", output)
         self.assertIn("📦 2 out of stock", output)
-        self.assertIn("🌐 1 fetch errors", output)
+        self.assertIn("🌐 1 fetch error", output)  # Singular form
         self.assertIn("🔍 2 extraction errors", output)
         self.assertIn("**Out of Stock:**", output)
         self.assertIn("**Product A**", output)
