@@ -8,6 +8,7 @@ from utils.extractors import (
     parse_price_string,
     extract_price,
     _is_element_hidden,
+    _is_inside_delivery_container,
 )
 
 
@@ -236,6 +237,91 @@ class TestIsElementHidden(unittest.TestCase):
         self.assertFalse(_is_element_hidden(element))
 
 
+class TestIsInsideDeliveryContainer(unittest.TestCase):
+    """Test delivery container detection."""
+
+    def create_soup(self, html):
+        """Helper to create BeautifulSoup from HTML."""
+        return BeautifulSoup(html, "lxml")
+
+    def test_direct_delivery_class(self):
+        """Test element with delivery class on itself."""
+        soup = self.create_soup('<span class="delivery_not_free">50.00€</span>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_parent_has_delivery_class(self):
+        """Test element inside parent with delivery class."""
+        soup = self.create_soup(
+            '<div class="delivery_info"><span>50.00€</span></div>'
+        )
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_grandparent_has_delivery_class(self):
+        """Test element inside grandparent with delivery class."""
+        soup = self.create_soup(
+            '<div class="delivery_box"><div><span>50.00€</span></div></div>'
+        )
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_shipping_keyword(self):
+        """Test detection of shipping keyword."""
+        soup = self.create_soup('<div class="shipping-info"><span>5.99€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_ship_keyword(self):
+        """Test detection of ship keyword."""
+        soup = self.create_soup('<div class="ship-cost"><span>10.00€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_freight_keyword(self):
+        """Test detection of freight keyword."""
+        soup = self.create_soup('<div class="freight-price"><span>15.00€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_postage_keyword(self):
+        """Test detection of postage keyword."""
+        soup = self.create_soup('<div class="postage-fee"><span>3.50€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_delivery_in_id(self):
+        """Test detection of delivery in element ID."""
+        soup = self.create_soup('<div id="delivery_cost"><span>7.99€</span></div>')
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_not_in_delivery_container(self):
+        """Test element not in delivery container."""
+        soup = self.create_soup('<div class="product-price"><span>66.01€</span></div>')
+        element = soup.find("span")
+        self.assertFalse(_is_inside_delivery_container(element))
+
+    def test_nested_5_levels_deep(self):
+        """Test detection up to 5 levels deep."""
+        soup = self.create_soup(
+            '<div class="delivery"><div><div><div><div><span>50€</span></div></div></div></div></div>'
+        )
+        element = soup.find("span")
+        self.assertTrue(_is_inside_delivery_container(element))
+
+    def test_too_deep_not_detected(self):
+        """Test element more than 5 levels deep not detected."""
+        # 6 levels deep - should not be detected (element + 6 ancestors = 7 total checks needed)
+        soup = self.create_soup(
+            '<div class="delivery"><div><div><div><div><div><div><span>50€</span></div></div></div></div></div></div></div>'
+        )
+        element = soup.find("span")
+        # The element is 6 levels away from delivery div
+        # (we only check element + 5 ancestors = 6 checks)
+        self.assertFalse(_is_inside_delivery_container(element))
+
+
 class TestExtractPrice(unittest.TestCase):
     """Test generic price extraction."""
 
@@ -404,6 +490,36 @@ class TestExtractPrice(unittest.TestCase):
         price = extract_price(soup, "https://example.com")
         # Should prioritize price-product class
         self.assertEqual(price, 79.07)
+
+    def test_skips_delivery_price(self):
+        """Test extraction skips delivery/shipping prices."""
+        html = """
+        <div class="delivery_not_free">
+            <span class="price_block">50.00€</span>
+        </div>
+        <div id="good_single_prices">
+            <strong class="price">66.01€</strong>
+        </div>
+        """
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://www.blinkshop.com/product")
+        # Should extract product price (66.01), not delivery threshold (50.00)
+        self.assertEqual(price, 66.01)
+
+    def test_skips_shipping_cost(self):
+        """Test extraction skips shipping cost."""
+        html = """
+        <div class="shipping-info">
+            <span class="price">5.99€</span>
+        </div>
+        <div class="product-price">
+            <span class="price">29.99€</span>
+        </div>
+        """
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com")
+        # Should extract product price (29.99), not shipping (5.99)
+        self.assertEqual(price, 29.99)
 
 
 if __name__ == "__main__":
