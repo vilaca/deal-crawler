@@ -319,7 +319,7 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
         )
         soup = self.create_soup(html)
         element = soup.find("span")
-        # The element is 6 levels away from delivery div
+        # The element is 7 levels away from delivery div
         # (we only check element + 5 ancestors = 6 checks)
         self.assertFalse(_is_inside_delivery_container(element))
 
