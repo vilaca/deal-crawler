@@ -2,9 +2,9 @@
 
 import sys
 
-from src.data_loader import load_products
-from src.finder import find_cheapest_prices
-from src.http_client import HttpClient
+from utils.data_loader import load_products
+from utils.finder import find_cheapest_prices
+from utils.http_client import HttpClient
 
 
 def main():

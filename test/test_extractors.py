@@ -3,7 +3,7 @@
 import unittest
 from bs4 import BeautifulSoup
 
-from src.extractors import parse_price_string, extract_price, extract_price_notino
+from utils.extractors import parse_price_string, extract_price, extract_price_notino
 
 
 class TestParsePriceString(unittest.TestCase):

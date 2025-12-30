@@ -22,36 +22,36 @@ test:
 	python3 -m unittest discover -s test -p 'test_*.py' -v
 
 coverage:
-	pytest --cov=src --cov-report=html --cov-report=term
+	pytest --cov=utils --cov-report=html --cov-report=term
 	@echo "\nHTML coverage report generated in htmlcov/index.html"
 
 format:
 	@echo "Formatting code with black..."
-	black main.py src/*.py test/*.py
+	black main.py utils/*.py test/*.py
 
 format-check:
 	@echo "Checking code formatting with black..."
-	black --check main.py src/*.py test/*.py
+	black --check main.py utils/*.py test/*.py
 
 lint: format-check
 	@echo "Running flake8..."
-	flake8 main.py src/*.py test/*.py
+	flake8 main.py utils/*.py test/*.py
 
 typecheck:
 	@echo "Running mypy..."
-	mypy main.py src/*.py test/*.py --ignore-missing-imports
+	mypy main.py utils/*.py test/*.py --ignore-missing-imports
 
 security:
 	@echo "Running bandit (code security analysis)..."
-	@bandit -r main.py src test -ll || true
+	@bandit -r main.py utils test -ll || true
 	@echo "\nRunning pip-audit (dependency vulnerabilities)..."
 	@pip-audit || true
 
 quality:
 	@echo "Running vulture (dead code detection)..."
-	@vulture main.py src test --min-confidence 100 || true
+	@vulture main.py utils test --min-confidence 100 || true
 	@echo "\nRunning interrogate (docstring coverage)..."
-	@interrogate -v main.py src test
+	@interrogate -v main.py utils test
 
 check-all: format-check lint typecheck quality security test
 	@echo "\n✅ All checks completed!"

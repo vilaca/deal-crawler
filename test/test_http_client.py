@@ -4,8 +4,8 @@ import unittest
 from unittest.mock import patch, MagicMock, Mock
 import requests
 
-from src.http_client import HttpClient
-from src.config import config
+from utils.http_client import HttpClient
+from utils.config import config
 
 
 class TestHttpClient(unittest.TestCase):
@@ -58,7 +58,7 @@ class TestHttpClient(unittest.TestCase):
         # that close() was called by checking the client still exists
         self.assertIsNotNone(client)
 
-    @patch("src.http_client.requests.Session")
+    @patch("utils.http_client.requests.Session")
     def test_close_method(self, mock_session_class):
         """Test close method closes the session."""
         mock_session = MagicMock()
@@ -88,8 +88,8 @@ class TestHttpClient(unittest.TestCase):
         self.assertGreaterEqual(delay, config.default_delay_min)
         self.assertLessEqual(delay, config.default_delay_max)
 
-    @patch("src.http_client.time.sleep")
-    @patch("src.http_client.BeautifulSoup")
+    @patch("utils.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
     def test_fetch_page_success(self, mock_soup, mock_sleep):
         """Test successful page fetch."""
         # Mock the response
@@ -109,7 +109,7 @@ class TestHttpClient(unittest.TestCase):
         mock_sleep.assert_called_once()  # Should have one delay
         mock_soup.assert_called_once_with(b"<html><body>Test</body></html>", "lxml")
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_http_error_non_403(self, mock_sleep):
         """Test fetch_page handles non-403 HTTP errors."""
         # Mock 404 error
@@ -125,8 +125,8 @@ class TestHttpClient(unittest.TestCase):
         self.assertIsNone(result)
         self.client.session.get.assert_called_once()
 
-    @patch("src.http_client.time.sleep")
-    @patch("src.http_client.BeautifulSoup")
+    @patch("utils.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
     def test_fetch_page_403_retry_then_success(self, mock_soup, mock_sleep):
         """Test fetch_page retries on 403 then succeeds."""
         # Mock 403 error on first call, success on second
@@ -151,7 +151,7 @@ class TestHttpClient(unittest.TestCase):
         # Should have: initial delay + retry delay + second attempt delay
         self.assertEqual(mock_sleep.call_count, 3)
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_403_max_retries_exceeded(self, mock_sleep):
         """Test fetch_page gives up after max retries on 403."""
         # Mock 403 error on all attempts
@@ -168,7 +168,7 @@ class TestHttpClient(unittest.TestCase):
         # Should try: initial + 2 retries = 3 attempts
         self.assertEqual(self.client.session.get.call_count, 3)
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_generic_exception(self, mock_sleep):
         """Test fetch_page handles generic exceptions."""
         self.client.session.get = Mock(side_effect=Exception("Network error"))
@@ -178,7 +178,7 @@ class TestHttpClient(unittest.TestCase):
         self.assertIsNone(result)
         self.client.session.get.assert_called_once()
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_uses_default_retry_count(self, mock_sleep):
         """Test fetch_page uses default max_retries when not specified."""
         # Test with 403 errors which do retry
@@ -195,8 +195,8 @@ class TestHttpClient(unittest.TestCase):
         # Should try: initial + 3 retries = 4 attempts
         self.assertEqual(self.client.session.get.call_count, 4)
 
-    @patch("src.http_client.BeautifulSoup")
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_retries_on_connection_error(self, mock_sleep, mock_soup):
         """Test fetch_page retries on ConnectionError."""
         # Fail twice, then succeed
@@ -213,8 +213,8 @@ class TestHttpClient(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(self.client.session.get.call_count, 3)
 
-    @patch("src.http_client.BeautifulSoup")
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_retries_on_timeout(self, mock_sleep, mock_soup):
         """Test fetch_page retries on Timeout."""
         # Timeout once, then succeed
@@ -230,7 +230,7 @@ class TestHttpClient(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(self.client.session.get.call_count, 2)
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_retries_on_chunked_encoding_error(self, mock_sleep):
         """Test fetch_page retries on ChunkedEncodingError."""
         self.client.session.get = Mock(
@@ -243,7 +243,7 @@ class TestHttpClient(unittest.TestCase):
         # Should try: initial + 2 retries = 3 attempts
         self.assertEqual(self.client.session.get.call_count, 3)
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_exhausts_retries_on_connection_error(self, mock_sleep):
         """Test fetch_page gives up after max retries on connection errors."""
         self.client.session.get = Mock(
@@ -256,7 +256,7 @@ class TestHttpClient(unittest.TestCase):
         # Should try: initial + 2 retries = 3 attempts
         self.assertEqual(self.client.session.get.call_count, 3)
 
-    @patch("src.http_client.time.sleep")
+    @patch("utils.http_client.time.sleep")
     def test_fetch_page_does_not_retry_on_non_transient_errors(self, mock_sleep):
         """Test fetch_page does not retry on non-transient errors."""
         # ValueError is not a transient error

@@ -3,7 +3,7 @@
 import unittest
 from bs4 import BeautifulSoup
 
-from src.stock_checker import is_out_of_stock
+from utils.stock_checker import is_out_of_stock
 
 
 class TestIsOutOfStock(unittest.TestCase):

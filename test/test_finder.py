@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from bs4 import BeautifulSoup
 
-from src.finder import find_cheapest_prices
+from utils.finder import find_cheapest_prices
 
 
 class TestFindCheapestPrices(unittest.TestCase):
@@ -18,8 +18,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         """Helper to create a mock HttpClient."""
         return MagicMock()
 
-    @patch("src.finder.is_out_of_stock")
-    @patch("src.finder.extract_price")
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
     def test_finds_cheapest_among_multiple_urls(self, mock_extract, mock_stock):
         """Test finds cheapest price when multiple URLs have different prices."""
         products = {
@@ -47,8 +47,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(price, 30.00)
         self.assertEqual(url, "https://example.com/product2")
 
-    @patch("src.finder.is_out_of_stock")
-    @patch("src.finder.extract_price")
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
     def test_excludes_out_of_stock_products(self, mock_extract, mock_stock):
         """Test excludes out-of-stock products from comparison."""
         products = {
@@ -76,8 +76,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(price, 60.00)
         self.assertEqual(url, "https://example.com/product3")
 
-    @patch("src.finder.is_out_of_stock")
-    @patch("src.finder.extract_price")
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
     def test_returns_none_when_no_prices_found(self, mock_extract, mock_stock):
         """Test returns None when no prices can be extracted."""
         products = {
@@ -100,8 +100,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product C", results)
         self.assertIsNone(results["Product C"])
 
-    @patch("src.finder.is_out_of_stock")
-    @patch("src.finder.extract_price")
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
     def test_returns_none_when_all_out_of_stock(self, mock_extract, mock_stock):
         """Test returns None when all products are out of stock."""
         products = {
@@ -136,8 +136,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product E", results)
         self.assertIsNone(results["Product E"])
 
-    @patch("src.finder.is_out_of_stock")
-    @patch("src.finder.extract_price")
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
     def test_handles_multiple_products(self, mock_extract, mock_stock):
         """Test handles multiple products correctly."""
         products = {
