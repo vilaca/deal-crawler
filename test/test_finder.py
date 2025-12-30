@@ -1,10 +1,11 @@
 """Tests for price comparison logic."""
 
+import io
 import unittest
 from unittest.mock import patch, MagicMock
 from bs4 import BeautifulSoup
 
-from utils.finder import find_cheapest_prices
+from utils.finder import find_cheapest_prices, SearchResults
 
 
 class TestFindCheapestPrices(unittest.TestCase):
@@ -208,6 +209,228 @@ class TestFindCheapestPrices(unittest.TestCase):
 
         self.assertEqual(results.prices, {})
         self.assertEqual(results.total_products, 0)
+
+
+class TestSearchResults(unittest.TestCase):
+    """Test SearchResults formatting and display methods."""
+
+    def test_get_success_emoji_high_success(self):
+        """Test emoji for high success rate (≥80%)."""
+        results = SearchResults()
+        self.assertEqual(results._get_success_emoji(100.0), "✅")
+        self.assertEqual(results._get_success_emoji(80.0), "✅")
+        self.assertEqual(results._get_success_emoji(85.5), "✅")
+
+    def test_get_success_emoji_medium_success(self):
+        """Test emoji for medium success rate (50-79%)."""
+        results = SearchResults()
+        self.assertEqual(results._get_success_emoji(79.9), "⚠️")
+        self.assertEqual(results._get_success_emoji(50.0), "⚠️")
+        self.assertEqual(results._get_success_emoji(65.0), "⚠️")
+
+    def test_get_success_emoji_low_success(self):
+        """Test emoji for low success rate (<50%)."""
+        results = SearchResults()
+        self.assertEqual(results._get_success_emoji(49.9), "❌")
+        self.assertEqual(results._get_success_emoji(25.0), "❌")
+        self.assertEqual(results._get_success_emoji(0.0), "❌")
+
+    def test_format_success_line_no_urls(self):
+        """Test success line when no URLs were checked."""
+        results = SearchResults()
+        results.total_products = 5
+        results.total_urls_checked = 0
+
+        line = results._format_success_line()
+        self.assertEqual(line, "**5 products** · No URLs checked")
+
+    def test_format_success_line_with_urls(self):
+        """Test success line with URLs checked."""
+        results = SearchResults()
+        results.total_products = 3
+        results.total_urls_checked = 10
+        results.prices_found = 8
+
+        line = results._format_success_line()
+        self.assertIn("8/10 URLs", line)
+        self.assertIn("80% success", line)
+        self.assertIn("3 products", line)
+        self.assertIn("✅", line)
+
+    def test_format_issues_line_no_issues(self):
+        """Test issues line when there are no issues."""
+        results = SearchResults()
+        line = results._format_issues_line()
+        self.assertIsNone(line)
+
+    def test_format_issues_line_single_issue(self):
+        """Test issues line with single issue type."""
+        results = SearchResults()
+        results.out_of_stock = 3
+
+        line = results._format_issues_line()
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("📦 3 out of stock", line)
+        self.assertNotIn("fetch errors", line)
+        self.assertNotIn("extraction errors", line)
+
+    def test_format_issues_line_multiple_issues(self):
+        """Test issues line with multiple issue types."""
+        results = SearchResults()
+        results.out_of_stock = 2
+        results.fetch_errors = 1
+        results.extraction_errors = 3
+
+        line = results._format_issues_line()
+        assert line is not None  # Type narrowing for mypy
+        self.assertIn("📦 2 out of stock", line)
+        self.assertIn("🌐 1 fetch errors", line)
+        self.assertIn("🔍 3 extraction errors", line)
+        self.assertIn(" · ", line)  # Should have separators
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_empty(self, mock_stdout):
+        """Test printing out-of-stock items when none exist."""
+        results = SearchResults()
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertEqual(output, "")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_single_product(self, mock_stdout):
+        """Test printing out-of-stock items for single product."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": [
+                "https://www.example.com/product1",
+                "https://store.com/item"
+            ]
+        }
+
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Out of Stock:**", output)
+        self.assertIn("**Product A**", output)
+        self.assertIn("example.com", output)
+        self.assertIn("store.com", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_out_of_stock_items_multiple_products(self, mock_stdout):
+        """Test printing out-of-stock items for multiple products."""
+        results = SearchResults()
+        results.out_of_stock_items = {
+            "Product A": ["https://example.com/a"],
+            "Product B": ["https://store.com/b", "https://shop.com/b"]
+        }
+
+        results._print_out_of_stock_items()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Product A**", output)
+        self.assertIn("**Product B**", output)
+        self.assertIn("example.com", output)
+        self.assertIn("store.com", output)
+        self.assertIn("shop.com", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_empty(self, mock_stdout):
+        """Test printing failed URLs when none exist."""
+        results = SearchResults()
+        results._print_failed_urls()
+
+        output = mock_stdout.getvalue()
+        self.assertEqual(output, "")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_few(self, mock_stdout):
+        """Test printing failed URLs when 3 or fewer."""
+        results = SearchResults()
+        results.failed_urls = [
+            "https://example.com/1",
+            "https://example.com/2"
+        ]
+
+        results._print_failed_urls()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Failed URLs** (2):", output)
+        self.assertIn("https://example.com/1", output)
+        self.assertIn("https://example.com/2", output)
+        self.assertNotIn("more...", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_failed_urls_many(self, mock_stdout):
+        """Test printing failed URLs with truncation (>3)."""
+        results = SearchResults()
+        results.failed_urls = [
+            "https://example.com/1",
+            "https://example.com/2",
+            "https://example.com/3",
+            "https://example.com/4",
+            "https://example.com/5"
+        ]
+
+        results._print_failed_urls()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("**Failed URLs** (5):", output)
+        self.assertIn("https://example.com/1", output)
+        self.assertIn("https://example.com/2", output)
+        self.assertIn("https://example.com/3", output)
+        self.assertNotIn("https://example.com/4", output)
+        self.assertNotIn("https://example.com/5", output)
+        self.assertIn("2 more...", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_summary_minimal(self, mock_stdout):
+        """Test print_summary with minimal data."""
+        results = SearchResults()
+        results.total_products = 1
+        results.total_urls_checked = 1
+        results.prices_found = 1
+
+        results.print_summary()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("## 📊 Search Summary", output)
+        self.assertIn("1/1 URLs", output)
+        self.assertIn("100% success", output)
+        self.assertIn("1 products", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_summary_with_issues(self, mock_stdout):
+        """Test print_summary with various issues."""
+        results = SearchResults()
+        results.total_products = 5
+        results.total_urls_checked = 15
+        results.prices_found = 10
+        results.out_of_stock = 2
+        results.fetch_errors = 1
+        results.extraction_errors = 2
+        results.out_of_stock_items = {
+            "Product A": ["https://example.com/a"]
+        }
+        results.failed_urls = [
+            "https://example.com/failed1",
+            "https://example.com/failed2",
+            "https://example.com/failed3",
+            "https://example.com/failed4"
+        ]
+
+        results.print_summary()
+
+        output = mock_stdout.getvalue()
+        self.assertIn("## 📊 Search Summary", output)
+        self.assertIn("10/15 URLs", output)
+        self.assertIn("67% success", output)
+        self.assertIn("📦 2 out of stock", output)
+        self.assertIn("🌐 1 fetch errors", output)
+        self.assertIn("🔍 2 extraction errors", output)
+        self.assertIn("**Out of Stock:**", output)
+        self.assertIn("**Product A**", output)
+        self.assertIn("**Failed URLs** (4):", output)
 
 
 if __name__ == "__main__":
