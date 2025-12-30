@@ -3,9 +3,9 @@
 import sys
 from typing import Dict, List, Optional, Tuple
 
-from http_client import HttpClient
-from stock_checker import is_out_of_stock
-from extractors import extract_price
+from src.http_client import HttpClient
+from src.stock_checker import is_out_of_stock
+from src.extractors import extract_price
 
 
 def find_cheapest_prices(
