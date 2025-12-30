@@ -1,11 +1,13 @@
 """HTTP client for fetching web pages."""
 
-import time
 import random
-import requests
-from bs4 import BeautifulSoup
+import sys
+import time
 from typing import Optional
 from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
 
 from config import config
 
@@ -165,11 +167,12 @@ class HttpClient:
                     )
                     print(
                         f"    Got 403, waiting {wait_time:.1f}s "
-                        f"before retry {attempt + 1}/{retry_count}..."
+                        f"before retry {attempt + 1}/{retry_count}...",
+                        file=sys.stderr,
                     )
                     time.sleep(wait_time)
                     continue
-                print(f"Error fetching {url}: {e}")
+                print(f"Error fetching {url}: {e}", file=sys.stderr)
                 return None
 
             except RETRYABLE_EXCEPTIONS as e:
@@ -181,16 +184,17 @@ class HttpClient:
                     error_type = type(e).__name__
                     print(
                         f"    {error_type}, waiting {wait_time:.1f}s "
-                        f"before retry {attempt + 1}/{retry_count}..."
+                        f"before retry {attempt + 1}/{retry_count}...",
+                        file=sys.stderr,
                     )
                     time.sleep(wait_time)
                     continue
-                print(f"Error fetching {url}: {e}")
+                print(f"Error fetching {url}: {e}", file=sys.stderr)
                 return None
 
             except Exception as e:
                 # Non-retryable errors
-                print(f"Error fetching {url}: {e}")
+                print(f"Error fetching {url}: {e}", file=sys.stderr)
                 return None
 
         return None  # Unreachable, but required for mypy type checking
