@@ -132,7 +132,8 @@ def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]
 
             # Skip elements with display:none or visibility:hidden in style
             style = element.get("style", "")
-            if "display:none" in style.replace(" ", "") or "visibility:hidden" in style.replace(" ", ""):
+            style_str = str(style) if style else ""
+            if "display:none" in style_str.replace(" ", "") or "visibility:hidden" in style_str.replace(" ", ""):
                 continue
 
             # Check content attribute first
@@ -174,7 +175,8 @@ def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
 
         # Skip elements with display:none or visibility:hidden in style
         style = element.get("style", "")
-        if "display:none" in style.replace(" ", "") or "visibility:hidden" in style.replace(" ", ""):
+        style_str = str(style) if style else ""
+        if "display:none" in style_str.replace(" ", "") or "visibility:hidden" in style_str.replace(" ", ""):
             continue
 
         # Check content attribute first
