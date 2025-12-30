@@ -136,8 +136,9 @@ jobs:
             const hasPipAuditWarnings = pipaudit.includes('Found') && pipaudit.includes('vulnerability');
 
             // Check for complexity issues (grade C or worse)
-            const hasComplexityWarnings = complexity.includes(' C ') || complexity.includes(' D ') ||
-                                          complexity.includes(' E ') || complexity.includes(' F ');
+            // Match radon's output format: " - C" or " - D" etc. (after function names or file names)
+            const complexityWarningPattern = / - [C-F](\s|\(|$)/;
+            const hasComplexityWarnings = complexityWarningPattern.test(complexity);
 
             // Only post if there are warnings
             if (!hasBlackWarnings && !hasPylintWarnings && !hasBanditWarnings && !hasVultureWarnings && !hasPipAuditWarnings && !hasComplexityWarnings) {
