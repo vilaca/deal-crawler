@@ -1,6 +1,7 @@
 """Tests for site-specific handlers."""
 
 import unittest
+from unittest.mock import patch
 from bs4 import BeautifulSoup
 
 from utils.site_handlers import (
@@ -102,6 +103,27 @@ class TestNotinoHandler(unittest.TestCase):
         soup = BeautifulSoup(html, "lxml")
         price = self.handler.extract_price(soup)
         self.assertIsNone(price)  # Too expensive
+
+    def test_extract_price_script_with_no_string(self):
+        """Test handles script tags with no string content."""
+        html = '<script src="external.js"></script><script>{"price": 29.99}</script>'
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        # Should skip the first script (no string) and find price in second
+        self.assertEqual(price, 29.99)
+
+    @patch("utils.site_handlers.re.findall")
+    def test_extract_price_handles_value_error(self, mock_findall):
+        """Test handles ValueError during float conversion."""
+        html = '<script>{"price": 29.99}</script>'
+        soup = BeautifulSoup(html, "lxml")
+
+        # Mock re.findall to return something that causes ValueError
+        # when converted to float (though this is contrived)
+        mock_findall.return_value = ["not_a_number"]
+
+        price = self.handler.extract_price(soup)
+        self.assertIsNone(price)
 
 
 class TestDefaultSiteHandler(unittest.TestCase):

@@ -1,6 +1,7 @@
 """Tests for price extraction logic."""
 
 import unittest
+from unittest.mock import patch
 from bs4 import BeautifulSoup
 
 from utils.extractors import (
@@ -67,6 +68,14 @@ class TestParsePriceString(unittest.TestCase):
         self.assertEqual(result, 52.10)
         # Not 52.1087 which would happen if spaces removed before extraction
         self.assertNotEqual(result, 52.1087)
+
+    @patch("utils.extractors.float")
+    def test_parse_price_string_with_value_error(self, mock_float):
+        """Test parse_price_string handles ValueError from float conversion."""
+        # Force float() to raise ValueError
+        mock_float.side_effect = ValueError("Invalid conversion")
+        result = parse_price_string("29.99")
+        self.assertIsNone(result)
 
 
 class TestIsElementHidden(unittest.TestCase):

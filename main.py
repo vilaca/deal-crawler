@@ -19,7 +19,7 @@ def main():
 
     # Find cheapest prices using HttpClient context manager
     with HttpClient() as http_client:
-        results = find_cheapest_prices(products, http_client)
+        search_results = find_cheapest_prices(products, http_client)
 
     # Display results as markdown
     print("\n# 🛒 Cheapest Prices\n")
@@ -28,7 +28,7 @@ def main():
     print("| Product | Price | Link |")
     print("|---------|-------|------|")
 
-    for product_name, result in results.items():
+    for product_name, result in search_results.prices.items():
         if result:
             price, url = result
             # Shorten URL for display (show domain)
@@ -38,6 +38,9 @@ def main():
             print(f"| **{product_name}** | _No prices found_ | - |")
 
     print("\n---\n")
+
+    # Print summary after results
+    search_results.print_summary()
 
 
 if __name__ == "__main__":
