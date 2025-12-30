@@ -218,7 +218,7 @@ class TestExtractPrice(unittest.TestCase):
 
     def test_text_pattern_with_price_range_validation(self):
         """Test text pattern extraction validates price range."""
-        html = '<div>Price: €15000.00</div>'  # Outside MAX_PRICE
+        html = "<div>Price: €15000.00</div>"  # Outside MAX_PRICE
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         # Should not return prices outside the valid range
@@ -226,10 +226,10 @@ class TestExtractPrice(unittest.TestCase):
 
     def test_skips_hidden_display_none_class(self):
         """Test skips elements with display-none class."""
-        html = '''
+        html = """
         <div class="price-product display-none">€ 52,10</div>
         <div class="price-product">€ 60,47</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         # Should extract visible price, not hidden one
@@ -237,51 +237,51 @@ class TestExtractPrice(unittest.TestCase):
 
     def test_skips_hidden_class(self):
         """Test skips elements with 'hidden' class."""
-        html = '''
+        html = """
         <div class="price hidden">€ 100,00</div>
         <div class="price">€ 50,00</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         self.assertEqual(price, 50.0)
 
     def test_skips_d_none_class(self):
         """Test skips elements with Bootstrap d-none class."""
-        html = '''
+        html = """
         <div class="price d-none">€ 100,00</div>
         <div class="price">€ 75,00</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         self.assertEqual(price, 75.0)
 
     def test_skips_inline_style_display_none(self):
         """Test skips elements with inline style display:none."""
-        html = '''
+        html = """
         <div class="price" style="display:none">€ 100,00</div>
         <div class="price">€ 45,00</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         self.assertEqual(price, 45.0)
 
     def test_skips_inline_style_visibility_hidden(self):
         """Test skips elements with inline style visibility:hidden."""
-        html = '''
+        html = """
         <div class="price" style="visibility:hidden">€ 100,00</div>
         <div class="price">€ 35,00</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         self.assertEqual(price, 35.0)
 
     def test_multiple_prices_picks_visible(self):
         """Test extracts visible price when multiple prices present (sweetcare.pt case)."""
-        html = '''
+        html = """
         <div class="price-product display-none">€ 52,09€ 57,88-10%</div>
         <div class="price-product">€ 60,47€ 67,19-10%</div>
         <div class="price-product display-none">€ 79,07€ 87,86-10%</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         # Should get the visible price (60.47), not hidden ones
@@ -289,11 +289,11 @@ class TestExtractPrice(unittest.TestCase):
 
     def test_price_product_class_priority(self):
         """Test price-product class has extraction priority."""
-        html = '''
+        html = """
         <div class="some-price">€ 100,00</div>
         <div class="price-product">€ 79,07</div>
         <div class="generic-price">€ 50,00</div>
-        '''
+        """
         soup = self.create_soup(html)
         price = extract_price(soup, "https://example.com")
         # Should prioritize price-product class

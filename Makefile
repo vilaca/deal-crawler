@@ -1,15 +1,17 @@
-.PHONY: help install test coverage lint typecheck security quality check-all clean
+.PHONY: help install test coverage format format-check lint typecheck security quality check-all clean
 
 help:
-	@echo "Available targets:"
+	@echo "Available targets (activate venv first: source venv/bin/activate):"
 	@echo "  make install      - Install dependencies"
 	@echo "  make test         - Run all tests"
 	@echo "  make coverage     - Run tests with coverage report"
-	@echo "  make lint         - Run code style checks (flake8)"
+	@echo "  make format       - Format code with black"
+	@echo "  make format-check - Check if code is black-formatted (no changes)"
+	@echo "  make lint         - Run code style checks (flake8 + black)"
 	@echo "  make typecheck    - Run type checking (mypy)"
 	@echo "  make security     - Run security checks (bandit, pip-audit)"
 	@echo "  make quality      - Run code quality checks (vulture, interrogate)"
-	@echo "  make check-all    - Run all checks (lint, typecheck, security, quality, test)"
+	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, test)"
 	@echo "  make clean        - Clean up temporary files"
 
 install:
@@ -23,7 +25,15 @@ coverage:
 	pytest --cov=. --cov-report=html --cov-report=term
 	@echo "\nHTML coverage report generated in htmlcov/index.html"
 
-lint:
+format:
+	@echo "Formatting code with black..."
+	black *.py
+
+format-check:
+	@echo "Checking code formatting with black..."
+	black --check *.py
+
+lint: format-check
 	@echo "Running flake8..."
 	flake8 *.py
 
@@ -43,7 +53,7 @@ quality:
 	@echo "\nRunning interrogate (docstring coverage)..."
 	@interrogate -v *.py
 
-check-all: lint typecheck quality security test
+check-all: format-check lint typecheck quality security test
 	@echo "\n✅ All checks completed!"
 
 clean:
