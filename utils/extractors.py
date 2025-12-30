@@ -16,6 +16,15 @@ PRIORITY_PRICE_CLASS_PATTERN = re.compile(
 
 GENERIC_PRICE_CLASS_PATTERN = re.compile(r"price", re.IGNORECASE)
 
+# Keywords that indicate delivery/shipping containers
+DELIVERY_KEYWORDS = [
+    "delivery",
+    "shipping",
+    "ship",
+    "freight",
+    "postage",
+]
+
 
 def parse_price_string(price_str: Optional[str]) -> Optional[float]:
     """Parse a price string and return float value.
@@ -111,17 +120,9 @@ def _is_inside_delivery_container(element: Tag) -> bool:
         if elem_id:
             elem_id = str(elem_id).lower()
 
-        # Keywords that indicate delivery/shipping containers
-        delivery_keywords = [
-            "delivery",
-            "shipping",
-            "ship",
-            "freight",
-            "postage",
-        ]
-
+        # Check if any delivery keyword is present
         if any(
-            keyword in classes or keyword in elem_id for keyword in delivery_keywords
+            keyword in classes or keyword in elem_id for keyword in DELIVERY_KEYWORDS
         ):
             return True
 
