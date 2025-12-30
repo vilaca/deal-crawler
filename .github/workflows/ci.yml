@@ -57,9 +57,9 @@ jobs:
         run: |
           interrogate -v *.py --fail-under 100
 
-      - name: Check dependency vulnerabilities
+      - name: Check dependency vulnerabilities ⚠️
         run: |
-          pip-audit
+          pip-audit --desc
         continue-on-error: true
 
   quality-summary:
