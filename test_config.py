@@ -48,10 +48,10 @@ class TestConfig(unittest.TestCase):
     def test_environment_variable_overrides(self):
         """Test configuration can be overridden with environment variables."""
         # Set environment variables
-        os.environ["FISHER_MIN_PRICE"] = "5.0"
-        os.environ["FISHER_MAX_PRICE"] = "500.0"
-        os.environ["FISHER_REQUEST_TIMEOUT"] = "30"
-        os.environ["FISHER_MAX_RETRIES"] = "5"
+        os.environ["DEAL_CRAWLER_MIN_PRICE"] = "5.0"
+        os.environ["DEAL_CRAWLER_MAX_PRICE"] = "500.0"
+        os.environ["DEAL_CRAWLER_REQUEST_TIMEOUT"] = "30"
+        os.environ["DEAL_CRAWLER_MAX_RETRIES"] = "5"
 
         # Create new config instance
         test_config = Config()
@@ -63,10 +63,10 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(test_config.max_retries, 5)
 
         # Clean up environment variables
-        del os.environ["FISHER_MIN_PRICE"]
-        del os.environ["FISHER_MAX_PRICE"]
-        del os.environ["FISHER_REQUEST_TIMEOUT"]
-        del os.environ["FISHER_MAX_RETRIES"]
+        del os.environ["DEAL_CRAWLER_MIN_PRICE"]
+        del os.environ["DEAL_CRAWLER_MAX_PRICE"]
+        del os.environ["DEAL_CRAWLER_REQUEST_TIMEOUT"]
+        del os.environ["DEAL_CRAWLER_MAX_RETRIES"]
 
 
 if __name__ == "__main__":
