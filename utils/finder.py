@@ -31,23 +31,29 @@ class SearchResults:
     )  # product -> URLs
     failed_urls: List[str] = field(default_factory=list)
 
-    def print_summary(self) -> None:
-        """Print a concise markdown summary of the search results."""
-        print("\n## 📊 Search Summary\n")
+    def _get_success_emoji(self, success_rate: float) -> str:
+        """Get emoji based on success rate."""
+        if success_rate >= 80:
+            return "✅"
+        if success_rate >= 50:
+            return "⚠️"
+        return "❌"
 
-        # Success rate with emoji
-        if self.total_urls_checked > 0:
-            success_rate = (self.prices_found / self.total_urls_checked) * 100
-            emoji = "✅" if success_rate >= 80 else "⚠️" if success_rate >= 50 else "❌"
-            print(
-                f"**{emoji} {self.prices_found}/{self.total_urls_checked} URLs** "
-                f"({success_rate:.0f}% success) · "
-                f"**{self.total_products} products**"
-            )
-        else:
-            print(f"**{self.total_products} products** · No URLs checked")
+    def _format_success_line(self) -> str:
+        """Format the success rate summary line."""
+        if self.total_urls_checked == 0:
+            return f"**{self.total_products} products** · No URLs checked"
 
-        # Issues section (only if there are any)
+        success_rate = (self.prices_found / self.total_urls_checked) * 100
+        emoji = self._get_success_emoji(success_rate)
+        return (
+            f"**{emoji} {self.prices_found}/{self.total_urls_checked} URLs** "
+            f"({success_rate:.0f}% success) · "
+            f"**{self.total_products} products**"
+        )
+
+    def _format_issues_line(self) -> Optional[str]:
+        """Format the issues summary line."""
         issues = []
         if self.out_of_stock > 0:
             issues.append(f"📦 {self.out_of_stock} out of stock")
@@ -56,26 +62,40 @@ class SearchResults:
         if self.extraction_errors > 0:
             issues.append(f"🔍 {self.extraction_errors} extraction errors")
 
-        if issues:
-            print(f"\n_{' · '.join(issues)}_")
+        return f"_{' · '.join(issues)}_" if issues else None
 
-        # Show out of stock items grouped by product
-        if self.out_of_stock_items:
-            print("\n**Out of Stock:**")
-            for product, urls in self.out_of_stock_items.items():
-                # Get domains from URLs
-                domains = [urlparse(url).netloc.replace("www.", "") for url in urls]
-                domains_str = ", ".join(domains)
-                print(f"- **{product}**: {domains_str}")
+    def _print_out_of_stock_items(self) -> None:
+        """Print out of stock items grouped by product."""
+        if not self.out_of_stock_items:
+            return
 
-        # Show failed URLs if any (compact list)
-        if self.failed_urls:
-            print(f"\n**Failed URLs** ({len(self.failed_urls)}):")
-            for url in self.failed_urls[:3]:  # Show first 3 only
-                print(f"- `{url}`")
-            if len(self.failed_urls) > 3:
-                print(f"- _{len(self.failed_urls) - 3} more..._")
+        print("\n**Out of Stock:**")
+        for product, urls in self.out_of_stock_items.items():
+            domains = [urlparse(url).netloc.replace("www.", "") for url in urls]
+            print(f"- **{product}**: {', '.join(domains)}")
 
+    def _print_failed_urls(self) -> None:
+        """Print failed URLs (showing first 3)."""
+        if not self.failed_urls:
+            return
+
+        print(f"\n**Failed URLs** ({len(self.failed_urls)}):")
+        for url in self.failed_urls[:3]:
+            print(f"- `{url}`")
+        if len(self.failed_urls) > 3:
+            print(f"- _{len(self.failed_urls) - 3} more..._")
+
+    def print_summary(self) -> None:
+        """Print a concise markdown summary of the search results."""
+        print("\n## 📊 Search Summary\n")
+        print(self._format_success_line())
+
+        issues_line = self._format_issues_line()
+        if issues_line:
+            print(f"\n{issues_line}")
+
+        self._print_out_of_stock_items()
+        self._print_failed_urls()
         print()  # Empty line at end
 
 
