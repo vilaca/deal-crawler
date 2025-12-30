@@ -38,6 +38,44 @@ def parse_price_string(price_str: str) -> Optional[float]:
     return None
 
 
+def _is_element_hidden(
+    element: Tag, additional_keywords: Optional[List[str]] = None
+) -> bool:
+    """Check if element is hidden via classes or inline styles.
+
+    Args:
+        element: BeautifulSoup Tag element to check
+        additional_keywords: Additional class keywords to check (beyond default hidden ones)
+
+    Returns:
+        True if element is hidden, False otherwise
+    """
+    # Check for hidden classes
+    class_attr = element.get("class", [])
+    if isinstance(class_attr, list):
+        classes = " ".join(class_attr).lower()
+    else:
+        classes = str(class_attr).lower()
+
+    # Default hidden keywords
+    hidden_keywords = ["display-none", "hidden", "d-none"]
+    if additional_keywords:
+        hidden_keywords.extend(additional_keywords)
+
+    if any(keyword in classes for keyword in hidden_keywords):
+        return True
+
+    # Check inline styles
+    style = element.get("style", "")
+    style_str = str(style) if style else ""
+    if "display:none" in style_str.replace(
+        " ", ""
+    ) or "visibility:hidden" in style_str.replace(" ", ""):
+        return True
+
+    return False
+
+
 def extract_price_notino(soup: BeautifulSoup) -> Optional[float]:
     """Extract price from notino.pt JSON data."""
     if not soup:
@@ -121,23 +159,7 @@ def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]
                 continue
 
             # Skip hidden elements (e.g., alternative variants)
-            class_attr = element.get("class", [])
-            if isinstance(class_attr, list):
-                classes = " ".join(class_attr).lower()
-            else:
-                classes = str(class_attr).lower()
-
-            if any(
-                keyword in classes for keyword in ["display-none", "hidden", "d-none"]
-            ):
-                continue
-
-            # Skip elements with display:none or visibility:hidden in style
-            style = element.get("style", "")
-            style_str = str(style) if style else ""
-            if "display:none" in style_str.replace(
-                " ", ""
-            ) or "visibility:hidden" in style_str.replace(" ", ""):
+            if _is_element_hidden(element):
                 continue
 
             # Check content attribute first
@@ -164,34 +186,9 @@ def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
     for element in generic_price_elements:
         if not isinstance(element, Tag):
             continue
-        # Skip elements with classes indicating old/original prices
-        class_attr = element.get("class", [])
-        if isinstance(class_attr, list):
-            classes = " ".join(class_attr).lower()
-        else:
-            classes = str(class_attr).lower()
 
-        if any(
-            keyword in classes
-            for keyword in [
-                "old",
-                "original",
-                "was",
-                "before",
-                "regular",
-                "display-none",
-                "hidden",
-                "d-none",
-            ]
-        ):
-            continue
-
-        # Skip elements with display:none or visibility:hidden in style
-        style = element.get("style", "")
-        style_str = str(style) if style else ""
-        if "display:none" in style_str.replace(
-            " ", ""
-        ) or "visibility:hidden" in style_str.replace(" ", ""):
+        # Skip elements with classes indicating old/original prices or hidden elements
+        if _is_element_hidden(element, ["old", "original", "was", "before", "regular"]):
             continue
 
         # Check content attribute first

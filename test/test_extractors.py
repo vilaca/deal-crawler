@@ -3,7 +3,12 @@
 import unittest
 from bs4 import BeautifulSoup
 
-from utils.extractors import parse_price_string, extract_price, extract_price_notino
+from utils.extractors import (
+    parse_price_string,
+    extract_price,
+    extract_price_notino,
+    _is_element_hidden,
+)
 
 
 class TestParsePriceString(unittest.TestCase):
@@ -63,6 +68,164 @@ class TestParsePriceString(unittest.TestCase):
         self.assertEqual(result, 52.10)
         # Not 52.1087 which would happen if spaces removed before extraction
         self.assertNotEqual(result, 52.1087)
+
+
+class TestIsElementHidden(unittest.TestCase):
+    """Test _is_element_hidden helper function."""
+
+    def create_soup(self, html):
+        """Helper to create BeautifulSoup from HTML."""
+        return BeautifulSoup(html, "lxml")
+
+    def test_hidden_class_as_list(self):
+        """Test element with 'hidden' class (list format)."""
+        html = '<div class="price hidden">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_hidden_class_as_string(self):
+        """Test element with 'hidden' class (string format)."""
+        html = '<div class="hidden">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_display_none_class(self):
+        """Test element with 'display-none' class."""
+        html = '<div class="display-none">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_d_none_class(self):
+        """Test element with Bootstrap 'd-none' class."""
+        html = '<div class="d-none">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_multiple_classes_with_hidden(self):
+        """Test element with multiple classes including hidden."""
+        html = '<div class="price product hidden sale">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_inline_style_display_none(self):
+        """Test element with inline style display:none."""
+        html = '<div style="display:none">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_inline_style_display_none_with_spaces(self):
+        """Test element with inline style display: none (with spaces)."""
+        html = '<div style="display: none">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_inline_style_visibility_hidden(self):
+        """Test element with inline style visibility:hidden."""
+        html = '<div style="visibility:hidden">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_inline_style_visibility_hidden_with_spaces(self):
+        """Test element with inline style visibility: hidden (with spaces)."""
+        html = '<div style="visibility: hidden">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_visible_element_no_classes(self):
+        """Test visible element with no classes."""
+        html = "<div>Test</div>"
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+
+    def test_visible_element_with_normal_classes(self):
+        """Test visible element with normal classes."""
+        html = '<div class="price product sale">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+
+    def test_visible_element_with_inline_style(self):
+        """Test visible element with inline style (not hidden)."""
+        html = '<div style="color: red; font-size: 14px">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+
+    def test_additional_keywords_old(self):
+        """Test additional_keywords parameter with 'old' keyword."""
+        html = '<div class="price-old">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        # Without additional keywords, should be visible
+        self.assertFalse(_is_element_hidden(element))
+        # With additional keywords, should be hidden
+        self.assertTrue(_is_element_hidden(element, ["old"]))
+
+    def test_additional_keywords_original(self):
+        """Test additional_keywords parameter with 'original' keyword."""
+        html = '<div class="price original-price">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+        self.assertTrue(_is_element_hidden(element, ["original"]))
+
+    def test_additional_keywords_multiple(self):
+        """Test additional_keywords with multiple keywords."""
+        html = '<div class="price was-price">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+        self.assertTrue(
+            _is_element_hidden(element, ["old", "original", "was", "before"])
+        )
+
+    def test_no_class_attribute(self):
+        """Test element with no class attribute."""
+        html = "<div>Test</div>"
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+
+    def test_empty_class_list(self):
+        """Test element with empty class list."""
+        html = '<div class="">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+
+    def test_no_style_attribute(self):
+        """Test element with no style attribute."""
+        html = '<div class="price">Test</div>'
+        soup = self.create_soup(html)
+        element = soup.find("div")
+        self.assertFalse(_is_element_hidden(element))
+
+    def test_class_as_string_hidden(self):
+        """Test element with class as string (not list) - hidden case."""
+        # Create a tag and manually set class as string (unusual but possible)
+        soup = self.create_soup("<div>Test</div>")
+        element = soup.find("div")
+        # Manually override the class attribute to be a string instead of list
+        element.attrs["class"] = "hidden"
+        self.assertTrue(_is_element_hidden(element))
+
+    def test_class_as_string_visible(self):
+        """Test element with class as string (not list) - visible case."""
+        soup = self.create_soup("<div>Test</div>")
+        element = soup.find("div")
+        # Manually set class as string
+        element.attrs["class"] = "price"
+        self.assertFalse(_is_element_hidden(element))
 
 
 class TestExtractPriceNotino(unittest.TestCase):
