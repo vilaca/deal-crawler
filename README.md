@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
- Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
+Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
 
 ## Quick Start
 
