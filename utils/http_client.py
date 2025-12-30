@@ -62,8 +62,7 @@ class HttpClient:
         """
         if "notino.pt" in url:
             return random.uniform(config.notino_delay_min, config.notino_delay_max)
-        else:
-            return random.uniform(config.default_delay_min, config.default_delay_max)
+        return random.uniform(config.default_delay_min, config.default_delay_max)
 
     def get_headers_for_site(self, url: str) -> dict:
         """Get appropriate headers for the given site.

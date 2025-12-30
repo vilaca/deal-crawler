@@ -13,6 +13,7 @@ disable=
     too-many-instance-attributes,
     too-many-arguments,
     too-many-locals,
+    too-many-public-methods,
 
     # Docstrings - already checked by interrogate
     missing-module-docstring,
@@ -28,7 +29,11 @@ disable=
 
     # Import order - not critical
     wrong-import-order,
-    wrong-import-position
+    wrong-import-position,
+
+    # Test-specific patterns
+    unused-argument,
+    protected-access
 
 [FORMAT]
 # Black compatibility
