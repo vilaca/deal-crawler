@@ -24,11 +24,17 @@ cd deal-crawler
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+# Install production dependencies
 pip install -r requirements.txt
 
 # Run the scraper (URLs to check are configured in data.yml)
 python main.py
+```
+
+For development (includes testing and linting tools):
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
 ```
 
 ## Usage
@@ -98,6 +104,15 @@ All settings can be customized using environment variables with the `DEAL_CRAWLE
 | `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
 | `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
 
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Install development dependencies (includes production deps + testing/linting tools)
+pip install -r requirements-dev.txt
+```
 
 ## Contributing
 
