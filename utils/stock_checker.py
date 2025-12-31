@@ -19,7 +19,7 @@ OUT_OF_STOCK_PATTERNS = [
 ]
 
 OUT_OF_STOCK_CLASS_PATTERN = re.compile(
-    r"out.?of.?stock|sold.?out|unavailable", re.IGNORECASE
+    r"out.?of.?stock|sold.?out|unavailable|indispon[ií]vel", re.IGNORECASE
 )
 
 IN_STOCK_CLASS_PATTERN = re.compile(
@@ -39,13 +39,14 @@ def _check_for_in_stock_indicators(soup: BeautifulSoup) -> Optional[bool]:
     # Ignore empty icons or elements without text
     in_stock_elements = soup.find_all(attrs={"class": IN_STOCK_CLASS_PATTERN})
     for element in in_stock_elements:
+        # Skip pure icon elements (i, svg, img tags typically have no meaningful text)
+        if element.name in ["i", "svg", "img"]:
+            continue
+
         text = element.get_text(strip=True)
         # Only consider elements with actual text content (not just icons)
-        # and exclude "icon" or "svg" elements which are likely just visual indicators
         if text and len(text) > 2:  # At least 3 characters of actual text
-            # Additional check: element name should not be just an icon
-            if "icon" not in " ".join(element.get("class", [])).lower():
-                return False
+            return False
 
     # Check JSON-LD structured data for InStock availability
     scripts = soup.find_all("script", type="application/ld+json")

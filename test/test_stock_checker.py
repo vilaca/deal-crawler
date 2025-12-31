@@ -134,6 +134,35 @@ class TestIsOutOfStock(unittest.TestCase):
         # Should be out of stock despite in-stock-icon elements
         self.assertTrue(is_out_of_stock(soup))
 
+    def test_accepts_text_element_with_icon_in_class(self):
+        """Test that elements with 'icon' in class but meaningful text are accepted.
+
+        An element like <span class="in_stock product-icon">Available Now</span>
+        should be detected as in-stock because it has meaningful text content,
+        even though "icon" appears in the class name.
+        """
+        html = '<span class="in_stock product-icon">Available Now</span>'
+        soup = self.create_soup(html)
+        # Should be in stock (has meaningful text despite "icon" in class)
+        self.assertFalse(is_out_of_stock(soup))
+
+    def test_ignores_icon_tag_elements(self):
+        """Test that pure icon tags (<i>, <svg>, <img>) are ignored.
+
+        Even if an <i> tag has an in-stock class, it should be ignored
+        as it's typically just a visual icon, not a text indicator.
+        """
+        html = """
+        <div>
+            <i class="in-stock"></i>
+            <svg class="available-icon"></svg>
+            <div class="out-of-stock">Out of stock</div>
+        </div>
+        """
+        soup = self.create_soup(html)
+        # Should be out of stock (icon tags ignored)
+        self.assertTrue(is_out_of_stock(soup))
+
     def test_ignores_backinstock_button(self):
         """Test that 'notify when back in stock' button is not treated as in-stock."""
         html = """
@@ -178,6 +207,28 @@ class TestIsOutOfStock(unittest.TestCase):
         html = '<div class="product-indisponível">Não disponível</div>'
         soup = self.create_soup(html)
         # Should be out of stock (indisponível != disponível)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_indisponivel_class_without_text(self):
+        """Test that 'indisponivel' class is detected even without text content.
+
+        This verifies that OUT_OF_STOCK_CLASS_PATTERN includes the Portuguese
+        pattern, not just relying on text-based detection.
+        """
+        html = '<span class="indisponivel"></span>'
+        soup = self.create_soup(html)
+        # Should be out of stock based on class alone
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_indisponivel_with_accent_class_without_text(self):
+        """Test that 'indisponível' class is detected even without text content.
+
+        This verifies that OUT_OF_STOCK_CLASS_PATTERN includes the Portuguese
+        pattern with accent, not just relying on text-based detection.
+        """
+        html = '<div class="produto-indisponível"></div>'
+        soup = self.create_soup(html)
+        # Should be out of stock based on class alone
         self.assertTrue(is_out_of_stock(soup))
 
 
