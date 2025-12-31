@@ -23,7 +23,7 @@ OUT_OF_STOCK_CLASS_PATTERN = re.compile(
 )
 
 IN_STOCK_CLASS_PATTERN = re.compile(
-    r"(?<!back)in.?stock|em.?stock|disponível|disponivel|available", re.IGNORECASE
+    r"(?<!back)in.?stock|em.?stock|disponível|disponivel|\bavailable\b", re.IGNORECASE
 )
 
 
