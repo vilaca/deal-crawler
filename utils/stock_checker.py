@@ -23,7 +23,8 @@ OUT_OF_STOCK_CLASS_PATTERN = re.compile(
 )
 
 IN_STOCK_CLASS_PATTERN = re.compile(
-    r"(?<!back)in.?stock|em.?stock|disponível|disponivel|\bavailable\b", re.IGNORECASE
+    r"(?<!back)in.?stock|em.?stock|(?<!in)disponível|(?<!in)disponivel|\bavailable\b",
+    re.IGNORECASE,
 )
 
 
@@ -43,7 +44,7 @@ def _check_for_in_stock_indicators(soup: BeautifulSoup) -> Optional[bool]:
         # and exclude "icon" or "svg" elements which are likely just visual indicators
         if text and len(text) > 2:  # At least 3 characters of actual text
             # Additional check: element name should not be just an icon
-            if 'icon' not in ' '.join(element.get('class', [])).lower():
+            if "icon" not in " ".join(element.get("class", [])).lower():
                 return False
 
     # Check JSON-LD structured data for InStock availability

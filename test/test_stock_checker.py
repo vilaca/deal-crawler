@@ -73,11 +73,11 @@ class TestIsOutOfStock(unittest.TestCase):
 
     def test_json_ld_in_stock(self):
         """Test JSON-LD InStock availability detection."""
-        html = '''
+        html = """
         <script type="application/ld+json">
         {"@type":"Product","availability":"https://schema.org/InStock","price":"12.04"}
         </script>
-        '''
+        """
         soup = self.create_soup(html)
         self.assertFalse(is_out_of_stock(soup))
 
@@ -90,24 +90,24 @@ class TestIsOutOfStock(unittest.TestCase):
 
         The in-stock indicator should take priority.
         """
-        html = '''
+        html = """
         <div>
             <span class="in_stock">Em Stock</span>
             <a class="btn btn-outofstock" disabled="">Esgotado</a>
         </div>
-        '''
+        """
         soup = self.create_soup(html)
         # Should be in stock despite "Esgotado" text
         self.assertFalse(is_out_of_stock(soup))
 
     def test_json_ld_takes_priority_over_out_of_stock_text(self):
         """Test JSON-LD InStock takes priority over out-of-stock text."""
-        html = '''
+        html = """
         <script type="application/ld+json">
         {"availability":"https://schema.org/InStock"}
         </script>
         <div>Produto esgotado</div>
-        '''
+        """
         soup = self.create_soup(html)
         # Should be in stock despite "esgotado" text
         self.assertFalse(is_out_of_stock(soup))
@@ -121,7 +121,7 @@ class TestIsOutOfStock(unittest.TestCase):
 
         The empty icons should be ignored and out-of-stock detected.
         """
-        html = '''
+        html = """
         <div>
             <span class="in-stock-icon zit"></span>
             <span class="in-stock-icon zit"></span>
@@ -129,21 +129,55 @@ class TestIsOutOfStock(unittest.TestCase):
                 <span>Esgotado.</span>
             </div>
         </div>
-        '''
+        """
         soup = self.create_soup(html)
         # Should be out of stock despite in-stock-icon elements
         self.assertTrue(is_out_of_stock(soup))
 
     def test_ignores_backinstock_button(self):
         """Test that 'notify when back in stock' button is not treated as in-stock."""
-        html = '''
+        html = """
         <div>
             <a class="register-backinstock" href="#">NOTIFICAR-ME</a>
             <div class="out-of-stock">Esgotado</div>
         </div>
-        '''
+        """
         soup = self.create_soup(html)
         # Should be out of stock despite "backinstock" class
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_unavailable_not_treated_as_available(self):
+        """Test that 'unavailable' class is treated as out-of-stock, not in-stock.
+
+        The word 'available' appears in 'unavailable', but with word boundaries
+        the pattern should not match. The OUT_OF_STOCK_CLASS_PATTERN should
+        catch 'unavailable' instead.
+        """
+        html = '<span class="unavailable">Out of stock</span>'
+        soup = self.create_soup(html)
+        # Should be out of stock (unavailable != available)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_indisponivel_not_treated_as_disponivel(self):
+        """Test that 'indisponivel' is treated as out-of-stock, not in-stock.
+
+        The word 'disponivel' appears in 'indisponivel' (Portuguese unavailable),
+        but with negative lookbehind the pattern should not match.
+        """
+        html = '<span class="indisponivel">Produto indisponível</span>'
+        soup = self.create_soup(html)
+        # Should be out of stock (indisponivel != disponivel)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_indisponivel_with_accent_not_treated_as_disponivel(self):
+        """Test that 'indisponível' (with accent) is treated as out-of-stock.
+
+        The word 'disponível' appears in 'indisponível' (Portuguese unavailable),
+        but with negative lookbehind the pattern should not match.
+        """
+        html = '<div class="product-indisponível">Não disponível</div>'
+        soup = self.create_soup(html)
+        # Should be out of stock (indisponível != disponível)
         self.assertTrue(is_out_of_stock(soup))
 
 
