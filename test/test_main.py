@@ -362,21 +362,18 @@ class TestPrintResultsText(unittest.TestCase):
 
         self.assertEqual(len(product_lines), 3, "Should have 3 product lines")
 
-        # Verify the price column starts at the same position for all lines
-        # (after product name + space)
+        # Verify all product lines have consistent structure
         longest_product = max("Product A", "Product B", "Product C", key=len)
-        expected_price_col_start = len(longest_product) + 1
 
         for line in product_lines:
-            # Find where content after product name starts
-            # This is the start of the price column
+            # Find where content after product name starts (price column)
             product_end = line.find("Product") + len(longest_product) + 1
             # The next non-space character should be within the expected column
             next_char_pos = len(line[:product_end].rstrip()) + 1
             self.assertLessEqual(
                 next_char_pos,
                 product_end + 1,
-                "Price column should start at consistent position"
+                "Price column should start at consistent position",
             )
 
         # Verify warning message and URL don't collide
