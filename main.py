@@ -53,55 +53,116 @@ def filter_by_products(
     return filtered
 
 
-def print_results_text(search_results: SearchResults) -> None:
-    """Print results in text format optimized for terminal."""
-    print("\n🛒 Best Prices")
+def _format_product_line(
+    product_name: str,
+    result: tuple | None,
+    max_name_len: int,
+    max_price_width: int
+) -> str:
+    """Format a single product line for text output.
 
-    # Sort by price: items with prices first (by price), then items without prices
-    items_with_prices = [(name, result) for name, result in search_results.prices.items() if result]
-    items_without_prices = [(name, result) for name, result in search_results.prices.items() if not result]
+    Args:
+        product_name: Name of the product
+        result: Tuple of (price, url) or None if no price found
+        max_name_len: Width to pad product name to
+        max_price_width: Width to pad price to
+
+    Returns:
+        Formatted line string
+    """
+    if result:
+        price, url = result
+        price_str = f"€{price:.2f}"
+        return f"{product_name:<{max_name_len}} {price_str:>{max_price_width}}  {url}"
+    return f"{product_name:<{max_name_len}} {'⚠️  No prices found':>{max_price_width}}"
+
+
+def _sort_and_group_items(
+    prices: Dict[str, tuple | None]
+) -> List[tuple[str, tuple | None]]:
+    """Sort items by price and group priced items before unpriced items.
+
+    Args:
+        prices: Dictionary of product names to (price, url) tuples or None
+
+    Returns:
+        List of (name, result) tuples sorted by price, with unpriced items last
+    """
+    items_with_prices = [(name, result) for name, result in prices.items() if result]
+    items_without_prices = [(name, result) for name, result in prices.items() if not result]
 
     # Sort items with prices by price (ascending)
     items_with_prices.sort(key=lambda x: x[1][0])
 
     # Combine: priced items first, then non-priced items
-    sorted_items = items_with_prices + items_without_prices
+    return items_with_prices + items_without_prices
+
+
+def _calculate_column_widths(
+    sorted_items: List[tuple[str, tuple | None]]
+) -> tuple[int, int]:
+    """Calculate dynamic column widths for product names and prices.
+
+    Args:
+        sorted_items: List of (name, result) tuples
+
+    Returns:
+        Tuple of (max_name_len, max_price_width)
+    """
+    if not sorted_items:
+        return 0, 0
 
     # Calculate max product name length for dynamic column width
-    max_name_len = max(len(name) for name, _ in sorted_items) if sorted_items else 0
+    max_name_len = max(len(name) for name, _ in sorted_items)
 
     # Calculate max price width for decimal point alignment
-    max_price_width = 0
+    items_with_prices = [(name, result) for name, result in sorted_items if result]
     if items_with_prices:
         max_price = max(price for _, (price, _) in items_with_prices)
         max_price_width = len(f"€{max_price:.2f}")
+    else:
+        # If no items have prices, use the width of the "No prices found" message
+        # for proper spacing and alignment
+        max_price_width = len("⚠️  No prices found")
 
-    # Calculate maximum line length for dynamic separator
-    max_line_len = 0
-    for product_name, result in sorted_items:
-        if result:
-            price, url = result
-            # name + space + price + "  " + url
-            line_len = max_name_len + 1 + max_price_width + 2 + len(url)
-        else:
-            # name + space + message
-            line_len = max_name_len + 1 + len("⚠️  No prices found")
-        max_line_len = max(max_line_len, line_len)
+    return max_name_len, max_price_width
 
-    # Print separator with dynamic width
-    print("=" * max_line_len)
 
-    for product_name, result in sorted_items:
-        if result:
-            price, url = result
-            # Columnar format: product name (dynamic width) | price (decimal-aligned) | URL
-            price_str = f"€{price:.2f}"
-            print(f"{product_name:<{max_name_len}} {price_str:>{max_price_width}}  {url}")
-        else:
-            # No prices found
-            print(f"{product_name:<{max_name_len}} {'⚠️  No prices found':>{max_price_width}}")
+def print_results_text(search_results: SearchResults) -> None:
+    """Print results in text format optimized for terminal."""
+    # Minimum separator width for visual consistency
+    MIN_SEPARATOR_WIDTH = 50
 
-    print("=" * max_line_len)
+    print("\n🛒 Best Prices")
+
+    # Sort and group items
+    sorted_items = _sort_and_group_items(search_results.prices)
+
+    # Handle empty results explicitly
+    if not sorted_items:
+        print("=" * MIN_SEPARATOR_WIDTH)
+        print("No products to display")
+        print("=" * MIN_SEPARATOR_WIDTH)
+        return
+
+    # Calculate column widths
+    max_name_len, max_price_width = _calculate_column_widths(sorted_items)
+
+    # Format all lines (avoids code duplication and repeated iterations)
+    formatted_lines = [
+        _format_product_line(name, result, max_name_len, max_price_width)
+        for name, result in sorted_items
+    ]
+
+    # Calculate separator width based on longest formatted line (with minimum width)
+    max_line_len = max(len(line) for line in formatted_lines) if formatted_lines else 0
+    separator_width = max(max_line_len, MIN_SEPARATOR_WIDTH)
+
+    # Print separator, content lines, and closing separator
+    print("=" * separator_width)
+    for line in formatted_lines:
+        print(line)
+    print("=" * separator_width)
 
 
 def print_results_markdown(search_results: SearchResults) -> None:
