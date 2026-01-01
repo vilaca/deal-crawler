@@ -122,13 +122,25 @@ def _calculate_column_widths(
 
     # Calculate max price width for decimal point alignment
     items_with_prices = [(name, result) for name, result in sorted_items if result]
+    warning_msg_width = len("⚠️  No prices found")
+
     if items_with_prices:
         max_price = max(price for _, (price, _) in items_with_prices)
-        max_price_width = len(f"€{max_price:.2f}")
+        price_width = len(f"€{max_price:.2f}")
+
+        # Check if there are items without prices (mixed scenario)
+        has_items_without_prices = len(items_with_prices) < len(sorted_items)
+
+        if has_items_without_prices:
+            # In mixed scenarios, ensure the column is wide enough for both
+            # prices AND the warning message to maintain alignment
+            max_price_width = max(price_width, warning_msg_width)
+        else:
+            # All items have prices, no need to account for warning message
+            max_price_width = price_width
     else:
         # If no items have prices, use the width of the "No prices found" message
-        # for proper spacing and alignment
-        max_price_width = len("⚠️  No prices found")
+        max_price_width = warning_msg_width
 
     return max_name_len, max_price_width
 
