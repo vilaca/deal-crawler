@@ -31,19 +31,23 @@ class TestPrintResultsText(unittest.TestCase):
         output = mock_stdout.getvalue()
         # Check header
         self.assertIn("🛒 Best Prices", output)
-        self.assertIn("=" * 70, output)
+        # Check separator exists (dynamic length)
+        self.assertIn("=====", output)
 
-        # Check Product A
+        # Check Product A (sorted - should be second since €29.99 > €15.50)
         self.assertIn("Product A", output)
-        self.assertIn("Price: €29.99", output)
-        self.assertIn("Store: example.com", output)
-        self.assertIn("Link:  https://www.example.com/product-a", output)
+        self.assertIn("€29.99", output)
+        self.assertIn("https://www.example.com/product-a", output)
 
-        # Check Product B
+        # Check Product B (sorted - should be first since €15.50 is cheaper)
         self.assertIn("Product B", output)
-        self.assertIn("Price: €15.50", output)
-        self.assertIn("Store: store.com", output)
-        self.assertIn("Link:  https://store.com/product-b", output)
+        self.assertIn("€15.50", output)
+        self.assertIn("https://store.com/product-b", output)
+
+        # Verify sorting: Product B (€15.50) should appear before Product A (€29.99)
+        pos_b = output.find("Product B")
+        pos_a = output.find("Product A")
+        self.assertLess(pos_b, pos_a, "Product B (cheaper) should appear before Product A")
 
         # Should NOT contain markdown markers
         self.assertNotIn("**", output)
@@ -89,21 +93,28 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        # Check Product A (has price)
+        # Check Product A (has price €29.99)
         self.assertIn("Product A", output)
-        self.assertIn("Price: €29.99", output)
+        self.assertIn("€29.99", output)
 
-        # Check Product B (no price)
+        # Check Product B (no price - should appear last)
         self.assertIn("Product B", output)
         self.assertIn("⚠️  No prices found", output)
 
-        # Check Product C (has price)
+        # Check Product C (has price €45.00)
         self.assertIn("Product C", output)
-        self.assertIn("Price: €45.00", output)
+        self.assertIn("€45.00", output)
+
+        # Verify sorting: A (€29.99) before C (€45.00) before B (no price)
+        pos_a = output.find("Product A")
+        pos_c = output.find("Product C")
+        pos_b = output.find("Product B")
+        self.assertLess(pos_a, pos_c, "Product A (€29.99) should appear before Product C (€45.00)")
+        self.assertLess(pos_c, pos_b, "Product C (has price) should appear before Product B (no price)")
 
     @patch("sys.stdout", new_callable=io.StringIO)
-    def test_print_results_text_domain_extraction(self, mock_stdout):
-        """Test text output correctly extracts domain from URLs."""
+    def test_print_results_text_with_full_urls(self, mock_stdout):
+        """Test text output includes full URLs and sorts by price."""
         results = SearchResults()
         results.prices = {
             "Product A": (29.99, "https://www.example.com/path/to/product"),
@@ -113,12 +124,19 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        # Should strip 'www.' from domain
-        self.assertIn("Store: example.com", output)
-        self.assertNotIn("Store: www.example.com", output)
+        # Should include product, full URL, and price at the end
+        self.assertIn("Product A", output)
+        self.assertIn("€29.99", output)
+        self.assertIn("https://www.example.com/path/to/product", output)
 
-        # Should keep subdomain
-        self.assertIn("Store: subdomain.store.com", output)
+        self.assertIn("Product B", output)
+        self.assertIn("€15.50", output)
+        self.assertIn("https://subdomain.store.com/item", output)
+
+        # Verify sorting: Product B (€15.50) should appear before Product A (€29.99)
+        pos_b = output.find("Product B")
+        pos_a = output.find("Product A")
+        self.assertLess(pos_b, pos_a, "Product B (cheaper) should appear before Product A")
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_separator_lines(self, mock_stdout):
@@ -129,11 +147,14 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        # Should have separator lines at top and bottom
-        separator = "=" * 70
-        self.assertIn(separator, output)
-        # Count occurrences (should be at least 2: after header and at end)
-        self.assertGreaterEqual(output.count(separator), 2)
+        # Should have separator lines at top and bottom (dynamic length)
+        lines = output.strip().split('\n')
+        # Find separator lines (lines with only equals signs)
+        separator_lines = [line for line in lines if line and all(c == '=' for c in line)]
+        # Should have exactly 2 separator lines (after header and at end)
+        self.assertEqual(len(separator_lines), 2)
+        # Both separators should be the same length
+        self.assertEqual(len(separator_lines[0]), len(separator_lines[1]))
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_empty_results(self, mock_stdout):
@@ -149,6 +170,111 @@ class TestPrintResultsText(unittest.TestCase):
         # Should not have any product information
         self.assertNotIn("Price:", output)
         self.assertNotIn("Store:", output)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_results_text_dynamic_product_name_width(self, mock_stdout):
+        """Test that product name column width adjusts to longest name."""
+        results = SearchResults()
+        results.prices = {
+            "Short": (10.00, "https://example.com/short"),
+            "Medium Length Name": (20.00, "https://example.com/medium"),
+            "Very Long Product Name Here": (30.00, "https://example.com/long"),
+        }
+
+        print_results_text(results)
+
+        output = mock_stdout.getvalue()
+        lines = output.strip().split('\n')
+
+        # Get content lines (exclude header and separators)
+        content_lines = [line for line in lines if line and '€' in line]
+
+        # All product names should be padded to the same width (longest name)
+        # Check that "Short" has spaces after it to align with longer names
+        short_line = [line for line in content_lines if 'Short' in line][0]
+        # Should have significant padding after "Short" (at least 20 spaces)
+        self.assertIn("Short" + " " * 20, short_line)
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_results_text_decimal_point_alignment(self, mock_stdout):
+        """Test that prices are aligned by decimal point."""
+        results = SearchResults()
+        results.prices = {
+            "Product A": (5.50, "https://example.com/a"),
+            "Product B": (99.99, "https://example.com/b"),
+            "Product C": (123.45, "https://example.com/c"),
+        }
+
+        print_results_text(results)
+
+        output = mock_stdout.getvalue()
+        lines = output.strip().split('\n')
+
+        # Get content lines with prices
+        price_lines = [line for line in lines if '€' in line and 'http' in line]
+
+        # Extract the position of the decimal point in each line
+        decimal_positions = []
+        for line in price_lines:
+            # Find the position of the decimal point in the price
+            euro_pos = line.find('€')
+            if euro_pos != -1:
+                # Find decimal point after the euro sign
+                decimal_pos = line.find('.', euro_pos)
+                if decimal_pos != -1:
+                    decimal_positions.append(decimal_pos)
+
+        # All decimal points should be at the same position
+        self.assertEqual(len(set(decimal_positions)), 1,
+                        "All decimal points should align at the same column")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_results_text_dynamic_separator_width(self, mock_stdout):
+        """Test that separator width matches the widest content line."""
+        results = SearchResults()
+        results.prices = {
+            "Product": (10.00, "https://short.com/a"),
+        }
+
+        print_results_text(results)
+
+        output = mock_stdout.getvalue()
+        lines = output.strip().split('\n')
+
+        # Get separator lines
+        separator_lines = [line for line in lines if line and all(c == '=' for c in line)]
+        # Get content line with price and URL
+        content_line = [line for line in lines if '€' in line and 'http' in line][0]
+
+        # Separator should match the content line length
+        self.assertEqual(len(separator_lines[0]), len(content_line),
+                        "Separator width should match content width")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_results_text_separator_matches_longest_line(self, mock_stdout):
+        """Test that separator adjusts to the longest line (with long URL)."""
+        results = SearchResults()
+        results.prices = {
+            "Short": (1.00, "https://example.com/short"),
+            "Long": (2.00, "https://verylongdomainname.com/very/long/path/to/product"),
+        }
+
+        print_results_text(results)
+
+        output = mock_stdout.getvalue()
+        lines = output.strip().split('\n')
+
+        # Get separator lines
+        separator_lines = [line for line in lines if line and all(c == '=' for c in line)]
+        # Get all content lines
+        content_lines = [line for line in lines if '€' in line]
+
+        # Find the longest content line
+        max_content_len = max(len(line) for line in content_lines)
+
+        # Separator should match the longest content line
+        self.assertEqual(len(separator_lines[0]), max_content_len,
+                        "Separator should match the longest line")
 
 
 class TestPrintResultsMarkdown(unittest.TestCase):
