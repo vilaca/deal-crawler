@@ -56,21 +56,52 @@ def filter_by_products(
 def print_results_text(search_results: SearchResults) -> None:
     """Print results in text format optimized for terminal."""
     print("\n🛒 Best Prices")
-    print("=" * 70)
 
-    for product_name, result in search_results.prices.items():
+    # Sort by price: items with prices first (by price), then items without prices
+    items_with_prices = [(name, result) for name, result in search_results.prices.items() if result]
+    items_without_prices = [(name, result) for name, result in search_results.prices.items() if not result]
+
+    # Sort items with prices by price (ascending)
+    items_with_prices.sort(key=lambda x: x[1][0])
+
+    # Combine: priced items first, then non-priced items
+    sorted_items = items_with_prices + items_without_prices
+
+    # Calculate max product name length for dynamic column width
+    max_name_len = max(len(name) for name, _ in sorted_items) if sorted_items else 0
+
+    # Calculate max price width for decimal point alignment
+    max_price_width = 0
+    if items_with_prices:
+        max_price = max(price for _, (price, _) in items_with_prices)
+        max_price_width = len(f"€{max_price:.2f}")
+
+    # Calculate maximum line length for dynamic separator
+    max_line_len = 0
+    for product_name, result in sorted_items:
         if result:
             price, url = result
-            domain = urlparse(url).netloc.replace("www.", "")
-            print(f"\n{product_name}")
-            print(f"  Price: €{price:.2f}")
-            print(f"  Store: {domain}")
-            print(f"  Link:  {url}")
+            # name + space + price + "  " + url
+            line_len = max_name_len + 1 + max_price_width + 2 + len(url)
         else:
-            print(f"\n{product_name}")
-            print("  ⚠️  No prices found")
+            # name + space + message
+            line_len = max_name_len + 1 + len("⚠️  No prices found")
+        max_line_len = max(max_line_len, line_len)
 
-    print("\n" + "=" * 70)
+    # Print separator with dynamic width
+    print("=" * max_line_len)
+
+    for product_name, result in sorted_items:
+        if result:
+            price, url = result
+            # Columnar format: product name (dynamic width) | price (decimal-aligned) | URL
+            price_str = f"€{price:.2f}"
+            print(f"{product_name:<{max_name_len}} {price_str:>{max_price_width}}  {url}")
+        else:
+            # No prices found
+            print(f"{product_name:<{max_name_len}} {'⚠️  No prices found':>{max_price_width}}")
+
+    print("=" * max_line_len)
 
 
 def print_results_markdown(search_results: SearchResults) -> None:
