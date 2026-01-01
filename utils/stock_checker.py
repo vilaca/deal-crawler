@@ -18,9 +18,7 @@ OUT_OF_STOCK_PATTERNS = [
     re.compile(r"não\s+disponivel", re.IGNORECASE),
 ]
 
-OUT_OF_STOCK_CLASS_PATTERN = re.compile(
-    r"out.?of.?stock|sold.?out|unavailable|indispon[ií]vel", re.IGNORECASE
-)
+OUT_OF_STOCK_CLASS_PATTERN = re.compile(r"out.?of.?stock|sold.?out|unavailable|indispon[ií]vel", re.IGNORECASE)
 
 IN_STOCK_CLASS_PATTERN = re.compile(
     r"(?<!back)in.?stock|em.?stock|(?<!in)disponível|(?<!in)disponivel|\bavailable\b",
@@ -74,10 +72,7 @@ def _check_meta_tags_for_stock(soup: BeautifulSoup) -> Optional[bool]:
         if isinstance(element, Tag):
             content_val = element.get("content", "")
             content = str(content_val).lower() if content_val else ""
-            if any(
-                status in content
-                for status in ["outofstock", "out of stock", "soldout"]
-            ):
+            if any(status in content for status in ["outofstock", "out of stock", "soldout"]):
                 return True
             if "instock" in content or "in stock" in content:
                 return False

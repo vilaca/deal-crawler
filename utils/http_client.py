@@ -23,9 +23,7 @@ RETRYABLE_EXCEPTIONS = (
 class HttpClient:
     """HTTP client for fetching web pages with session management."""
 
-    def __init__(
-        self, timeout: Optional[int] = None, max_retries: Optional[int] = None
-    ):
+    def __init__(self, timeout: Optional[int] = None, max_retries: Optional[int] = None):
         """Initialize HTTP client with configuration.
 
         Args:
@@ -33,18 +31,14 @@ class HttpClient:
             max_retries: Maximum number of retry attempts (uses config default if None)
         """
         self.timeout = timeout if timeout is not None else config.request_timeout
-        self.max_retries = (
-            max_retries if max_retries is not None else config.max_retries
-        )
+        self.max_retries = max_retries if max_retries is not None else config.max_retries
         self.session = requests.Session()
 
     def __enter__(self) -> Self:
         """Context manager entry."""
         return self
 
-    def __exit__(
-        self, _exc_type: object, _exc_val: object, _exc_tb: object
-    ) -> Literal[False]:
+    def __exit__(self, _exc_type: object, _exc_val: object, _exc_tb: object) -> Literal[False]:
         """Context manager exit - ensures session is closed.
 
         Returns:
@@ -89,8 +83,7 @@ class HttpClient:
                 "Chrome/131.0.0.0 Safari/537.36"
             ),
             "Accept": (
-                "text/html,application/xhtml+xml,application/xml;q=0.9,"
-                "image/avif,image/webp,image/apng,*/*;q=0.8"
+                "text/html,application/xhtml+xml,application/xml;q=0.9," "image/avif,image/webp,image/apng,*/*;q=0.8"
             ),
             "Accept-Language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
             "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -101,9 +94,7 @@ class HttpClient:
             "Sec-Fetch-Site": "none",
             "Sec-Fetch-User": "?1",
             "Cache-Control": "max-age=0",
-            "sec-ch-ua": (
-                '"Google Chrome";v="131", "Chromium";v="131", ' '"Not_A Brand";v="24"'
-            ),
+            "sec-ch-ua": ('"Google Chrome";v="131", "Chromium";v="131", ' '"Not_A Brand";v="24"'),
             "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": '"macOS"',
         }
@@ -115,9 +106,7 @@ class HttpClient:
 
         return base_headers
 
-    def fetch_page(
-        self, url: str, retry_count: Optional[int] = None
-    ) -> Optional[BeautifulSoup]:
+    def fetch_page(self, url: str, retry_count: Optional[int] = None) -> Optional[BeautifulSoup]:
         """Fetch and parse a webpage with retry logic.
 
         Retries on transient errors (connection errors, timeouts, 403 status).
@@ -147,12 +136,9 @@ class HttpClient:
             except requests.exceptions.HTTPError as e:
                 # Retry on 403 (bot detection)
                 if attempt < retry_count and e.response.status_code == 403:
-                    wait_time = random.uniform(
-                        config.retry_delay_min, config.retry_delay_max
-                    )
+                    wait_time = random.uniform(config.retry_delay_min, config.retry_delay_max)
                     print(
-                        f"    Got 403, waiting {wait_time:.1f}s "
-                        f"before retry {attempt + 1}/{retry_count}...",
+                        f"    Got 403, waiting {wait_time:.1f}s " f"before retry {attempt + 1}/{retry_count}...",
                         file=sys.stderr,
                     )
                     time.sleep(wait_time)
@@ -163,13 +149,10 @@ class HttpClient:
             except RETRYABLE_EXCEPTIONS as e:
                 # Retry on transient network errors
                 if attempt < retry_count:
-                    wait_time = random.uniform(
-                        config.retry_delay_min, config.retry_delay_max
-                    )
+                    wait_time = random.uniform(config.retry_delay_min, config.retry_delay_max)
                     error_type = type(e).__name__
                     print(
-                        f"    {error_type}, waiting {wait_time:.1f}s "
-                        f"before retry {attempt + 1}/{retry_count}...",
+                        f"    {error_type}, waiting {wait_time:.1f}s " f"before retry {attempt + 1}/{retry_count}...",
                         file=sys.stderr,
                     )
                     time.sleep(wait_time)

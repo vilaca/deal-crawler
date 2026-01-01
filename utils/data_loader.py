@@ -18,8 +18,7 @@ def load_products(yaml_file: str) -> Dict[str, List[str]]:
 
             if not isinstance(data, dict):
                 print(
-                    f"Error: '{yaml_file}' must contain a dictionary "
-                    f"at the root level",
+                    f"Error: '{yaml_file}' must contain a dictionary " f"at the root level",
                     file=sys.stderr,
                 )
                 return {}
@@ -28,15 +27,13 @@ def load_products(yaml_file: str) -> Dict[str, List[str]]:
             for product_name, urls in data.items():
                 if not isinstance(urls, list):
                     print(
-                        f"Warning: Product '{product_name}' does not have "
-                        f"a list of URLs, skipping",
+                        f"Warning: Product '{product_name}' does not have " f"a list of URLs, skipping",
                         file=sys.stderr,
                     )
                     data[product_name] = []
                 elif not all(isinstance(url, str) for url in urls):
                     print(
-                        f"Warning: Product '{product_name}' contains "
-                        f"non-string URLs",
+                        f"Warning: Product '{product_name}' contains " f"non-string URLs",
                         file=sys.stderr,
                     )
 

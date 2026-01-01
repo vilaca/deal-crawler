@@ -100,9 +100,7 @@ class NotinoHandler(SiteHandler):
             "sec-ch-ua-arch": '"arm"',
             "sec-ch-ua-bitness": '"64"',
             "sec-ch-ua-full-version-list": (
-                '"Google Chrome";v="131.0.6778.109", '
-                '"Chromium";v="131.0.6778.109", '
-                '"Not_A Brand";v="24.0.0.0"'
+                '"Google Chrome";v="131.0.6778.109", ' '"Chromium";v="131.0.6778.109", ' '"Not_A Brand";v="24.0.0.0"'
             ),
             "Viewport-Width": "1920",
         }
@@ -116,9 +114,7 @@ class NotinoHandler(SiteHandler):
             if '"price"' in script.string:
                 try:
                     # Find price values in JSON
-                    price_matches = re.findall(
-                        r'"price"\s*:\s*([0-9]+\.?[0-9]*)', script.string
-                    )
+                    price_matches = re.findall(r'"price"\s*:\s*([0-9]+\.?[0-9]*)', script.string)
 
                     for price_str in price_matches:
                         price = float(price_str)
