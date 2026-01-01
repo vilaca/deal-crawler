@@ -338,6 +338,58 @@ class TestPrintResultsText(unittest.TestCase):
         )
 
     @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_results_text_mixed_small_prices_alignment(self, mock_stdout):
+        """Test that warning messages fit properly in mixed scenarios with small prices.
+
+        When prices are small (e.g., €5.50 = 5 chars) but some products have no prices,
+        the price column must be wide enough to fit the warning message (19 chars).
+        This ensures the warning message doesn't extend beyond the column and break layout.
+        """
+        results = SearchResults()
+        results.prices = {
+            "Product A": (5.50, "https://example.com/a"),  # Small price (5 chars)
+            "Product B": None,  # Warning message is 19 chars
+            "Product C": (9.99, "https://example.com/c"),  # Small price (5 chars)
+        }
+
+        print_results_text(results)
+
+        output = mock_stdout.getvalue()
+        lines = output.strip().split("\n")
+
+        # Get content lines
+        product_lines = [line for line in lines if "Product" in line]
+
+        self.assertEqual(len(product_lines), 3, "Should have 3 product lines")
+
+        # Verify the price column starts at the same position for all lines
+        # (after product name + space)
+        longest_product = max("Product A", "Product B", "Product C", key=len)
+        expected_price_col_start = len(longest_product) + 1
+
+        for line in product_lines:
+            # Find where content after product name starts
+            # This is the start of the price column
+            product_end = line.find("Product") + len(longest_product) + 1
+            # The next non-space character should be within the expected column
+            next_char_pos = len(line[:product_end].rstrip()) + 1
+            self.assertLessEqual(
+                next_char_pos,
+                product_end + 1,
+                "Price column should start at consistent position"
+            )
+
+        # Verify warning message and URL don't collide
+        warning_line = [line for line in product_lines if "⚠️" in line][0]
+        # Warning line should not have a URL (since it has no price)
+        self.assertNotIn("http", warning_line)
+
+        # Price lines should have URLs
+        price_lines = [line for line in product_lines if "€" in line]
+        for line in price_lines:
+            self.assertIn("http", line, "Lines with prices should have URLs")
+
+    @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_separator_matches_longest_line(self, mock_stdout):
         """Test that separator adjusts to the longest line (with long URL)."""
         results = SearchResults()
