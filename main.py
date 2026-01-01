@@ -96,8 +96,8 @@ def _sort_and_group_items(
     ]
 
     # Sort items with prices by price (ascending)
-    # mypy knows x[1] is not None due to the filter
-    items_with_prices.sort(key=lambda x: x[1][0])
+    # mypy needs the conditional even though we filtered for non-None values
+    items_with_prices.sort(key=lambda x: x[1][0] if x[1] else 0)
 
     # Combine: priced items first, then non-priced items
     return items_with_prices + items_without_prices
