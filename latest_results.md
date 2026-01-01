@@ -12,8 +12,8 @@
 | **Cerave Hydrating Cream To Foam Cleanser (236ml)** | €11.17 | [🔗 aveirofarma.pt](https://aveirofarma.pt/cerave-creme-espuma-236ml) |
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €15.14 | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
 | **Cerave Micellar Water (295ml)** | €9.63 | [🔗 wells.pt](https://wells.pt/micellar-cleansing-water-6703198.html) |
-| **LRP Anthelios UVMune 400 SPF50** | €13.35 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-7577494.html) |
-| **LRP Anthelios UVMune 400 SPF50 - Oil control** | €13.35 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
+| **LRP Anthelios UVMune 400 SPF50** | €19.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
+| **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-spf-gel-creme-toque-seco-50ml) |
 | **Medik8 Crystal Retinal 3** | €48.36 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
 | **Medik8 Crystal Retinal 6** | €63.98 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
 | **Medik8 Duo** | €66.96 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/35249-advanced-night-restore-50-ml-hydr8-b5-intense-30ml.html) |
