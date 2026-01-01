@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 from utils.data_loader import load_products
@@ -55,9 +55,9 @@ def filter_by_products(
 
 def _format_product_line(
     product_name: str,
-    result: tuple | None,
+    result: Optional[Tuple[float, str]],
     max_name_len: int,
-    max_price_width: int
+    max_price_width: int,
 ) -> str:
     """Format a single product line for text output.
 
@@ -78,8 +78,8 @@ def _format_product_line(
 
 
 def _sort_and_group_items(
-    prices: Dict[str, tuple | None]
-) -> List[tuple[str, tuple | None]]:
+    prices: Dict[str, Optional[Tuple[float, str]]],
+) -> List[Tuple[str, Optional[Tuple[float, str]]]]:
     """Sort items by price and group priced items before unpriced items.
 
     Args:
@@ -88,19 +88,24 @@ def _sort_and_group_items(
     Returns:
         List of (name, result) tuples sorted by price, with unpriced items last
     """
-    items_with_prices = [(name, result) for name, result in prices.items() if result]
-    items_without_prices = [(name, result) for name, result in prices.items() if not result]
+    items_with_prices: List[Tuple[str, Optional[Tuple[float, str]]]] = [
+        (name, result) for name, result in prices.items() if result
+    ]
+    items_without_prices: List[Tuple[str, Optional[Tuple[float, str]]]] = [
+        (name, result) for name, result in prices.items() if not result
+    ]
 
     # Sort items with prices by price (ascending)
-    items_with_prices.sort(key=lambda x: x[1][0])
+    # mypy knows x[1] is not None due to the filter, but we need to help it
+    items_with_prices.sort(key=lambda x: x[1][0] if x[1] else 0)
 
     # Combine: priced items first, then non-priced items
     return items_with_prices + items_without_prices
 
 
 def _calculate_column_widths(
-    sorted_items: List[tuple[str, tuple | None]]
-) -> tuple[int, int]:
+    sorted_items: List[Tuple[str, Optional[Tuple[float, str]]]],
+) -> Tuple[int, int]:
     """Calculate dynamic column widths for product names and prices.
 
     Args:
