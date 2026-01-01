@@ -104,16 +104,6 @@ All settings can be customized using environment variables with the `DEAL_CRAWLE
 | `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
 | `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
 
-
-## Development
-
-### Setup Development Environment
-
-```bash
-# Install development dependencies (includes production deps + testing/linting tools)
-pip install -r requirements-dev.txt
-```
-
 ## Contributing
 
 Contributions are welcome! 
