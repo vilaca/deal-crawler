@@ -27,11 +27,11 @@ coverage:
 
 format:
 	@echo "Formatting code with black..."
-	black main.py utils/*.py test/*.py
+	black --line-length 120 main.py utils/*.py test/*.py
 
 format-check:
 	@echo "Checking code formatting with black..."
-	black --check main.py utils/*.py test/*.py
+	black --line-length 120 --check main.py utils/*.py test/*.py
 
 lint: format-check
 	@echo "Running flake8..."

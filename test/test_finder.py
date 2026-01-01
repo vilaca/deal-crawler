@@ -91,9 +91,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(results.total_urls_checked, 3)
         # Check out_of_stock_items tracking
         self.assertIn("Product B", results.out_of_stock_items)
-        self.assertEqual(
-            results.out_of_stock_items["Product B"], ["https://example.com/product1"]
-        )
+        self.assertEqual(results.out_of_stock_items["Product B"], ["https://example.com/product1"])
 
     @patch("utils.finder.is_out_of_stock")
     @patch("utils.finder.extract_price")
@@ -239,24 +237,18 @@ class TestSearchResults(unittest.TestCase):
     def test_extract_domain_normal_url(self):
         """Test domain extraction from normal URL."""
         results = SearchResults()
-        self.assertEqual(
-            results._extract_domain("https://example.com/product"), "example.com"
-        )
+        self.assertEqual(results._extract_domain("https://example.com/product"), "example.com")
 
     def test_extract_domain_with_www(self):
         """Test domain extraction removes www. prefix."""
         results = SearchResults()
-        self.assertEqual(
-            results._extract_domain("https://www.example.com/product"), "example.com"
-        )
+        self.assertEqual(results._extract_domain("https://www.example.com/product"), "example.com")
 
     def test_extract_domain_malformed_url(self):
         """Test domain extraction with malformed URLs returns full URL."""
         results = SearchResults()
         # Relative path (no netloc)
-        self.assertEqual(
-            results._extract_domain("/path/to/resource"), "/path/to/resource"
-        )
+        self.assertEqual(results._extract_domain("/path/to/resource"), "/path/to/resource")
         # Just a path
         self.assertEqual(results._extract_domain("product/123"), "product/123")
 
@@ -364,9 +356,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_single_product(self, mock_stdout):
         """Test printing out-of-stock items for single product."""
         results = SearchResults()
-        results.out_of_stock_items = {
-            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
-        }
+        results.out_of_stock_items = {"Product A": ["https://www.example.com/product1", "https://store.com/item"]}
 
         results._print_out_of_stock_items(markdown=True)
 
@@ -562,9 +552,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_text_single_product(self, mock_stdout):
         """Test printing out-of-stock items in text format."""
         results = SearchResults()
-        results.out_of_stock_items = {
-            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
-        }
+        results.out_of_stock_items = {"Product A": ["https://www.example.com/product1", "https://store.com/item"]}
 
         results._print_out_of_stock_items(markdown=False)
 

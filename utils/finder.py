@@ -26,12 +26,8 @@ class SearchResults:
     extraction_errors: int = 0
 
     # Detailed tracking
-    out_of_stock_items: Dict[str, List[str]] = field(
-        default_factory=dict
-    )  # product -> URLs
-    failed_urls: List[str] = field(
-        default_factory=list
-    )  # URLs that failed (fetch or extraction errors)
+    out_of_stock_items: Dict[str, List[str]] = field(default_factory=dict)  # product -> URLs
+    failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
 
     def _pluralize(self, count: int, singular: str, plural: str) -> str:
         """Return singular or plural form based on count."""
@@ -102,14 +98,10 @@ class SearchResults:
         if self.out_of_stock > 0:
             issues.append(f"📦 {self.out_of_stock} out of stock")
         if self.fetch_errors > 0:
-            error_text = self._pluralize(
-                self.fetch_errors, "fetch error", "fetch errors"
-            )
+            error_text = self._pluralize(self.fetch_errors, "fetch error", "fetch errors")
             issues.append(f"🌐 {self.fetch_errors} {error_text}")
         if self.extraction_errors > 0:
-            error_text = self._pluralize(
-                self.extraction_errors, "extraction error", "extraction errors"
-            )
+            error_text = self._pluralize(self.extraction_errors, "extraction error", "extraction errors")
             issues.append(f"🔍 {self.extraction_errors} {error_text}")
 
         if not issues:
@@ -183,9 +175,7 @@ class SearchResults:
         print()  # Empty line at end
 
 
-def find_cheapest_prices(
-    products: Dict[str, List[str]], http_client: HttpClient
-) -> SearchResults:
+def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient) -> SearchResults:
     """Find the cheapest price for each product, excluding out-of-stock items.
 
     Args:

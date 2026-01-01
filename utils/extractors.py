@@ -55,9 +55,7 @@ def parse_price_string(price_str: Optional[str]) -> Optional[float]:
     return None
 
 
-def _is_element_hidden(
-    element: Tag, additional_keywords: Optional[List[str]] = None
-) -> bool:
+def _is_element_hidden(element: Tag, additional_keywords: Optional[List[str]] = None) -> bool:
     """Check if element is hidden via classes or inline styles.
 
     Args:
@@ -85,9 +83,7 @@ def _is_element_hidden(
     # Check inline styles
     style = element.get("style", "")
     style_str = str(style) if style else ""
-    if "display:none" in style_str.replace(
-        " ", ""
-    ) or "visibility:hidden" in style_str.replace(" ", ""):
+    if "display:none" in style_str.replace(" ", "") or "visibility:hidden" in style_str.replace(" ", ""):
         return True
 
     return False
@@ -121,9 +117,7 @@ def _is_inside_delivery_container(element: Tag) -> bool:
             elem_id = str(elem_id).lower()
 
         # Check if any delivery keyword is present
-        if any(
-            keyword in classes or keyword in elem_id for keyword in DELIVERY_KEYWORDS
-        ):
+        if any(keyword in classes or keyword in elem_id for keyword in DELIVERY_KEYWORDS):
             return True
 
         current = current.parent

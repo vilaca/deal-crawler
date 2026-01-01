@@ -194,9 +194,7 @@ class TestIsElementHidden(unittest.TestCase):
         soup = self.create_soup(html)
         element = soup.find("div")
         self.assertFalse(_is_element_hidden(element))
-        self.assertTrue(
-            _is_element_hidden(element, ["old", "original", "was", "before"])
-        )
+        self.assertTrue(_is_element_hidden(element, ["old", "original", "was", "before"]))
 
     def test_no_class_attribute(self):
         """Test element with no class attribute."""
@@ -258,9 +256,7 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
 
     def test_grandparent_has_delivery_class(self):
         """Test element inside grandparent with delivery class."""
-        soup = self.create_soup(
-            '<div class="delivery_box"><div><span>50.00€</span></div></div>'
-        )
+        soup = self.create_soup('<div class="delivery_box"><div><span>50.00€</span></div></div>')
         element = soup.find("span")
         self.assertTrue(_is_inside_delivery_container(element))
 

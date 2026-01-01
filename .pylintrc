@@ -37,7 +37,7 @@ disable=
 
 [FORMAT]
 # Black compatibility
-max-line-length=88
+max-line-length=120
 indent-string='    '
 
 [DESIGN]

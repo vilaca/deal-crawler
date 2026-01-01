@@ -24,12 +24,8 @@ class Config:
         # Notino has aggressive bot detection, use longer delays
         self.notino_delay_min = float(os.getenv("DEAL_CRAWLER_NOTINO_DELAY_MIN", "4.0"))
         self.notino_delay_max = float(os.getenv("DEAL_CRAWLER_NOTINO_DELAY_MAX", "7.0"))
-        self.default_delay_min = float(
-            os.getenv("DEAL_CRAWLER_DEFAULT_DELAY_MIN", "1.0")
-        )
-        self.default_delay_max = float(
-            os.getenv("DEAL_CRAWLER_DEFAULT_DELAY_MAX", "2.0")
-        )
+        self.default_delay_min = float(os.getenv("DEAL_CRAWLER_DEFAULT_DELAY_MIN", "1.0"))
+        self.default_delay_max = float(os.getenv("DEAL_CRAWLER_DEFAULT_DELAY_MAX", "2.0"))
         self.retry_delay_min = float(os.getenv("DEAL_CRAWLER_RETRY_DELAY_MIN", "5.0"))
         self.retry_delay_max = float(os.getenv("DEAL_CRAWLER_RETRY_DELAY_MAX", "8.0"))
 
