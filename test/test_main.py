@@ -47,7 +47,9 @@ class TestPrintResultsText(unittest.TestCase):
         # Verify sorting: Product B (€15.50) should appear before Product A (€29.99)
         pos_b = output.find("Product B")
         pos_a = output.find("Product A")
-        self.assertLess(pos_b, pos_a, "Product B (cheaper) should appear before Product A")
+        self.assertLess(
+            pos_b, pos_a, "Product B (cheaper) should appear before Product A"
+        )
 
         # Should NOT contain markdown markers
         self.assertNotIn("**", output)
@@ -109,8 +111,14 @@ class TestPrintResultsText(unittest.TestCase):
         pos_a = output.find("Product A")
         pos_c = output.find("Product C")
         pos_b = output.find("Product B")
-        self.assertLess(pos_a, pos_c, "Product A (€29.99) should appear before Product C (€45.00)")
-        self.assertLess(pos_c, pos_b, "Product C (has price) should appear before Product B (no price)")
+        self.assertLess(
+            pos_a, pos_c, "Product A (€29.99) should appear before Product C (€45.00)"
+        )
+        self.assertLess(
+            pos_c,
+            pos_b,
+            "Product C (has price) should appear before Product B (no price)",
+        )
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_with_full_urls(self, mock_stdout):
@@ -136,7 +144,9 @@ class TestPrintResultsText(unittest.TestCase):
         # Verify sorting: Product B (€15.50) should appear before Product A (€29.99)
         pos_b = output.find("Product B")
         pos_a = output.find("Product A")
-        self.assertLess(pos_b, pos_a, "Product B (cheaper) should appear before Product A")
+        self.assertLess(
+            pos_b, pos_a, "Product B (cheaper) should appear before Product A"
+        )
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_separator_lines(self, mock_stdout):
@@ -148,9 +158,11 @@ class TestPrintResultsText(unittest.TestCase):
 
         output = mock_stdout.getvalue()
         # Should have separator lines at top and bottom (dynamic length)
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
         # Find separator lines (lines with only equals signs)
-        separator_lines = [line for line in lines if line and all(c == '=' for c in line)]
+        separator_lines = [
+            line for line in lines if line and all(c == "=" for c in line)
+        ]
         # Should have exactly 2 separator lines (after header and at end)
         self.assertEqual(len(separator_lines), 2)
         # Both separators should be the same length
@@ -189,25 +201,33 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
 
         # Get content lines with prices
-        content_lines = [line for line in lines if line and '€' in line and 'http' in line]
+        content_lines = [
+            line for line in lines if line and "€" in line and "http" in line
+        ]
 
         # Extract the position of the euro sign in each line (start of price column)
-        euro_positions = [line.find('€') for line in content_lines]
+        euro_positions = [line.find("€") for line in content_lines]
 
         # All euro signs should be at the same position (price column alignment)
-        self.assertEqual(len(set(euro_positions)), 1,
-                        "All prices should start at the same column position")
+        self.assertEqual(
+            len(set(euro_positions)),
+            1,
+            "All prices should start at the same column position",
+        )
 
         # Verify the longest product name determines the column width
         longest_name = "Very Long Product Name Here"
         # The euro sign should appear after the longest name + 1 space
         expected_euro_pos = len(longest_name) + 1
-        self.assertEqual(euro_positions[0], expected_euro_pos,
-                        f"Price column should start at position {expected_euro_pos} "
-                        f"(after longest product name + 1 space)")
+        self.assertEqual(
+            euro_positions[0],
+            expected_euro_pos,
+            f"Price column should start at position {expected_euro_pos} "
+            f"(after longest product name + 1 space)",
+        )
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_decimal_point_alignment(self, mock_stdout):
@@ -222,25 +242,28 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
 
         # Get content lines with prices
-        price_lines = [line for line in lines if '€' in line and 'http' in line]
+        price_lines = [line for line in lines if "€" in line and "http" in line]
 
         # Extract the position of the decimal point in each line
         decimal_positions = []
         for line in price_lines:
             # Find the position of the decimal point in the price
-            euro_pos = line.find('€')
+            euro_pos = line.find("€")
             if euro_pos != -1:
                 # Find decimal point after the euro sign
-                decimal_pos = line.find('.', euro_pos)
+                decimal_pos = line.find(".", euro_pos)
                 if decimal_pos != -1:
                     decimal_positions.append(decimal_pos)
 
         # All decimal points should be at the same position
-        self.assertEqual(len(set(decimal_positions)), 1,
-                        "All decimal points should align at the same column")
+        self.assertEqual(
+            len(set(decimal_positions)),
+            1,
+            "All decimal points should align at the same column",
+        )
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_dynamic_separator_width(self, mock_stdout):
@@ -253,19 +276,25 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
 
         # Get separator lines
-        separator_lines = [line for line in lines if line and all(c == '=' for c in line)]
+        separator_lines = [
+            line for line in lines if line and all(c == "=" for c in line)
+        ]
         # Get content line with price and URL
-        content_line = [line for line in lines if '€' in line and 'http' in line][0]
+        content_line = [line for line in lines if "€" in line and "http" in line][0]
 
         # Separator should be at least as wide as the content line
-        self.assertGreaterEqual(len(separator_lines[0]), len(content_line),
-                               "Separator should be at least as wide as content")
+        self.assertGreaterEqual(
+            len(separator_lines[0]),
+            len(content_line),
+            "Separator should be at least as wide as content",
+        )
         # Separator should be at least the minimum width (50)
-        self.assertGreaterEqual(len(separator_lines[0]), 50,
-                               "Separator should meet minimum width of 50")
+        self.assertGreaterEqual(
+            len(separator_lines[0]), 50, "Separator should meet minimum width of 50"
+        )
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_all_items_without_prices(self, mock_stdout):
@@ -280,27 +309,33 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
 
         # Get content lines with the warning message
-        content_lines = [line for line in lines if '⚠️  No prices found' in line]
+        content_lines = [line for line in lines if "⚠️  No prices found" in line]
 
         # Should have 3 lines (one for each product)
         self.assertEqual(len(content_lines), 3)
 
         # Extract the position where the warning message starts in each line
-        warning_positions = [line.find('⚠️') for line in content_lines]
+        warning_positions = [line.find("⚠️") for line in content_lines]
 
         # All warning messages should start at the same position (proper alignment)
-        self.assertEqual(len(set(warning_positions)), 1,
-                        "All 'No prices found' messages should be aligned")
+        self.assertEqual(
+            len(set(warning_positions)),
+            1,
+            "All 'No prices found' messages should be aligned",
+        )
 
         # Verify the longest product name determines the column width
         longest_name = "Very Long Product Name"
         # The warning should appear after the longest name + 1 space
         expected_warning_pos = len(longest_name) + 1
-        self.assertEqual(warning_positions[0], expected_warning_pos,
-                        f"Warning messages should start at position {expected_warning_pos}")
+        self.assertEqual(
+            warning_positions[0],
+            expected_warning_pos,
+            f"Warning messages should start at position {expected_warning_pos}",
+        )
 
     @patch("sys.stdout", new_callable=io.StringIO)
     def test_print_results_text_separator_matches_longest_line(self, mock_stdout):
@@ -314,19 +349,24 @@ class TestPrintResultsText(unittest.TestCase):
         print_results_text(results)
 
         output = mock_stdout.getvalue()
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
 
         # Get separator lines
-        separator_lines = [line for line in lines if line and all(c == '=' for c in line)]
+        separator_lines = [
+            line for line in lines if line and all(c == "=" for c in line)
+        ]
         # Get all content lines
-        content_lines = [line for line in lines if '€' in line]
+        content_lines = [line for line in lines if "€" in line]
 
         # Find the longest content line
         max_content_len = max(len(line) for line in content_lines)
 
         # Separator should match the longest content line
-        self.assertEqual(len(separator_lines[0]), max_content_len,
-                        "Separator should match the longest line")
+        self.assertEqual(
+            len(separator_lines[0]),
+            max_content_len,
+            "Separator should match the longest line",
+        )
 
 
 class TestPrintResultsMarkdown(unittest.TestCase):
