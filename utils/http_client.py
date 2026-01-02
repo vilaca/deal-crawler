@@ -58,6 +58,15 @@ class HttpClient:
         if self.session:
             self.session.close()
 
+    def remove_from_cache(self, url: str) -> None:
+        """Remove URL from cache (used when extraction fails).
+
+        Args:
+            url: The URL to remove from cache
+        """
+        if self.cache:
+            self.cache.remove(url)
+
     def _get_delay_for_url(self, url: str) -> float:
         """Calculate appropriate delay for the given URL.
 
