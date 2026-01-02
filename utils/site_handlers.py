@@ -128,6 +128,91 @@ class NotinoHandler(SiteHandler):
         return None
 
 
+class FarmacentralHandler(SiteHandler):
+    """Handler for farmacentral.pt which uses Nuxt.js.
+
+    Farmacentral.pt stores product data in window.__NUXT__ JavaScript state.
+    This handler extracts prices from the serialized JavaScript object.
+    """
+
+    def get_domain_pattern(self) -> str:
+        """Return domain pattern for Farmacentral."""
+        return "farmacentral.pt"
+
+    def get_delay_range(self) -> tuple[float, float]:
+        """Return default delay range (1-2 seconds)."""
+        return (1.0, 2.0)
+
+    def get_custom_headers(self, domain: str) -> Dict[str, str]:
+        """Return empty dict - no custom headers needed."""
+        return {}
+
+    def _is_valid_price(self, price: float) -> bool:
+        """Check if price is within acceptable range.
+
+        Args:
+            price: Price value to validate
+
+        Returns:
+            True if price is valid, False otherwise
+        """
+        return config.min_price < price < config.max_price
+
+    def _extract_from_nuxt_script(self, script_content: str) -> Optional[float]:
+        """Extract price from Nuxt.js script content.
+
+        Args:
+            script_content: JavaScript content containing __NUXT__ state
+
+        Returns:
+            Extracted price if found, None otherwise
+        """
+        # Patterns for various formats found in Nuxt state
+        price_patterns = [
+            r"price:([0-9]+\.?[0-9]*)",  # price:7.32 (any context)
+            r"\.price[=:]([0-9]+\.?[0-9]*)",  # gl.price=7.32
+            r'"price"[:\s]*([0-9]+\.?[0-9]*)',  # "price":7.32
+            r"'price'[:\s]*([0-9]+\.?[0-9]*)",  # 'price':7.32
+        ]
+
+        # Try specific price patterns first
+        for pattern in price_patterns:
+            price_matches = re.findall(pattern, script_content)
+            for price_str in price_matches:
+                try:
+                    price = float(price_str)
+                    if self._is_valid_price(price):
+                        return price
+                except ValueError:
+                    continue
+
+        # Fallback: find all decimal numbers and return first valid one
+        all_numbers = re.findall(r"\b([0-9]+\.[0-9]{2})\b", script_content)
+        for num_str in all_numbers:
+            try:
+                price = float(num_str)
+                if self._is_valid_price(price):
+                    return price
+            except ValueError:
+                continue
+
+        return None
+
+    def extract_price(self, soup: BeautifulSoup) -> Optional[float]:
+        """Extract price from Nuxt.js state in <script> tags."""
+        for script in soup.find_all("script"):
+            if not script.string:
+                continue
+
+            # Look for window.__NUXT__ state
+            if "window.__NUXT__" in script.string or "__NUXT__" in script.string:
+                price = self._extract_from_nuxt_script(script.string)
+                if price:
+                    return price
+
+        return None
+
+
 class DefaultSiteHandler(SiteHandler):
     """Default handler for generic e-commerce sites.
 
@@ -192,6 +277,7 @@ class SiteHandlerRegistry:
 # Global registry - register all site handlers here
 _registry = SiteHandlerRegistry()
 _registry.register(NotinoHandler())
+_registry.register(FarmacentralHandler())
 
 # Add more site handlers here as needed:
 # _registry.register(AmazonHandler())
