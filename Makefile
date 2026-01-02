@@ -1,4 +1,4 @@
-.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean clean-cache
+.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean
 
 help:
 	@echo "Available targets (activate venv first: source venv/bin/activate):"
@@ -73,8 +73,3 @@ clean:
 	find . -type f -name '*.pyc' -delete
 	rm -rf .pytest_cache htmlcov .coverage .mypy_cache
 	@echo "Cleaned up temporary files"
-
-clean-cache:
-	@echo "Clearing HTTP cache..."
-	@rm -f .http_cache.json
-	@echo "Cache cleared"

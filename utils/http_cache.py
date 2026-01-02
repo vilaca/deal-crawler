@@ -35,6 +35,11 @@ class HttpCache:
             return None
 
         entry = cache[url]
+
+        # Validate entry structure (handle corrupted cache entries)
+        if not isinstance(entry, dict) or "timestamp" not in entry or "html" not in entry:
+            return None
+
         if self._is_expired(entry["timestamp"]):
             return None
 
@@ -105,12 +110,20 @@ class HttpCache:
         Returns:
             Number of expired entries removed
         """
-        if self._cache is None:
-            return 0
+        # Load cache if not already loaded
+        cache = self._load_cache()
 
-        expired_urls = [url for url, entry in self._cache.items() if self._is_expired(entry["timestamp"])]
+        # Remove expired entries and invalid/corrupted entries
+        expired_urls = []
+        for url, entry in cache.items():
+            # Remove corrupted entries (missing required keys)
+            if not isinstance(entry, dict) or "timestamp" not in entry or "html" not in entry:
+                expired_urls.append(url)
+            # Remove expired entries
+            elif self._is_expired(entry["timestamp"]):
+                expired_urls.append(url)
 
         for url in expired_urls:
-            del self._cache[url]
+            del cache[url]
 
         return len(expired_urls)

@@ -104,6 +104,7 @@ class TestHttpClient(unittest.TestCase):
         # Mock the response
         mock_response = Mock()
         mock_response.content = b"<html><body>Test</body></html>"
+        mock_response.text = "<html><body>Test</body></html>"
         mock_response.raise_for_status = Mock()
         self.client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
 
@@ -116,7 +117,7 @@ class TestHttpClient(unittest.TestCase):
         self.assertEqual(result, mock_soup_instance)
         self.client.session.get.assert_called_once()
         mock_sleep.assert_called_once()  # Should have one delay
-        mock_soup.assert_called_once_with(b"<html><body>Test</body></html>", "lxml")
+        mock_soup.assert_called_once_with("<html><body>Test</body></html>", "lxml")
 
     @patch("utils.http_client.time.sleep")
     def test_fetch_page_http_error_non_403(self, mock_sleep):

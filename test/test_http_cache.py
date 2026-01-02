@@ -139,6 +139,55 @@ class TestHttpCache(unittest.TestCase):
         self.assertEqual(result, "<html>test</html>")
         self.assertTrue(os.path.exists(self.temp_cache_file))
 
+    def test_corrupted_cache_entries(self):
+        """Test handling of cache entries with missing required keys."""
+        # Create cache with various corrupted entries
+        corrupted_cache = {
+            "https://example.com/missing-timestamp": {"html": "<html>no timestamp</html>"},
+            "https://example.com/missing-html": {"timestamp": time.time()},
+            "https://example.com/not-a-dict": "invalid entry",
+            "https://example.com/valid": {"html": "<html>valid</html>", "timestamp": time.time()},
+        }
+
+        # Write corrupted cache to file
+        with open(self.temp_cache_file, "w", encoding="utf-8") as f:
+            json.dump(corrupted_cache, f)
+
+        cache = HttpCache(self.temp_cache_file, cache_duration=3600)
+
+        # Corrupted entries should return None (cache miss)
+        self.assertIsNone(cache.get("https://example.com/missing-timestamp"))
+        self.assertIsNone(cache.get("https://example.com/missing-html"))
+        self.assertIsNone(cache.get("https://example.com/not-a-dict"))
+
+        # Valid entry should work
+        self.assertEqual(cache.get("https://example.com/valid"), "<html>valid</html>")
+
+    def test_clear_expired_removes_corrupted_entries(self):
+        """Test that clear_expired removes corrupted entries along with expired ones."""
+        # Create cache with corrupted and valid entries
+        cache_data = {
+            "https://example.com/missing-timestamp": {"html": "<html>no timestamp</html>"},
+            "https://example.com/missing-html": {"timestamp": time.time()},
+            "https://example.com/not-a-dict": "invalid entry",
+            "https://example.com/valid": {"html": "<html>valid</html>", "timestamp": time.time()},
+        }
+
+        # Write cache to file
+        with open(self.temp_cache_file, "w", encoding="utf-8") as f:
+            json.dump(cache_data, f)
+
+        cache = HttpCache(self.temp_cache_file, cache_duration=3600)
+
+        # Clear expired (should also remove corrupted entries)
+        removed_count = cache.clear_expired()
+
+        # Should have removed 3 corrupted entries (not-a-dict, missing-timestamp, missing-html)
+        self.assertEqual(removed_count, 3)
+
+        # Valid entry should still exist
+        self.assertEqual(cache.get("https://example.com/valid"), "<html>valid</html>")
+
     def test_multiple_cache_entries(self):
         """Test caching multiple URLs."""
         cache = HttpCache(self.temp_cache_file, cache_duration=3600)
