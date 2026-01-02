@@ -72,3 +72,6 @@ dmypy.json
 data.yml.backup
 *.bak
 *.log
+
+# HTTP cache
+.http_cache.json

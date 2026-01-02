@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .config import config
+from .http_cache import HttpCache
 from .site_handlers import get_site_handler
 
 # Transient errors that should trigger retries
@@ -23,16 +24,21 @@ RETRYABLE_EXCEPTIONS = (
 class HttpClient:
     """HTTP client for fetching web pages with session management."""
 
-    def __init__(self, timeout: Optional[int] = None, max_retries: Optional[int] = None):
+    def __init__(
+        self, timeout: Optional[int] = None, max_retries: Optional[int] = None, use_cache: bool = True
+    ) -> None:
         """Initialize HTTP client with configuration.
 
         Args:
             timeout: Request timeout in seconds (uses config default if None)
             max_retries: Maximum number of retry attempts (uses config default if None)
+            use_cache: Whether to use HTTP response cache (default: True)
         """
         self.timeout = timeout if timeout is not None else config.request_timeout
         self.max_retries = max_retries if max_retries is not None else config.max_retries
+        self.use_cache = use_cache
         self.session = requests.Session()
+        self.cache = HttpCache(config.cache_file, config.cache_duration) if use_cache else None
 
     def __enter__(self) -> Self:
         """Context manager entry."""
@@ -118,6 +124,13 @@ class HttpClient:
         Returns:
             BeautifulSoup object if successful, None otherwise
         """
+        # Check cache first (if caching is enabled)
+        if self.cache:
+            cached_html = self.cache.get(url)
+            if cached_html:
+                print("  📦 Using cached response", file=sys.stderr)
+                return BeautifulSoup(cached_html, "lxml")
+
         if retry_count is None:
             retry_count = self.max_retries
 
@@ -131,6 +144,12 @@ class HttpClient:
 
                 response = self.session.get(url, headers=headers, timeout=self.timeout)
                 response.raise_for_status()
+
+                # Cache successful responses (if caching is enabled)
+                if self.cache and response.status_code == 200:
+                    html = response.content.decode("utf-8")
+                    self.cache.set(url, html)
+
                 return BeautifulSoup(response.content, "lxml")
 
             except requests.exceptions.HTTPError as e:
