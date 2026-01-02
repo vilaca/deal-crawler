@@ -115,7 +115,7 @@ All settings can be customized using environment variables with the `DEAL_CRAWLE
 
 ## Caching
 
-Successful HTTP responses are cached for 1 hour by default. Configure with `DEAL_CRAWLER_CACHE_DURATION` (seconds). Clear cache with `make clean-cache` or bypass with `--no-cache` flag.
+Successful HTTP responses are cached for 1 hour by default. Configure with `DEAL_CRAWLER_CACHE_DURATION` (seconds). Clear the cache by deleting the cache file (`.http_cache.json`) or bypass caching with the `--no-cache` flag.
 
 ## Contributing
 
