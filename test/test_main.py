@@ -397,6 +397,111 @@ class TestMainFunction(unittest.TestCase):
         # Verify load_products was called with default file
         mock_load_products.assert_called_once_with("products.yml")
 
+    @patch("main.filter_best_value_sizes")
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_filters_by_best_value_by_default(  # pylint: disable=too-many-positional-arguments
+        self,
+        mock_print_text,
+        mock_http_client,
+        mock_load_products,
+        mock_find_prices,
+        mock_filter_sizes,
+    ):
+        """Test main() applies best value filtering by default (no --all-sizes flag)."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        mock_filtered_results = MagicMock(spec=SearchResults)
+        mock_filter_sizes.return_value = mock_filtered_results
+
+        # Run main
+        main()
+
+        # Verify filter_best_value_sizes was called
+        mock_filter_sizes.assert_called_once_with(mock_results)
+
+        # Verify filtered results were used for display
+        mock_print_text.assert_called_once_with(mock_filtered_results)
+
+    @patch("main.filter_best_value_sizes")
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--all-sizes"])
+    def test_main_skips_filtering_with_all_sizes_flag(  # pylint: disable=too-many-positional-arguments
+        self,
+        mock_print_text,
+        mock_http_client,
+        mock_load_products,
+        mock_find_prices,
+        mock_filter_sizes,
+    ):
+        """Test main() skips filtering when --all-sizes flag is present."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify filter_best_value_sizes was NOT called
+        mock_filter_sizes.assert_not_called()
+
+        # Verify original results were used for display
+        mock_print_text.assert_called_once_with(mock_results)
+
+    @patch("main.config")
+    @patch("main.filter_best_value_sizes")
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_respects_env_variable_for_show_all_sizes(  # pylint: disable=too-many-positional-arguments
+        self,
+        mock_print_text,
+        mock_http_client,
+        mock_load_products,
+        mock_find_prices,
+        mock_filter_sizes,
+        mock_config,
+    ):
+        """Test main() respects SHOW_ALL_SIZES environment variable."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Set env variable to true
+        mock_config.show_all_sizes = True
+        mock_config.products_file = "products.yml"
+
+        # Run main
+        main()
+
+        # Verify filter_best_value_sizes was NOT called
+        mock_filter_sizes.assert_not_called()
+
+        # Verify original results were used for display
+        mock_print_text.assert_called_once_with(mock_results)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
