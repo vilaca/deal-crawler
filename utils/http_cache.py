@@ -1,6 +1,7 @@
 """HTTP response caching with file-based persistent storage."""
 
 import json
+import sys
 import time
 from typing import Any, Dict, Optional, Union
 
@@ -94,9 +95,9 @@ class HttpCache:
         try:
             with open(self.cache_file, "w", encoding="utf-8") as f:
                 json.dump(self._cache, f, indent=2)
-        except (OSError, IOError):
+        except (OSError, IOError) as e:
             # Fail gracefully if we can't write (e.g., disk full, permissions)
-            pass
+            print(f"Warning: Failed to save HTTP cache to {self.cache_file}: {e}", file=sys.stderr)
 
     def clear_expired(self) -> int:
         """Remove expired entries, return count removed.

@@ -317,6 +317,7 @@ class TestHttpClient(unittest.TestCase):
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.content = b"<html><body>Fresh Content</body></html>"
+        mock_response.text = "<html><body>Fresh Content</body></html>"
         mock_response.raise_for_status = Mock()
         self.client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
 
