@@ -356,7 +356,9 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.HttpClient")
     @patch("main.print_results_text")
     @patch("sys.argv", ["main.py", "--products-file", "custom_products.yml"])
-    def test_main_with_custom_products_file(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
+    def test_main_with_custom_products_file(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
         """Test main() uses custom products file with --products-file flag."""
         # Setup mocks
         mock_products = {"Product A": ["https://example.com/a"]}
@@ -377,7 +379,9 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.HttpClient")
     @patch("main.print_results_text")
     @patch("sys.argv", ["main.py"])
-    def test_main_uses_default_products_file(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
+    def test_main_uses_default_products_file(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
         """Test main() uses default products file (products.yml) when no --products-file flag."""
         # Setup mocks
         mock_products = {"Product A": ["https://example.com/a"]}
