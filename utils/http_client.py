@@ -215,7 +215,7 @@ class HttpClient:
             try:
                 response = self._make_request(url)
                 self._cache_response(url, response)
-                return BeautifulSoup(response.content, "lxml")
+                return BeautifulSoup(response.text, "lxml")
 
             except requests.exceptions.HTTPError as e:
                 if self._should_retry_http_error(e, attempt, max_retries):
