@@ -262,6 +262,55 @@ class TestHttpCache(unittest.TestCase):
         self.assertNotIn("https://example.com/old1", cache_data)
         self.assertNotIn("https://example.com/old2", cache_data)
 
+    def test_remove_url_from_cache(self):
+        """Test removing a URL from cache."""
+        cache = HttpCache(self.temp_cache_file, cache_duration=3600)
+
+        # Add multiple entries
+        cache.set("https://example.com/product1", "<html>Product 1</html>")
+        cache.set("https://example.com/product2", "<html>Product 2</html>")
+        cache.set("https://example.com/product3", "<html>Product 3</html>")
+
+        # Verify all are cached
+        self.assertIsNotNone(cache.get("https://example.com/product1"))
+        self.assertIsNotNone(cache.get("https://example.com/product2"))
+        self.assertIsNotNone(cache.get("https://example.com/product3"))
+
+        # Remove one entry
+        cache.remove("https://example.com/product2")
+
+        # Verify product2 is gone but others remain
+        self.assertIsNotNone(cache.get("https://example.com/product1"))
+        self.assertIsNone(cache.get("https://example.com/product2"))
+        self.assertIsNotNone(cache.get("https://example.com/product3"))
+
+    def test_remove_nonexistent_url_does_nothing(self):
+        """Test removing a URL that doesn't exist in cache."""
+        cache = HttpCache(self.temp_cache_file, cache_duration=3600)
+
+        cache.set("https://example.com/product", "<html>Product</html>")
+
+        # Remove non-existent URL - should not raise error
+        cache.remove("https://example.com/nonexistent")
+
+        # Original entry should still be there
+        self.assertIsNotNone(cache.get("https://example.com/product"))
+
+    def test_remove_persists_to_file(self):
+        """Test that removal is persisted to the cache file."""
+        cache = HttpCache(self.temp_cache_file, cache_duration=3600)
+
+        cache.set("https://example.com/product1", "<html>Product 1</html>")
+        cache.set("https://example.com/product2", "<html>Product 2</html>")
+
+        # Remove one entry
+        cache.remove("https://example.com/product1")
+
+        # Create new cache instance to verify persistence
+        cache2 = HttpCache(self.temp_cache_file, cache_duration=3600)
+        self.assertIsNone(cache2.get("https://example.com/product1"))
+        self.assertIsNotNone(cache2.get("https://example.com/product2"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

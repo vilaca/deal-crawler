@@ -58,6 +58,18 @@ class HttpCache:
 
         self._save_cache()
 
+    def remove(self, url: str) -> None:
+        """Remove URL from cache.
+
+        Args:
+            url: The URL to remove from cache
+        """
+        cache = self._load_cache()
+
+        if url in cache:
+            del cache[url]
+            self._save_cache()
+
     def _is_expired(self, timestamp: float) -> bool:
         """Check if cache entry is expired.
 
