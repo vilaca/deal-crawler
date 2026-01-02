@@ -1,4 +1,4 @@
-.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean
+.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean clean-cache
 
 help:
 	@echo "Available targets (activate venv first: source venv/bin/activate):"
@@ -14,6 +14,7 @@ help:
 	@echo "  make complexity   - Run complexity checks (radon)"
 	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, complexity, test)"
 	@echo "  make clean        - Clean up temporary files"
+	@echo "  make clean-cache  - Clear HTTP response cache"
 
 install:
 	pip install -r requirements.txt
@@ -72,3 +73,8 @@ clean:
 	find . -type f -name '*.pyc' -delete
 	rm -rf .pytest_cache htmlcov .coverage .mypy_cache
 	@echo "Cleaned up temporary files"
+
+clean-cache:
+	@echo "Clearing HTTP cache..."
+	@rm -f .http_cache.json
+	@echo "Cache cleared"

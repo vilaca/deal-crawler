@@ -27,7 +27,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install production dependencies
 pip install -r requirements.txt
 
-# Run the scraper (URLs to check are configured in data.yml)
+# Run the scraper (URLs to check are configured in products.yml)
 python main.py
 ```
 
@@ -47,6 +47,12 @@ python main.py
 
 # Run with markdown output (for CI/documentation)
 python main.py --markdown
+
+# Use custom products file
+python main.py --products-file my_products.yml
+
+# Bypass cache (force fresh HTTP requests)
+python main.py --no-cache
 
 # View help
 python main.py --help
@@ -103,6 +109,13 @@ All settings can be customized using environment variables with the `DEAL_CRAWLE
 | `DEAL_CRAWLER_DEFAULT_DELAY_MAX` | `2.0` | Maximum delay before other site requests (seconds) |
 | `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
 | `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
+| `DEAL_CRAWLER_CACHE_DURATION` | `3600` | HTTP cache lifetime in seconds (1 hour) |
+| `DEAL_CRAWLER_CACHE_FILE` | `.http_cache.json` | HTTP cache file path |
+| `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Products data file path |
+
+## Caching
+
+Successful HTTP responses are cached for 1 hour by default. Configure with `DEAL_CRAWLER_CACHE_DURATION` (seconds). Clear cache with `make clean-cache` or bypass with `--no-cache` flag.
 
 ## Contributing
 
