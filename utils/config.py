@@ -20,6 +20,13 @@ class Config:
         self.request_timeout = int(os.getenv("DEAL_CRAWLER_REQUEST_TIMEOUT", "15"))
         self.max_retries = int(os.getenv("DEAL_CRAWLER_MAX_RETRIES", "2"))
 
+        # Caching settings
+        self.cache_duration = int(os.getenv("DEAL_CRAWLER_CACHE_DURATION", "3600"))
+        self.cache_file = os.getenv("DEAL_CRAWLER_CACHE_FILE", ".http_cache.json")
+
+        # Products file settings
+        self.products_file = os.getenv("DEAL_CRAWLER_PRODUCTS_FILE", "products.yml")
+
         # Delay settings for different sites (in seconds)
         # Notino has aggressive bot detection, use longer delays
         self.notino_delay_min = float(os.getenv("DEAL_CRAWLER_NOTINO_DELAY_MIN", "4.0"))

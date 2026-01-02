@@ -3,6 +3,7 @@
 import argparse
 import sys
 
+from utils.config import config
 from utils.data_loader import load_products
 from utils.filters import filter_by_sites, filter_by_products
 from utils.finder import find_cheapest_prices
@@ -29,10 +30,21 @@ def main() -> None:
         type=str,
         help="Filter by product name substrings (comma-separated, case-insensitive)",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Bypass HTTP cache (force fresh requests)",
+    )
+    parser.add_argument(
+        "--products-file",
+        type=str,
+        default=config.products_file,
+        help=f"Path to products data file (default: {config.products_file})",
+    )
     args = parser.parse_args()
 
     # Load products from YAML
-    products = load_products("data.yml")
+    products = load_products(args.products_file)
 
     if not products:
         print("\nNo products to compare. Exiting.", file=sys.stderr)
@@ -54,7 +66,7 @@ def main() -> None:
             sys.exit(1)
 
     # Find cheapest prices using HttpClient context manager
-    with HttpClient() as http_client:
+    with HttpClient(use_cache=not args.no_cache) as http_client:
         search_results = find_cheapest_prices(products, http_client)
 
     # Display results based on format

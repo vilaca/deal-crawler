@@ -121,7 +121,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify load_products was called with correct file
-        mock_load_products.assert_called_once_with("data.yml")
+        mock_load_products.assert_called_once_with("products.yml")
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -308,6 +308,94 @@ class TestMainFunction(unittest.TestCase):
         self.assertIn("Product A", call_args)
         self.assertIn("Product B", call_args)
         self.assertNotIn("Product C", call_args)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--no-cache"])
+    def test_main_with_no_cache_flag(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
+        """Test main() passes use_cache=False with --no-cache flag."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with use_cache=False
+        mock_http_client.assert_called_once_with(use_cache=False)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_without_no_cache_flag(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
+        """Test main() passes use_cache=True by default (no --no-cache flag)."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with use_cache=True (default)
+        mock_http_client.assert_called_once_with(use_cache=True)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--products-file", "custom_products.yml"])
+    def test_main_with_custom_products_file(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() uses custom products file with --products-file flag."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify load_products was called with custom file
+        mock_load_products.assert_called_once_with("custom_products.yml")
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py"])
+    def test_main_uses_default_products_file(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() uses default products file (products.yml) when no --products-file flag."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify load_products was called with default file
+        mock_load_products.assert_called_once_with("products.yml")
 
 
 if __name__ == "__main__":

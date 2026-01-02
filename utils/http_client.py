@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .config import config
+from .http_cache import HttpCache
 from .site_handlers import get_site_handler
 
 # Transient errors that should trigger retries
@@ -23,16 +24,21 @@ RETRYABLE_EXCEPTIONS = (
 class HttpClient:
     """HTTP client for fetching web pages with session management."""
 
-    def __init__(self, timeout: Optional[int] = None, max_retries: Optional[int] = None):
+    def __init__(
+        self, timeout: Optional[int] = None, max_retries: Optional[int] = None, use_cache: bool = True
+    ) -> None:
         """Initialize HTTP client with configuration.
 
         Args:
             timeout: Request timeout in seconds (uses config default if None)
             max_retries: Maximum number of retry attempts (uses config default if None)
+            use_cache: Whether to use HTTP response cache (default: True)
         """
         self.timeout = timeout if timeout is not None else config.request_timeout
         self.max_retries = max_retries if max_retries is not None else config.max_retries
+        self.use_cache = use_cache
         self.session = requests.Session()
+        self.cache = HttpCache(config.cache_file, config.cache_duration) if use_cache else None
 
     def __enter__(self) -> Self:
         """Context manager entry."""
@@ -106,6 +112,86 @@ class HttpClient:
 
         return base_headers
 
+    def _check_cache(self, url: str) -> Optional[BeautifulSoup]:
+        """Check cache for URL and return parsed response if found.
+
+        Args:
+            url: The URL to check in cache
+
+        Returns:
+            BeautifulSoup object if cached, None otherwise
+        """
+        if not self.cache:
+            return None
+
+        cached_html = self.cache.get(url)
+        if cached_html:
+            print("  📦 Using cached response", file=sys.stderr)
+            return BeautifulSoup(cached_html, "lxml")
+
+        return None
+
+    def _cache_response(self, url: str, response: requests.Response) -> None:
+        """Cache successful HTTP response.
+
+        Args:
+            url: The URL to cache
+            response: The HTTP response object
+        """
+        if self.cache and response.status_code == 200:
+            self.cache.set(url, response.text)
+
+    def _make_request(self, url: str) -> requests.Response:
+        """Make a single HTTP request with rate limiting.
+
+        Args:
+            url: The URL to fetch
+
+        Returns:
+            HTTP response object
+
+        Raises:
+            Any requests exception on failure
+        """
+        headers = self.get_headers_for_site(url)
+
+        # Add rate limiting delay
+        delay = self._get_delay_for_url(url)
+        time.sleep(delay)
+
+        response = self.session.get(url, headers=headers, timeout=self.timeout)
+        response.raise_for_status()
+
+        return response
+
+    def _should_retry_http_error(self, error: requests.exceptions.HTTPError, attempt: int, max_attempts: int) -> bool:
+        """Check if HTTP error should trigger a retry.
+
+        Args:
+            error: The HTTP error
+            attempt: Current attempt number (0-indexed)
+            max_attempts: Maximum number of attempts
+
+        Returns:
+            True if should retry, False otherwise
+        """
+        return attempt < max_attempts and error.response is not None and error.response.status_code == 403
+
+    def _wait_for_retry(self, error_message: str, attempt: int, max_attempts: int) -> None:
+        """Wait before retry with logging.
+
+        Args:
+            error_message: Error description to log
+            attempt: Current attempt number (0-indexed)
+            max_attempts: Maximum number of attempts
+        """
+        wait_time = random.uniform(config.retry_delay_min, config.retry_delay_max)
+        print(
+            f"    {error_message}, waiting {wait_time:.1f}s before retry {attempt + 1}/{max_attempts}...",
+            file=sys.stderr,
+        )
+        time.sleep(wait_time)
+
     def fetch_page(self, url: str, retry_count: Optional[int] = None) -> Optional[BeautifulSoup]:
         """Fetch and parse a webpage with retry logic.
 
@@ -118,50 +204,35 @@ class HttpClient:
         Returns:
             BeautifulSoup object if successful, None otherwise
         """
-        if retry_count is None:
-            retry_count = self.max_retries
+        # Check cache first
+        cached_result = self._check_cache(url)
+        if cached_result:
+            return cached_result
 
-        for attempt in range(retry_count + 1):
+        max_retries = retry_count if retry_count is not None else self.max_retries
+
+        for attempt in range(max_retries + 1):
             try:
-                headers = self.get_headers_for_site(url)
-
-                # Add a delay with some randomization to appear more human-like
-                delay = self._get_delay_for_url(url)
-                time.sleep(delay)
-
-                response = self.session.get(url, headers=headers, timeout=self.timeout)
-                response.raise_for_status()
-                return BeautifulSoup(response.content, "lxml")
+                response = self._make_request(url)
+                self._cache_response(url, response)
+                return BeautifulSoup(response.text, "lxml")
 
             except requests.exceptions.HTTPError as e:
-                # Retry on 403 (bot detection)
-                if attempt < retry_count and e.response.status_code == 403:
-                    wait_time = random.uniform(config.retry_delay_min, config.retry_delay_max)
-                    print(
-                        f"    Got 403, waiting {wait_time:.1f}s " f"before retry {attempt + 1}/{retry_count}...",
-                        file=sys.stderr,
-                    )
-                    time.sleep(wait_time)
+                if self._should_retry_http_error(e, attempt, max_retries):
+                    self._wait_for_retry("Got 403", attempt, max_retries)
                     continue
                 print(f"Error fetching {url}: {e}", file=sys.stderr)
                 return None
 
             except RETRYABLE_EXCEPTIONS as e:
-                # Retry on transient network errors
-                if attempt < retry_count:
-                    wait_time = random.uniform(config.retry_delay_min, config.retry_delay_max)
+                if attempt < max_retries:
                     error_type = type(e).__name__
-                    print(
-                        f"    {error_type}, waiting {wait_time:.1f}s " f"before retry {attempt + 1}/{retry_count}...",
-                        file=sys.stderr,
-                    )
-                    time.sleep(wait_time)
+                    self._wait_for_retry(error_type, attempt, max_retries)
                     continue
                 print(f"Error fetching {url}: {e}", file=sys.stderr)
                 return None
 
             except Exception as e:
-                # Non-retryable errors
                 print(f"Error fetching {url}: {e}", file=sys.stderr)
                 return None
 
