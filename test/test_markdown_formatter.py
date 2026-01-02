@@ -4,7 +4,7 @@ import io
 import unittest
 from unittest.mock import patch
 
-from utils.finder import SearchResults
+from utils.finder import PriceResult, SearchResults
 from utils.markdown_formatter import print_results_markdown
 
 
@@ -16,8 +16,8 @@ class TestPrintResultsMarkdown(unittest.TestCase):
         """Test markdown output with products that have prices."""
         results = SearchResults()
         results.prices = {
-            "Product A": (29.99, "https://www.example.com/product-a"),
-            "Product B": (15.50, "https://store.com/product-b"),
+            "Product A": PriceResult(price=29.99, url="https://www.example.com/product-a"),
+            "Product B": PriceResult(price=15.50, url="https://store.com/product-b"),
         }
 
         print_results_markdown(results)
@@ -67,9 +67,9 @@ class TestPrintResultsMarkdown(unittest.TestCase):
         """Test markdown output with mix of products."""
         results = SearchResults()
         results.prices = {
-            "Product A": (29.99, "https://example.com/product-a"),
+            "Product A": PriceResult(price=29.99, url="https://example.com/product-a"),
             "Product B": None,
-            "Product C": (45.00, "https://shop.com/product-c"),
+            "Product C": PriceResult(price=45.00, url="https://shop.com/product-c"),
         }
 
         print_results_markdown(results)
@@ -91,8 +91,8 @@ class TestPrintResultsMarkdown(unittest.TestCase):
         """Test markdown output correctly extracts domain from URLs."""
         results = SearchResults()
         results.prices = {
-            "Product A": (29.99, "https://www.example.com/path/to/product"),
-            "Product B": (15.50, "https://subdomain.store.com/item"),
+            "Product A": PriceResult(price=29.99, url="https://www.example.com/path/to/product"),
+            "Product B": PriceResult(price=15.50, url="https://subdomain.store.com/item"),
         }
 
         print_results_markdown(results)
@@ -109,7 +109,7 @@ class TestPrintResultsMarkdown(unittest.TestCase):
     def test_print_results_markdown_separator_line(self, mock_stdout):
         """Test markdown output has proper separator."""
         results = SearchResults()
-        results.prices = {"Product A": (29.99, "https://example.com/a")}
+        results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
 
         print_results_markdown(results)
 
@@ -136,7 +136,7 @@ class TestPrintResultsMarkdown(unittest.TestCase):
     def test_print_results_markdown_table_structure(self, mock_stdout):
         """Test markdown table has correct structure."""
         results = SearchResults()
-        results.prices = {"Product A": (29.99, "https://example.com/a")}
+        results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
 
         print_results_markdown(results)
 
