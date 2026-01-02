@@ -45,9 +45,9 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product A", results.prices)
         self.assertIsNotNone(results.prices["Product A"])
         assert results.prices["Product A"] is not None  # Type narrowing for mypy
-        price, url = results.prices["Product A"]
-        self.assertEqual(price, 30.00)
-        self.assertEqual(url, "https://example.com/product2")
+        result = results.prices["Product A"]
+        self.assertEqual(result.price, 30.00)
+        self.assertEqual(result.url, "https://example.com/product2")
 
         # Check summary statistics
         self.assertEqual(results.total_products, 1)
@@ -80,10 +80,10 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product B", results.prices)
         self.assertIsNotNone(results.prices["Product B"])
         assert results.prices["Product B"] is not None  # Type narrowing for mypy
-        price, url = results.prices["Product B"]
+        result = results.prices["Product B"]
         # Should get cheapest in-stock price (60.00), not the out-of-stock one
-        self.assertEqual(price, 60.00)
-        self.assertEqual(url, "https://example.com/product3")
+        self.assertEqual(result.price, 60.00)
+        self.assertEqual(result.url, "https://example.com/product3")
 
         # Check summary statistics
         self.assertEqual(results.out_of_stock, 1)
@@ -196,14 +196,14 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product B", results.prices)
 
         assert results.prices["Product A"] is not None  # Type narrowing for mypy
-        price_a, url_a = results.prices["Product A"]
-        self.assertEqual(price_a, 20.00)
-        self.assertEqual(url_a, "https://example.com/a2")
+        result_a = results.prices["Product A"]
+        self.assertEqual(result_a.price, 20.00)
+        self.assertEqual(result_a.url, "https://example.com/a2")
 
         assert results.prices["Product B"] is not None  # Type narrowing for mypy
-        price_b, url_b = results.prices["Product B"]
-        self.assertEqual(price_b, 15.00)
-        self.assertEqual(url_b, "https://example.com/b1")
+        result_b = results.prices["Product B"]
+        self.assertEqual(result_b.price, 15.00)
+        self.assertEqual(result_b.url, "https://example.com/b1")
 
         # Check summary statistics
         self.assertEqual(results.total_products, 2)
