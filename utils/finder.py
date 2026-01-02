@@ -1,21 +1,32 @@
 """Main price comparison logic."""
 
+import re
 import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 from .http_client import HttpClient
 from .stock_checker import is_out_of_stock
 from .extractors import extract_price
+from .product_info import calculate_price_per_100ml, parse_product_name
+
+
+@dataclass
+class PriceResult:
+    """Single price result with value calculation."""
+
+    price: float
+    url: str
+    price_per_100ml: Optional[float] = None  # Price per 100ml (for value comparison)
 
 
 @dataclass
 class SearchResults:
     """Results from price search with summary statistics."""
 
-    # Product name -> (price, url) or None
-    prices: Dict[str, Optional[Tuple[float, str]]] = field(default_factory=dict)
+    # Product name -> PriceResult or None
+    prices: Dict[str, Optional[PriceResult]] = field(default_factory=dict)
 
     # Summary statistics
     total_products: int = 0
@@ -175,6 +186,110 @@ class SearchResults:
         print()  # Empty line at end
 
 
+def _extract_base_product_name(product_name: str) -> str:
+    """Extract base product name without size information.
+
+    Args:
+        product_name: Full product name (e.g., "Cerave Foaming Cleanser (236ml)")
+
+    Returns:
+        Base product name (e.g., "Cerave Foaming Cleanser")
+    """
+    # Remove size patterns: (236ml), (2x236ml), etc.
+    base_name = re.sub(r"\s*\(\d+(?:x\d+)?(?:\.\d+)?ml\)\s*$", "", product_name, flags=re.IGNORECASE)
+    return base_name.strip()
+
+
+def _group_products_by_base_name(
+    prices: Dict[str, Optional[PriceResult]],
+) -> Dict[str, List[tuple[str, Optional[PriceResult]]]]:
+    """Group products by their base name (without size info).
+
+    Args:
+        prices: Dictionary of product names to PriceResult objects
+
+    Returns:
+        Dictionary mapping base names to lists of (product_name, result) tuples
+    """
+    product_families: Dict[str, List[tuple[str, Optional[PriceResult]]]] = {}
+
+    for product_name, price_result in prices.items():
+        base_name = _extract_base_product_name(product_name)
+        product_families.setdefault(base_name, []).append((product_name, price_result))
+
+    return product_families
+
+
+def _select_best_from_family(
+    products_list: List[tuple[str, Optional[PriceResult]]],
+) -> Dict[str, Optional[PriceResult]]:
+    """Select the best value product from a family.
+
+    Args:
+        products_list: List of (product_name, result) tuples in the same family
+
+    Returns:
+        Dictionary with the best value product(s)
+    """
+    # Separate products with and without price_per_100ml
+    with_value = [(name, result) for name, result in products_list if result and result.price_per_100ml]
+    without_value = [(name, result) for name, result in products_list if not result or not result.price_per_100ml]
+
+    if with_value:
+        # Return the one with lowest price per 100ml
+        best_product = min(with_value, key=lambda x: x[1].price_per_100ml or float("inf"))
+        return {best_product[0]: best_product[1]}
+
+    # No comparable values - keep all products without value info
+    return dict(without_value)
+
+
+def _copy_search_statistics(source: SearchResults, target: SearchResults) -> None:
+    """Copy statistics from source to target SearchResults.
+
+    Args:
+        source: Source SearchResults with statistics
+        target: Target SearchResults to copy statistics to
+    """
+    target.total_products = source.total_products
+    target.total_urls_checked = source.total_urls_checked
+    target.prices_found = source.prices_found
+    target.out_of_stock = source.out_of_stock
+    target.fetch_errors = source.fetch_errors
+    target.extraction_errors = source.extraction_errors
+    target.out_of_stock_items = source.out_of_stock_items
+    target.failed_urls = source.failed_urls
+
+
+def filter_best_value_sizes(results: SearchResults) -> SearchResults:
+    """Filter results to show only the best value (lowest price per 100ml) for each product family.
+
+    Products are grouped by their base name (without size info). For each group,
+    only the size with the lowest price per 100ml is kept.
+
+    Args:
+        results: SearchResults with all product sizes
+
+    Returns:
+        New SearchResults with only best value sizes
+    """
+    # Group products by base name
+    product_families = _group_products_by_base_name(results.prices)
+
+    # For each family, select the best value
+    filtered_prices: Dict[str, Optional[PriceResult]] = {}
+    for products_list in product_families.values():
+        best_products = _select_best_from_family(products_list)
+        filtered_prices.update(best_products)
+
+    # Create new SearchResults with filtered prices
+    filtered_results = SearchResults()
+    filtered_results.prices = filtered_prices
+    _copy_search_statistics(results, filtered_results)
+
+    return filtered_results
+
+
 def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient) -> SearchResults:
     """Find the cheapest price for each product, excluding out-of-stock items.
 
@@ -191,6 +306,9 @@ def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient
     for product_name, urls in products.items():
         print(f"\nChecking prices for {product_name}...", file=sys.stderr)
         prices = []
+
+        # Parse product info once for all URLs of this product
+        product_info = parse_product_name(product_name)
 
         for url in urls:
             results.total_urls_checked += 1
@@ -214,8 +332,19 @@ def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient
             price = extract_price(soup, url)
 
             if price:
-                print(f"    Found price: €{price:.2f}", file=sys.stderr)
-                prices.append((price, url))
+                # Calculate price per 100ml if volume information is available
+                price_per_100ml = None
+                if product_info.total_volume_ml:
+                    price_per_100ml = calculate_price_per_100ml(price, product_info.total_volume_ml)
+                    print(
+                        f"    Found price: €{price:.2f} ({price_per_100ml:.2f}/100ml)",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(f"    Found price: €{price:.2f}", file=sys.stderr)
+
+                price_result = PriceResult(price=price, url=url, price_per_100ml=price_per_100ml)
+                prices.append(price_result)
                 results.prices_found += 1
             else:
                 print("    Could not find price", file=sys.stderr)
@@ -225,7 +354,8 @@ def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient
                 http_client.remove_from_cache(url)
 
         if prices:
-            cheapest = min(prices, key=lambda x: x[0])
+            # Find cheapest by absolute price
+            cheapest = min(prices, key=lambda x: x.price)
             results.prices[product_name] = cheapest
         else:
             results.prices[product_name] = None

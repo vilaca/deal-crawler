@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from main import main
-from utils.finder import SearchResults
+from utils.finder import PriceResult, SearchResults
 
 
 class TestMainFunction(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py"])
+    @patch("sys.argv", ["main.py", "--all-sizes"])
     def test_main_default_text_format(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() uses text format by default (no --markdown flag)."""
         # Setup mocks
@@ -22,7 +22,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -36,7 +36,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_markdown")
-    @patch("sys.argv", ["main.py", "--markdown"])
+    @patch("sys.argv", ["main.py", "--markdown", "--all-sizes"])
     def test_main_markdown_format(
         self,
         mock_print_markdown,
@@ -50,7 +50,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -61,7 +61,7 @@ class TestMainFunction(unittest.TestCase):
         mock_results.print_summary.assert_called_once_with(markdown=True)
 
     @patch("main.load_products")
-    @patch("sys.argv", ["main.py"])
+    @patch("sys.argv", ["main.py", "--all-sizes"])
     def test_main_exits_when_no_products(self, mock_load_products):
         """Test main() exits with error when no products to compare."""
         # Setup: load_products returns empty dict
@@ -77,7 +77,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py"])
+    @patch("sys.argv", ["main.py", "--all-sizes"])
     def test_main_uses_http_client_context_manager(
         self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
     ):
@@ -87,7 +87,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         mock_http_instance = mock_http_client.return_value.__enter__.return_value
@@ -106,7 +106,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py"])
+    @patch("sys.argv", ["main.py", "--all-sizes"])
     def test_main_calls_load_products(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() calls load_products with correct filename."""
         # Setup mocks
@@ -114,7 +114,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -127,7 +127,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--sites", "notino.pt"])
+    @patch("sys.argv", ["main.py", "--sites", "notino.pt", "--all-sizes"])
     def test_main_with_sites_filter(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() applies --sites filter correctly."""
         # Setup mocks with multiple sites
@@ -141,7 +141,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://www.notino.pt/product-a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://www.notino.pt/product-a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -159,7 +159,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--products", "Product A"])
+    @patch("sys.argv", ["main.py", "--products", "Product A", "--all-sizes"])
     def test_main_with_products_filter(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() applies --products filter correctly."""
         # Setup mocks
@@ -170,7 +170,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -186,7 +186,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--sites", "notino.pt", "--products", "Product A"])
+    @patch("sys.argv", ["main.py", "--sites", "notino.pt", "--products", "Product A", "--all-sizes"])
     def test_main_with_combined_filters(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() applies both --sites and --products filters together."""
         # Setup mocks
@@ -200,7 +200,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://www.notino.pt/product-a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://www.notino.pt/product-a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -215,7 +215,7 @@ class TestMainFunction(unittest.TestCase):
         self.assertIn("notino.pt", call_args["Product A"][0])
 
     @patch("main.load_products")
-    @patch("sys.argv", ["main.py", "--sites", "nonexistent.com"])
+    @patch("sys.argv", ["main.py", "--sites", "nonexistent.com", "--all-sizes"])
     def test_main_exits_when_sites_filter_has_no_matches(self, mock_load_products):
         """Test main() exits with error when --sites filter has no matches."""
         # Setup: products exist but none match the site filter
@@ -232,7 +232,7 @@ class TestMainFunction(unittest.TestCase):
         self.assertEqual(cm.exception.code, 1)
 
     @patch("main.load_products")
-    @patch("sys.argv", ["main.py", "--products", "NonExistent"])
+    @patch("sys.argv", ["main.py", "--products", "NonExistent", "--all-sizes"])
     def test_main_exits_when_products_filter_has_no_matches(self, mock_load_products):
         """Test main() exits with error when --products filter has no matches."""
         # Setup: products exist but none match the product filter
@@ -252,7 +252,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--sites", "notino.pt,wells.pt"])
+    @patch("sys.argv", ["main.py", "--sites", "notino.pt,wells.pt", "--all-sizes"])
     def test_main_with_multiple_sites(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() handles comma-separated sites correctly."""
         # Setup mocks
@@ -266,7 +266,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://www.notino.pt/product-a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://www.notino.pt/product-a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -281,7 +281,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--products", "Product A,Product B"])
+    @patch("sys.argv", ["main.py", "--products", "Product A,Product B", "--all-sizes"])
     def test_main_with_multiple_products(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() handles comma-separated products correctly."""
         # Setup mocks
@@ -294,8 +294,8 @@ class TestMainFunction(unittest.TestCase):
 
         mock_results = MagicMock(spec=SearchResults)
         mock_results.prices = {
-            "Product A": (29.99, "https://example.com/a"),
-            "Product B": (19.99, "https://example.com/b"),
+            "Product A": PriceResult(price=29.99, url="https://example.com/a"),
+            "Product B": PriceResult(price=19.99, url="https://example.com/b"),
         }
         mock_find_prices.return_value = mock_results
 
@@ -313,7 +313,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--no-cache"])
+    @patch("sys.argv", ["main.py", "--no-cache", "--all-sizes"])
     def test_main_with_no_cache_flag(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() passes use_cache=False with --no-cache flag."""
         # Setup mocks
@@ -321,7 +321,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -334,7 +334,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py"])
+    @patch("sys.argv", ["main.py", "--all-sizes"])
     def test_main_without_no_cache_flag(self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices):
         """Test main() passes use_cache=True by default (no --no-cache flag)."""
         # Setup mocks
@@ -342,7 +342,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -355,7 +355,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py", "--products-file", "custom_products.yml"])
+    @patch("sys.argv", ["main.py", "--products-file", "custom_products.yml", "--all-sizes"])
     def test_main_with_custom_products_file(
         self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
     ):
@@ -365,7 +365,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main
@@ -378,7 +378,7 @@ class TestMainFunction(unittest.TestCase):
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
-    @patch("sys.argv", ["main.py"])
+    @patch("sys.argv", ["main.py", "--all-sizes"])
     def test_main_uses_default_products_file(
         self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
     ):
@@ -388,7 +388,7 @@ class TestMainFunction(unittest.TestCase):
         mock_load_products.return_value = mock_products
 
         mock_results = MagicMock(spec=SearchResults)
-        mock_results.prices = {"Product A": (29.99, "https://example.com/a")}
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
         # Run main

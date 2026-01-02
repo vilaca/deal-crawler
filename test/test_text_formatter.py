@@ -4,7 +4,7 @@ import io
 import unittest
 from unittest.mock import patch
 
-from utils.finder import SearchResults
+from utils.finder import PriceResult, SearchResults
 from utils.text_formatter import print_results_text
 
 
@@ -16,8 +16,8 @@ class TestPrintResultsText(unittest.TestCase):
         """Test text output with products that have prices."""
         results = SearchResults()
         results.prices = {
-            "Product A": (29.99, "https://www.example.com/product-a"),
-            "Product B": (15.50, "https://store.com/product-b"),
+            "Product A": PriceResult(price=29.99, url="https://www.example.com/product-a"),
+            "Product B": PriceResult(price=15.50, url="https://store.com/product-b"),
         }
 
         print_results_text(results)
@@ -79,9 +79,9 @@ class TestPrintResultsText(unittest.TestCase):
         """Test text output with mix of products (some with prices, some without)."""
         results = SearchResults()
         results.prices = {
-            "Product A": (29.99, "https://example.com/product-a"),
+            "Product A": PriceResult(price=29.99, url="https://example.com/product-a"),
             "Product B": None,
-            "Product C": (45.00, "https://shop.com/product-c"),
+            "Product C": PriceResult(price=45.00, url="https://shop.com/product-c"),
         }
 
         print_results_text(results)
@@ -115,8 +115,8 @@ class TestPrintResultsText(unittest.TestCase):
         """Test text output includes full URLs and sorts by price."""
         results = SearchResults()
         results.prices = {
-            "Product A": (29.99, "https://www.example.com/path/to/product"),
-            "Product B": (15.50, "https://subdomain.store.com/item"),
+            "Product A": PriceResult(price=29.99, url="https://www.example.com/path/to/product"),
+            "Product B": PriceResult(price=15.50, url="https://subdomain.store.com/item"),
         }
 
         print_results_text(results)
@@ -140,7 +140,7 @@ class TestPrintResultsText(unittest.TestCase):
     def test_print_results_text_separator_lines(self, mock_stdout):
         """Test text output has proper separator lines."""
         results = SearchResults()
-        results.prices = {"Product A": (29.99, "https://example.com/a")}
+        results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
 
         print_results_text(results)
 
@@ -179,9 +179,9 @@ class TestPrintResultsText(unittest.TestCase):
         """Test that product name column width adjusts to longest name."""
         results = SearchResults()
         results.prices = {
-            "Short": (10.00, "https://example.com/short"),
-            "Medium Length Name": (20.00, "https://example.com/medium"),
-            "Very Long Product Name Here": (30.00, "https://example.com/long"),
+            "Short": PriceResult(price=10.00, url="https://example.com/short"),
+            "Medium Length Name": PriceResult(price=20.00, url="https://example.com/medium"),
+            "Very Long Product Name Here": PriceResult(price=30.00, url="https://example.com/long"),
         }
 
         print_results_text(results)
@@ -217,9 +217,9 @@ class TestPrintResultsText(unittest.TestCase):
         """Test that prices are aligned by decimal point."""
         results = SearchResults()
         results.prices = {
-            "Product A": (5.50, "https://example.com/a"),
-            "Product B": (99.99, "https://example.com/b"),
-            "Product C": (123.45, "https://example.com/c"),
+            "Product A": PriceResult(price=5.50, url="https://example.com/a"),
+            "Product B": PriceResult(price=99.99, url="https://example.com/b"),
+            "Product C": PriceResult(price=123.45, url="https://example.com/c"),
         }
 
         print_results_text(results)
@@ -253,7 +253,7 @@ class TestPrintResultsText(unittest.TestCase):
         """Test that separator width is at least as wide as content (with minimum)."""
         results = SearchResults()
         results.prices = {
-            "Product": (10.00, "https://short.com/a"),
+            "Product": PriceResult(price=10.00, url="https://short.com/a"),
         }
 
         print_results_text(results)
@@ -326,9 +326,9 @@ class TestPrintResultsText(unittest.TestCase):
         """
         results = SearchResults()
         results.prices = {
-            "Product A": (5.50, "https://example.com/a"),  # Small price (5 chars)
+            "Product A": PriceResult(price=5.50, url="https://example.com/a"),  # Small price (5 chars)
             "Product B": None,  # Warning message is 19 chars
-            "Product C": (9.99, "https://example.com/c"),  # Small price (5 chars)
+            "Product C": PriceResult(price=9.99, url="https://example.com/c"),  # Small price (5 chars)
         }
 
         print_results_text(results)
@@ -370,8 +370,8 @@ class TestPrintResultsText(unittest.TestCase):
         """Test that separator adjusts to the longest line (with long URL)."""
         results = SearchResults()
         results.prices = {
-            "Short": (1.00, "https://example.com/short"),
-            "Long": (2.00, "https://verylongdomainname.com/very/long/path/to/product"),
+            "Short": PriceResult(price=1.00, url="https://example.com/short"),
+            "Long": PriceResult(price=2.00, url="https://verylongdomainname.com/very/long/path/to/product"),
         }
 
         print_results_text(results)
