@@ -221,6 +221,8 @@ def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient
                 print("    Could not find price", file=sys.stderr)
                 results.extraction_errors += 1
                 results.failed_urls.append(url)
+                # Remove from cache so we can retry later
+                http_client.remove_from_cache(url)
 
         if prices:
             cheapest = min(prices, key=lambda x: x[0])

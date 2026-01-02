@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from utils.site_handlers import (
     DefaultSiteHandler,
+    FarmacentralHandler,
     NotinoHandler,
     SiteHandlerRegistry,
     get_site_handler,
@@ -126,6 +127,129 @@ class TestNotinoHandler(unittest.TestCase):
         self.assertIsNone(price)
 
 
+class TestFarmacentralHandler(unittest.TestCase):
+    """Test Farmacentral site handler."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.handler = FarmacentralHandler()
+
+    def test_domain_pattern(self):
+        """Test Farmacentral domain pattern."""
+        self.assertEqual(self.handler.get_domain_pattern(), "farmacentral.pt")
+
+    def test_delay_range(self):
+        """Test Farmacentral delay range."""
+        min_delay, max_delay = self.handler.get_delay_range()
+        self.assertEqual(min_delay, 1.0)
+        self.assertEqual(max_delay, 2.0)
+
+    def test_no_custom_headers(self):
+        """Test Farmacentral has no custom headers."""
+        headers = self.handler.get_custom_headers("farmacentral.pt")
+        self.assertEqual(headers, {})
+
+    def test_extract_price_from_nuxt_state_dot_notation(self):
+        """Test price extraction from Nuxt state with dot notation."""
+        html = """
+            <script>
+                window.__NUXT__=(function(a){gl.price=7.32;gl.campaign_price=7.32})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertEqual(price, 7.32)
+
+    def test_extract_price_from_nuxt_state_json_notation(self):
+        """Test price extraction from Nuxt state with JSON notation."""
+        html = """
+            <script>
+                window.__NUXT__={"product":{"price":15.99}}
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertEqual(price, 15.99)
+
+    def test_extract_price_from_nuxt_state_single_quotes(self):
+        """Test price extraction with single quotes."""
+        html = """
+            <script>
+                window.__NUXT__={'price':22.50}
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertEqual(price, 22.50)
+
+    def test_extract_price_from_nuxt_state_unquoted_key(self):
+        """Test price extraction with unquoted key (JavaScript object literal)."""
+        html = """
+            <script>
+                window.__NUXT__=(function(){return {id:123,sku:456,price:7.32,sifarma_price:9.1}})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertEqual(price, 7.32)
+
+    def test_extract_price_multiple_prices_returns_first_valid(self):
+        """Test extracts first valid price from multiple prices."""
+        html = """
+            <script>
+                window.__NUXT__=(function(){
+                    gl.sifarma_price=9000.0;
+                    gl.price=7.32;
+                    gl.old_price=9.1;
+                })()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        # Should return first price in valid range (7.32)
+        self.assertEqual(price, 7.32)
+
+    def test_extract_price_no_nuxt_state(self):
+        """Test returns None when no Nuxt state found."""
+        html = "<div>No Nuxt state here</div>"
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertIsNone(price)
+
+    def test_extract_price_invalid_price_format(self):
+        """Test handles invalid price format gracefully."""
+        html = '<script>window.__NUXT__={price:"not_a_number"}</script>'
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertIsNone(price)
+
+    def test_extract_price_outside_range(self):
+        """Test skips prices outside valid range."""
+        html = "<script>window.__NUXT__={price:5000.00}</script>"
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertIsNone(price)  # Too expensive
+
+    def test_extract_price_script_with_no_string(self):
+        """Test handles script tags with no string content."""
+        html = '<script src="external.js"></script><script>window.__NUXT__={"price":29.99}</script>'
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        # Should skip the first script (no string) and find price in second
+        self.assertEqual(price, 29.99)
+
+    def test_extract_price_without_window_prefix(self):
+        """Test extraction works even without 'window.' prefix."""
+        html = """
+            <script>
+                __NUXT__=(function(){gl.price=12.34})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)
+        self.assertEqual(price, 12.34)
+
+
 class TestDefaultSiteHandler(unittest.TestCase):
     """Test default site handler."""
 
@@ -170,6 +294,12 @@ class TestSiteHandlerRegistry(unittest.TestCase):
         url = "https://shop.notino.pt/product/456"
         handler = get_site_handler(url)
         self.assertIsInstance(handler, NotinoHandler)
+
+    def test_get_handler_for_farmacentral(self):
+        """Test registry returns Farmacentral handler for Farmacentral URL."""
+        url = "https://farmacentral.pt/pt/artigo/cerave-cleanser-hydrating-limpeza-facial-236ml"
+        handler = get_site_handler(url)
+        self.assertIsInstance(handler, FarmacentralHandler)
 
     def test_get_handler_for_generic_site(self):
         """Test registry returns default handler for unknown site."""
