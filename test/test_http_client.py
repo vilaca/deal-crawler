@@ -13,11 +13,20 @@ class TestHttpClient(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
+        # Mock the cache to avoid file I/O and ensure tests don't hit cache
+        self.cache_patcher = patch("utils.http_client.HttpCache")
+        mock_cache_class = self.cache_patcher.start()
+        mock_cache = MagicMock()
+        mock_cache.get.return_value = None  # Always cache miss
+        mock_cache_class.return_value = mock_cache
+
         self.client = HttpClient()
+        self.mock_cache = mock_cache
 
     def tearDown(self):
         """Clean up after tests."""
         self.client.close()
+        self.cache_patcher.stop()
 
     def test_default_headers(self):
         """Test default headers for regular sites."""
@@ -95,6 +104,7 @@ class TestHttpClient(unittest.TestCase):
         # Mock the response
         mock_response = Mock()
         mock_response.content = b"<html><body>Test</body></html>"
+        mock_response.text = "<html><body>Test</body></html>"
         mock_response.raise_for_status = Mock()
         self.client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
 
@@ -107,7 +117,7 @@ class TestHttpClient(unittest.TestCase):
         self.assertEqual(result, mock_soup_instance)
         self.client.session.get.assert_called_once()
         mock_sleep.assert_called_once()  # Should have one delay
-        mock_soup.assert_called_once_with(b"<html><body>Test</body></html>", "lxml")
+        mock_soup.assert_called_once_with("<html><body>Test</body></html>", "lxml")
 
     @patch("utils.http_client.time.sleep")
     def test_fetch_page_http_error_non_403(self, mock_sleep):
@@ -267,6 +277,158 @@ class TestHttpClient(unittest.TestCase):
         self.assertIsNone(result)
         # Should only try once (no retries)
         self.assertEqual(self.client.session.get.call_count, 1)
+
+    @patch("utils.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
+    def test_cache_hit_returns_cached_html(self, mock_soup, mock_sleep):
+        """Test that cache hit returns cached HTML without making HTTP request."""
+        # Configure cache to return cached HTML
+        cached_html = "<html><body>Cached Content</body></html>"
+        self.mock_cache.get.return_value = cached_html
+
+        # Mock session.get to verify it's not called
+        self.client.session.get = Mock()  # type: ignore[method-assign]
+
+        mock_soup_instance = Mock()
+        mock_soup.return_value = mock_soup_instance
+
+        result = self.client.fetch_page("https://example.com/product")
+
+        # Should use cache
+        self.mock_cache.get.assert_called_once_with("https://example.com/product")
+        self.assertEqual(result, mock_soup_instance)
+
+        # Should NOT make HTTP request
+        self.client.session.get.assert_not_called()
+
+        # Should NOT apply rate limiting delay
+        mock_sleep.assert_not_called()
+
+        # Should parse cached HTML
+        mock_soup.assert_called_once_with(cached_html, "lxml")
+
+    @patch("utils.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
+    def test_cache_miss_makes_http_request(self, mock_soup, mock_sleep):
+        """Test that cache miss makes HTTP request and caches result."""
+        # Configure cache to return None (cache miss)
+        self.mock_cache.get.return_value = None
+
+        # Mock successful response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.content = b"<html><body>Fresh Content</body></html>"
+        mock_response.text = "<html><body>Fresh Content</body></html>"
+        mock_response.raise_for_status = Mock()
+        self.client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
+
+        mock_soup_instance = Mock()
+        mock_soup.return_value = mock_soup_instance
+
+        result = self.client.fetch_page("https://example.com/product")
+
+        # Should check cache
+        self.mock_cache.get.assert_called_once_with("https://example.com/product")
+
+        # Should make HTTP request
+        self.client.session.get.assert_called_once()
+
+        # Should cache the response
+        self.mock_cache.set.assert_called_once_with(
+            "https://example.com/product", "<html><body>Fresh Content</body></html>"
+        )
+
+        # Should apply rate limiting delay
+        mock_sleep.assert_called_once()
+
+        # Should return parsed content
+        self.assertEqual(result, mock_soup_instance)
+
+    @patch("utils.http_client.time.sleep")
+    def test_cache_only_stores_200_responses(self, mock_sleep):
+        """Test that only HTTP 200 responses are cached."""
+        # Configure cache miss
+        self.mock_cache.get.return_value = None
+
+        # Mock 404 error
+        mock_response = Mock()
+        mock_response.status_code = 404
+        http_error = requests.exceptions.HTTPError()
+        http_error.response = mock_response
+        self.client.session.get = Mock(side_effect=http_error)  # type: ignore[method-assign]
+
+        result = self.client.fetch_page("https://example.com/product")
+
+        # Should NOT cache the failed response
+        self.mock_cache.set.assert_not_called()
+
+        self.assertIsNone(result)
+
+    def test_use_cache_false_disables_caching(self):
+        """Test that use_cache=False disables cache."""
+        client = HttpClient(use_cache=False)
+
+        # Cache should be None when disabled
+        self.assertIsNone(client.cache)
+        self.assertFalse(client.use_cache)
+
+        client.close()
+
+    @patch("utils.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
+    def test_no_cache_bypasses_cache_read(self, mock_soup, mock_sleep):
+        """Test that use_cache=False bypasses cache read."""
+        # Create client with caching disabled
+        with patch("utils.http_client.HttpCache"):
+            client = HttpClient(use_cache=False)
+
+        # Mock successful response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.content = b"<html><body>Fresh Content</body></html>"
+        mock_response.raise_for_status = Mock()
+        client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
+
+        mock_soup_instance = Mock()
+        mock_soup.return_value = mock_soup_instance
+
+        result = client.fetch_page("https://example.com/product")
+
+        # Should make HTTP request (not use cache)
+        client.session.get.assert_called_once()
+
+        # Should return result
+        self.assertEqual(result, mock_soup_instance)
+
+        client.close()
+
+    @patch("utils.http_client.time.sleep")
+    @patch("utils.http_client.BeautifulSoup")
+    def test_no_cache_bypasses_cache_write(self, mock_soup, mock_sleep):
+        """Test that use_cache=False bypasses cache write."""
+        # Create client with caching disabled
+        with patch("utils.http_client.HttpCache"):
+            client = HttpClient(use_cache=False)
+
+        # Mock successful response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.content = b"<html><body>Test</body></html>"
+        mock_response.raise_for_status = Mock()
+        client.session.get = Mock(return_value=mock_response)  # type: ignore[method-assign]
+
+        mock_soup_instance = Mock()
+        mock_soup.return_value = mock_soup_instance
+
+        result = client.fetch_page("https://example.com/product")
+
+        # Should NOT attempt to cache (cache is None)
+        self.assertIsNone(client.cache)
+
+        # Should still return result
+        self.assertEqual(result, mock_soup_instance)
+
+        client.close()
 
 
 if __name__ == "__main__":

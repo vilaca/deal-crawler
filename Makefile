@@ -14,6 +14,7 @@ help:
 	@echo "  make complexity   - Run complexity checks (radon)"
 	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, complexity, test)"
 	@echo "  make clean        - Clean up temporary files"
+	@echo "  make clean-cache  - Clear HTTP response cache"
 
 install:
 	pip install -r requirements.txt
