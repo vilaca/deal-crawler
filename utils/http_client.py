@@ -175,7 +175,7 @@ class HttpClient:
         Returns:
             True if should retry, False otherwise
         """
-        return attempt < max_attempts and error.response.status_code == 403
+        return attempt < max_attempts and error.response is not None and error.response.status_code == 403
 
     def _wait_for_retry(self, error_message: str, attempt: int, max_attempts: int) -> None:
         """Wait before retry with logging.
