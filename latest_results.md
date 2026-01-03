@@ -20,13 +20,13 @@
 
 ## 📊 Search Summary
 
-**⚠️ 56/82 URLs** (68% success) · **23 products**
+**⚠️ 56/95 URLs** (59% success) · **23 products**
 
-_🌐 13 fetch errors · 🔍 13 extraction errors_
+_🌐 19 fetch errors · 🔍 20 extraction errors_
 
-**Failed URLs** (26):
+**Failed URLs** (39):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
-- `https://www.blinkshop.com/cerave-foaming-cleanser-normal-to-oily-skin-236ml`
-- `https://skin.pt/cerave-foaming-cleanser-gel-espuma-de-limpeza-purificante?opt=473ml&attr=uom`
-- _23 more..._
+- `https://www.farmacia365.pt/avene-couvrance-base-fluido-areia-30ml_6600163`
+- `https://www.farmacia365.pt/avene-couvrance-base-fluido-bege-30ml_6951863`
+- _36 more..._
 
