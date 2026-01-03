@@ -361,3 +361,114 @@ def find_cheapest_prices(products: Dict[str, List[str]], http_client: HttpClient
             results.prices[product_name] = None
 
     return results
+
+
+def filter_all_prices_by_best_value(
+    all_prices: Dict[str, List[PriceResult]], shipping_config=None
+) -> Dict[str, List[PriceResult]]:
+    """Filter all prices to keep only best value sizes for each product family.
+
+    Similar to filter_best_value_sizes but works on all_prices format
+    instead of SearchResults. Compares sizes by base price per 100ml
+    (without shipping). Shipping is only considered during store optimization.
+
+    Args:
+        all_prices: Dictionary mapping product names to lists of PriceResult
+        shipping_config: Unused parameter (kept for compatibility)
+
+    Returns:
+        Filtered dictionary with only best value sizes per product family
+    """
+    # Group products by base name
+    product_families = _group_products_by_base_name(
+        {name: prices[0] if prices else None for name, prices in all_prices.items()}
+    )
+
+    # For each family, identify the best value product name
+    filtered_prices: Dict[str, List[PriceResult]] = {}
+
+    for base_name, products_list in product_families.items():
+        # Get all products in this family with their prices
+        family_prices = []
+        for product_name, _ in products_list:
+            if product_name in all_prices and all_prices[product_name]:
+                # Find best base price per 100ml for this product
+                best_price = min(all_prices[product_name], key=lambda x: x.price)
+                if best_price.price_per_100ml:
+                    family_prices.append((product_name, best_price, best_price.price_per_100ml))
+
+        if family_prices:
+            # Select product with best value (base price per 100ml)
+            best_product_name, _, _ = min(family_prices, key=lambda x: x[2] or float("inf"))
+            # Keep all prices for the best product
+            filtered_prices[best_product_name] = all_prices[best_product_name]
+        else:
+            # No products with price_per_100ml - keep all
+            for product_name, _ in products_list:
+                if product_name in all_prices:
+                    filtered_prices[product_name] = all_prices[product_name]
+
+    return filtered_prices
+
+
+def find_all_prices(products: Dict[str, List[str]], http_client: HttpClient) -> Dict[str, List[PriceResult]]:
+    """Find ALL available prices for each product across all stores.
+
+    Similar to find_cheapest_prices() but returns all valid prices instead
+    of just the cheapest one. Useful for optimization across stores.
+
+    Args:
+        products: Dictionary mapping product names to lists of URLs
+        http_client: HttpClient instance for fetching pages
+
+    Returns:
+        Dictionary mapping product names to lists of PriceResult objects
+        (one per store with product in stock and valid price)
+    """
+    all_prices: Dict[str, List[PriceResult]] = {}
+
+    for product_name, urls in products.items():
+        print(f"\nChecking prices for {product_name}...", file=sys.stderr)
+        prices = []
+
+        # Parse product info once for all URLs of this product
+        product_info = parse_product_name(product_name)
+
+        for url in urls:
+            print(f"  Fetching: {url}", file=sys.stderr)
+            soup = http_client.fetch_page(url)
+
+            if not soup:
+                print("    Could not fetch page", file=sys.stderr)
+                continue
+
+            # Check stock status first
+            if is_out_of_stock(soup):
+                print("    Out of stock - skipping", file=sys.stderr)
+                continue
+
+            price = extract_price(soup, url)
+
+            if price:
+                # Calculate price per 100ml if volume information is available
+                price_per_100ml = None
+                if product_info.total_volume_ml:
+                    price_per_100ml = calculate_price_per_100ml(price, product_info.total_volume_ml)
+                    print(
+                        f"    Found price: €{price:.2f} ({price_per_100ml:.2f}/100ml)",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(f"    Found price: €{price:.2f}", file=sys.stderr)
+
+                price_result = PriceResult(price=price, url=url, price_per_100ml=price_per_100ml)
+                prices.append(price_result)
+            else:
+                print("    Could not find price", file=sys.stderr)
+                # Remove from cache so we can retry later
+                http_client.remove_from_cache(url)
+
+        # Store all prices found for this product
+        all_prices[product_name] = prices
+
+    return all_prices
