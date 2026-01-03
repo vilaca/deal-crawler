@@ -503,5 +503,218 @@ class TestMainFunction(unittest.TestCase):
         mock_print_text.assert_called_once_with(mock_results)
 
 
+    @patch("main.print_plan_text")
+    @patch("main.optimize_shopping_plan")
+    @patch("main.load_shipping_config")
+    @patch("main.find_all_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("sys.argv", ["main.py", "--plan", "Product A,Product B"])
+    def test_main_with_plan_flag(
+        self,
+        mock_http_client,
+        mock_load_products,
+        mock_find_all_prices,
+        mock_load_shipping_config,
+        mock_optimize,
+        mock_print_plan,
+    ):  # pylint: disable=too-many-positional-arguments
+        """Test main() with --plan flag optimizes purchases."""
+        from utils.finder import PriceResult
+        from utils.shipping import ShippingConfig, ShippingInfo
+
+        # Setup mocks
+        mock_products = {
+            "Product A": ["https://store1.com/a", "https://store2.com/a"],
+            "Product B": ["https://store1.com/b", "https://store2.com/b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        mock_all_prices = {
+            "Product A": [PriceResult(price=10.0, url="https://store1.com/a", price_per_100ml=1.0)],
+            "Product B": [PriceResult(price=20.0, url="https://store2.com/b", price_per_100ml=2.0)],
+        }
+        mock_find_all_prices.return_value = mock_all_prices
+
+        mock_shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.0, free_over=50.0),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.5, free_over=40.0),
+            }
+        )
+        mock_load_shipping_config.return_value = mock_shipping_config
+
+        mock_plan = MagicMock()
+        mock_plan.total_shipping = 0.0  # No shipping cost
+        mock_optimize.return_value = mock_plan
+
+        # Run main
+        main()
+
+        # Verify shipping config was loaded
+        mock_load_shipping_config.assert_called_once_with("shipping.yaml")
+
+        # Verify find_all_prices was called (not find_cheapest_prices)
+        mock_find_all_prices.assert_called_once()
+
+        # Verify optimizer was called
+        mock_optimize.assert_called_once_with(mock_all_prices, mock_shipping_config)
+
+        # Verify plan was printed
+        mock_print_plan.assert_called_once_with(mock_plan)
+
+    @patch("main.print_plan_text")
+    @patch("main.optimize_shopping_plan")
+    @patch("main.load_shipping_config")
+    @patch("main.find_all_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("sys.argv", ["main.py", "--products", "Product A,Product B", "--plan", "Product A"])
+    def test_main_plan_and_products_work_together(
+        self,
+        mock_http_client,
+        mock_load_products,
+        mock_find_all_prices,
+        mock_load_shipping_config,
+        mock_optimize,
+        mock_print_plan,
+    ):  # pylint: disable=too-many-positional-arguments
+        """Test that --plan and --products can be used together."""
+        # Setup mocks
+        mock_products = {
+            "Product A": ["https://store1.com/a"],
+            "Product B": ["https://store1.com/b"],
+            "Product C": ["https://store1.com/c"],
+        }
+        mock_load_products.return_value = mock_products
+
+        from utils.finder import PriceResult
+        from utils.shipping import ShippingConfig, ShippingInfo
+
+        mock_all_prices = {"Product A": [PriceResult(price=10.0, url="https://store1.com/a", price_per_100ml=1.0)]}
+        mock_find_all_prices.return_value = mock_all_prices
+
+        mock_shipping_config = ShippingConfig(
+            stores={"store1.com": ShippingInfo(site="store1.com", shipping_cost=3.0, free_over=50.0)}
+        )
+        mock_load_shipping_config.return_value = mock_shipping_config
+
+        mock_plan = MagicMock()
+        mock_plan.total_shipping = 0.0  # No shipping cost
+        mock_optimize.return_value = mock_plan
+
+        # Run main
+        main()
+
+        # Should only optimize Product A (filtered by both --products and --plan)
+        mock_optimize.assert_called_once()
+        mock_print_plan.assert_called_once()
+
+    @patch("main.print_plan_text")
+    @patch("main.optimize_shopping_plan")
+    @patch("main.load_shipping_config")
+    @patch("main.find_all_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("sys.argv", ["main.py", "--plan"])
+    def test_main_plan_without_value_optimizes_all(
+        self,
+        mock_http_client,
+        mock_load_products,
+        mock_find_all_prices,
+        mock_load_shipping_config,
+        mock_optimize,
+        mock_print_plan,
+    ):  # pylint: disable=too-many-positional-arguments
+        """Test that --plan without a value optimizes all products."""
+        # Setup mocks
+        mock_products = {
+            "Product A": ["https://store1.com/a"],
+            "Product B": ["https://store1.com/b"],
+        }
+        mock_load_products.return_value = mock_products
+
+        from utils.finder import PriceResult
+        from utils.shipping import ShippingConfig, ShippingInfo
+
+        mock_all_prices = {
+            "Product A": [PriceResult(price=10.0, url="https://store1.com/a", price_per_100ml=1.0)],
+            "Product B": [PriceResult(price=20.0, url="https://store1.com/b", price_per_100ml=2.0)],
+        }
+        mock_find_all_prices.return_value = mock_all_prices
+
+        mock_shipping_config = ShippingConfig(
+            stores={"store1.com": ShippingInfo(site="store1.com", shipping_cost=3.0, free_over=50.0)}
+        )
+        mock_load_shipping_config.return_value = mock_shipping_config
+
+        mock_plan = MagicMock()
+        mock_plan.total_shipping = 0.0  # No shipping cost
+        mock_optimize.return_value = mock_plan
+
+        # Run main
+        main()
+
+        # Should optimize all products
+        mock_optimize.assert_called_once()
+        mock_print_plan.assert_called_once()
+
+    @patch("main.load_products")
+    @patch("sys.argv", ["main.py", "--plan", "NonExistent"])
+    def test_main_plan_with_no_matches(self, mock_load_products):
+        """Test --plan with no matching products."""
+        mock_products = {
+            "Product A": ["https://example.com/a"],
+        }
+        mock_load_products.return_value = mock_products
+
+        with self.assertRaises(SystemExit) as cm:
+            main()
+
+        self.assertEqual(cm.exception.code, 1)
+
+    @patch("main.print_plan_markdown")
+    @patch("main.optimize_shopping_plan")
+    @patch("main.load_shipping_config")
+    @patch("main.find_all_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("sys.argv", ["main.py", "--plan", "Product A", "--markdown"])
+    def test_main_plan_with_markdown_flag(
+        self,
+        mock_http_client,
+        mock_load_products,
+        mock_find_all_prices,
+        mock_load_shipping_config,
+        mock_optimize,
+        mock_print_markdown,
+    ):  # pylint: disable=too-many-positional-arguments
+        """Test --plan with --markdown flag uses markdown formatter."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        from utils.finder import PriceResult
+        from utils.shipping import ShippingConfig, ShippingInfo
+
+        mock_all_prices = {"Product A": [PriceResult(price=10.0, url="https://example.com/a", price_per_100ml=1.0)]}
+        mock_find_all_prices.return_value = mock_all_prices
+
+        mock_shipping_config = ShippingConfig(
+            stores={"example.com": ShippingInfo(site="example.com", shipping_cost=3.0, free_over=50.0)}
+        )
+        mock_load_shipping_config.return_value = mock_shipping_config
+
+        mock_plan = MagicMock()
+        mock_plan.total_shipping = 0.0  # No shipping cost
+        mock_optimize.return_value = mock_plan
+
+        # Run main
+        main()
+
+        # Verify markdown formatter was used
+        mock_print_markdown.assert_called_once_with(mock_plan)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
