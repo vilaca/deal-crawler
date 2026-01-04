@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 from bs4 import BeautifulSoup
 
-from utils.finder import find_cheapest_prices, SearchResults
+from utils.finder import find_cheapest_prices, find_all_prices, SearchResults
+from utils.string_utils import pluralize
 
 
 class TestFindCheapestPrices(unittest.TestCase):
@@ -227,8 +228,6 @@ class TestSearchResults(unittest.TestCase):
 
     def test_pluralize(self):
         """Test pluralization logic."""
-        from utils.string_utils import pluralize
-
         # Singular (count = 1)
         self.assertEqual(pluralize(1, "product", "products"), "product")
         # Plural (count != 1)
@@ -695,6 +694,303 @@ class TestSearchResults(unittest.TestCase):
         # Should NOT contain markdown markers
         self.assertNotIn("**", output)
         self.assertNotIn("_📦", output)  # No italic markers around issues
+
+
+class TestFindAllPrices(unittest.TestCase):
+    """Test finding all prices for optimization across stores."""
+
+    def create_soup(self, html: str) -> BeautifulSoup:
+        """Helper to create BeautifulSoup from HTML.
+
+        Args:
+            html: HTML string to parse
+
+        Returns:
+            BeautifulSoup object
+        """
+        return BeautifulSoup(html, "lxml")
+
+    def create_mock_http_client(self) -> MagicMock:
+        """Helper to create a mock HttpClient.
+
+        Returns:
+            Mock HttpClient
+        """
+        return MagicMock()
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_returns_all_prices_not_just_cheapest(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test returns ALL prices across stores, not just the cheapest."""
+        products = {
+            "Product A (100ml)": [
+                "https://store1.com/product",
+                "https://store2.com/product",
+                "https://store3.com/product",
+            ]
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        # All in stock
+        mock_stock.return_value = False
+        # Different prices: 50.00, 30.00, 45.00
+        mock_extract.side_effect = [50.00, 30.00, 45.00]
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should return ALL three prices, not just cheapest
+        self.assertIn("Product A (100ml)", all_prices)
+        self.assertEqual(len(all_prices["Product A (100ml)"]), 3)
+
+        prices = [p.price for p in all_prices["Product A (100ml)"]]
+        self.assertEqual(sorted(prices), [30.00, 45.00, 50.00])
+
+        # Check that each price has correct URL
+        urls = [p.url for p in all_prices["Product A (100ml)"]]
+        self.assertEqual(len(urls), 3)
+        self.assertIn("https://store1.com/product", urls)
+        self.assertIn("https://store2.com/product", urls)
+        self.assertIn("https://store3.com/product", urls)
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_returns_empty_list_when_all_out_of_stock(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test returns empty list when all URLs are out of stock."""
+        products = {
+            "Product B": [
+                "https://store1.com/product",
+                "https://store2.com/product",
+            ]
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        # All out of stock
+        mock_stock.return_value = True
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should return empty list
+        self.assertIn("Product B", all_prices)
+        self.assertEqual(all_prices["Product B"], [])
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_skips_out_of_stock_includes_in_stock(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test skips out-of-stock items but includes in-stock ones."""
+        products = {
+            "Product C": [
+                "https://store1.com/product",
+                "https://store2.com/product",
+                "https://store3.com/product",
+            ]
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        # First and third are out of stock, second is in stock
+        mock_stock.side_effect = [True, False, True]
+        # Only one price should be requested (for in-stock item)
+        mock_extract.return_value = 25.00
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should only have one price
+        self.assertIn("Product C", all_prices)
+        self.assertEqual(len(all_prices["Product C"]), 1)
+        self.assertEqual(all_prices["Product C"][0].price, 25.00)
+        self.assertEqual(all_prices["Product C"][0].url, "https://store2.com/product")
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_handles_fetch_failures_gracefully(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test handles fetch failures gracefully and continues."""
+        products = {
+            "Product D": [
+                "https://store1.com/product",
+                "https://store2.com/product",
+                "https://store3.com/product",
+            ]
+        }
+
+        # Mock HttpClient - first fetch fails, others succeed
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.side_effect = [
+            None,  # Fetch failure
+            self.create_soup("<div>test</div>"),
+            self.create_soup("<div>test</div>"),
+        ]
+
+        # In stock for successful fetches
+        mock_stock.return_value = False
+        mock_extract.side_effect = [40.00, 35.00]
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should have two prices (one fetch failed)
+        self.assertIn("Product D", all_prices)
+        self.assertEqual(len(all_prices["Product D"]), 2)
+        prices = [p.price for p in all_prices["Product D"]]
+        self.assertEqual(sorted(prices), [35.00, 40.00])
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_handles_price_extraction_failures(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test handles price extraction failures gracefully."""
+        products = {
+            "Product E": [
+                "https://store1.com/product",
+                "https://store2.com/product",
+                "https://store3.com/product",
+            ]
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        # All in stock
+        mock_stock.return_value = False
+        # First extraction fails (returns None), others succeed
+        mock_extract.side_effect = [None, 42.00, 38.00]
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should have two prices (one extraction failed)
+        self.assertIn("Product E", all_prices)
+        self.assertEqual(len(all_prices["Product E"]), 2)
+        prices = [p.price for p in all_prices["Product E"]]
+        self.assertEqual(sorted(prices), [38.00, 42.00])
+
+        # Should call remove_from_cache for failed extraction
+        mock_client.remove_from_cache.assert_called_once_with("https://store1.com/product")
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_calculates_price_per_100ml_when_volume_available(
+        self, mock_extract: MagicMock, mock_stock: MagicMock
+    ) -> None:
+        """Test calculates price_per_100ml correctly when volume info is available."""
+        products = {
+            "Cerave Cleanser (236ml)": [
+                "https://store1.com/product",
+                "https://store2.com/product",
+            ]
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        # All in stock
+        mock_stock.return_value = False
+        mock_extract.side_effect = [10.00, 12.00]
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should have both prices with price_per_100ml calculated
+        self.assertIn("Cerave Cleanser (236ml)", all_prices)
+        self.assertEqual(len(all_prices["Cerave Cleanser (236ml)"]), 2)
+
+        # Check first price: €10.00 for 236ml = €4.24/100ml
+        price1 = all_prices["Cerave Cleanser (236ml)"][0]
+        self.assertEqual(price1.price, 10.00)
+        self.assertIsNotNone(price1.price_per_100ml)
+        assert price1.price_per_100ml is not None  # Type narrowing
+        self.assertAlmostEqual(price1.price_per_100ml, 4.24, places=2)
+
+        # Check second price: €12.00 for 236ml = €5.08/100ml
+        price2 = all_prices["Cerave Cleanser (236ml)"][1]
+        self.assertEqual(price2.price, 12.00)
+        self.assertIsNotNone(price2.price_per_100ml)
+        assert price2.price_per_100ml is not None  # Type narrowing
+        self.assertAlmostEqual(price2.price_per_100ml, 5.08, places=2)
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_price_per_100ml_none_when_no_volume_info(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test price_per_100ml is None when product name has no volume info."""
+        products = {
+            "Some Product": [
+                "https://store1.com/product",
+            ]
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        mock_stock.return_value = False
+        mock_extract.return_value = 20.00
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should have price but price_per_100ml should be None
+        self.assertIn("Some Product", all_prices)
+        self.assertEqual(len(all_prices["Some Product"]), 1)
+        self.assertEqual(all_prices["Some Product"][0].price, 20.00)
+        self.assertIsNone(all_prices["Some Product"][0].price_per_100ml)
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_works_with_multiple_products(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test correctly processes multiple products."""
+        products = {
+            "Product A (100ml)": [
+                "https://store1.com/productA",
+                "https://store2.com/productA",
+            ],
+            "Product B (200ml)": [
+                "https://store1.com/productB",
+                "https://store2.com/productB",
+            ],
+        }
+
+        # Mock HttpClient
+        mock_client = self.create_mock_http_client()
+        mock_client.fetch_page.return_value = self.create_soup("<div>test</div>")
+
+        # All in stock
+        mock_stock.return_value = False
+        # Prices for Product A, then Product B
+        mock_extract.side_effect = [10.00, 12.00, 20.00, 22.00]
+
+        all_prices = find_all_prices(products, mock_client)
+
+        # Should have both products
+        self.assertIn("Product A (100ml)", all_prices)
+        self.assertIn("Product B (200ml)", all_prices)
+
+        # Product A should have 2 prices
+        self.assertEqual(len(all_prices["Product A (100ml)"]), 2)
+        prices_a = [p.price for p in all_prices["Product A (100ml)"]]
+        self.assertEqual(sorted(prices_a), [10.00, 12.00])
+
+        # Product B should have 2 prices
+        self.assertEqual(len(all_prices["Product B (200ml)"]), 2)
+        prices_b = [p.price for p in all_prices["Product B (200ml)"]]
+        self.assertEqual(sorted(prices_b), [20.00, 22.00])
+
+    @patch("utils.finder.is_out_of_stock")
+    @patch("utils.finder.extract_price")
+    def test_empty_products_returns_empty_dict(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
+        """Test returns empty dict when given empty products dict."""
+        products: dict[str, list[str]] = {}
+
+        mock_client = self.create_mock_http_client()
+
+        all_prices = find_all_prices(products, mock_client)
+
+        self.assertEqual(all_prices, {})
+        # Should not call fetch_page at all
+        mock_client.fetch_page.assert_not_called()
 
 
 if __name__ == "__main__":

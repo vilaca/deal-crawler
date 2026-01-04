@@ -12,10 +12,9 @@ from utils.data_loader import load_products
 from utils.filters import filter_by_sites, filter_by_products
 from utils.finder import SearchResults, find_cheapest_prices, filter_best_value_sizes, find_all_prices
 from utils.http_client import HttpClient
-from utils.markdown_formatter import print_results_markdown
-from utils.text_formatter import print_results_text
+from utils.markdown_formatter import print_results_markdown, print_plan_markdown
+from utils.text_formatter import print_results_text, print_plan_text
 from utils.optimizer import optimize_shopping_plan
-from utils.plan_formatter import print_plan_text, print_plan_markdown
 from utils.shipping import ShippingConfig
 
 
