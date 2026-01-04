@@ -28,7 +28,11 @@ class Config:
         self.products_file = os.getenv("DEAL_CRAWLER_PRODUCTS_FILE", "products.yml")
 
         # Display settings
-        self.show_all_sizes = os.getenv("DEAL_CRAWLER_ALL_SIZES", "false").lower() == "true"
+        env_show_all_sizes = os.getenv("DEAL_CRAWLER_ALL_SIZES")
+        if env_show_all_sizes is None:
+            # Backward compatibility with the old environment variable name
+            env_show_all_sizes = os.getenv("DEAL_CRAWLER_SHOW_ALL_SIZES", "false")
+        self.show_all_sizes = env_show_all_sizes.lower() == "true"
 
         # Delay settings for different sites (in seconds)
         # Notino has aggressive bot detection, use longer delays
