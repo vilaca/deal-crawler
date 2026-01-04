@@ -208,7 +208,10 @@ def _add_constraints(
 
     # Constraint 2: Link product selection to store usage
     for p, s, i in price_options:
-        prob += x[(p, s, i)] <= use_store[s], f"Link_{_sanitize_constraint_name(p)}_{_sanitize_constraint_name(s)}_{i}_to_store"
+        prob += (
+            x[(p, s, i)] <= use_store[s],
+            f"Link_{_sanitize_constraint_name(p)}_{_sanitize_constraint_name(s)}_{i}_to_store",
+        )
 
     # Constraint 3: Free shipping threshold
     for store in stores:
