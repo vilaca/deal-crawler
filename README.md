@@ -13,110 +13,74 @@ Price comparison tool that scrapes product prices from multiple retailers and fi
 
 ## Quick Start
 
-### Installation
-
 ```bash
-# Clone the repository
 git clone https://github.com/vilaca/deal-crawler.git
 cd deal-crawler
-
-# Create virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install production dependencies
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# Run the scraper (URLs to check are configured in products.yml)
 python main.py
-```
-
-For development (includes testing and linting tools):
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
 ```
 
 ## Usage
 
-### Basic Usage
-
 ```bash
-# Run with terminal-optimized text output (default)
+# Basic usage
 python main.py
 
-# Run with markdown output (for CI/documentation)
-python main.py --markdown
+# Filter by sites and products
+python main.py --sites "notino.pt,wells.pt" --products "Cerave,Medik8"
 
-# Use custom products file
-python main.py --products-file my_products.yml
+# Use environment variables instead
+export DEAL_CRAWLER_SITES="notino.pt,wells.pt"
+export DEAL_CRAWLER_PRODUCTS="Cerave,Medik8"
+python main.py
 
-# Bypass cache (force fresh HTTP requests)
-python main.py --no-cache
-
-# View help
-python main.py --help
+# Markdown output, bypass cache, show all sizes
+python main.py --markdown --no-cache --all-sizes
 ```
-
-### Filtering Options
-
-You can filter which products and sites to check using CLI parameters:
-
-```bash
-# Filter by site domains (comma-separated)
-python main.py --sites "notino.pt,wells.pt"
-
-# Filter by product names (substring match, comma-separated)
-python main.py --products "Crystal Retinal,SPF50"
-
-# Combine filters (only check notino.pt for Crystal Retinal products)
-python main.py --sites "notino.pt" --products "Crystal Retinal"
-
-# Use with markdown output
-python main.py --products "Medik8" --sites "notino.pt,atida.com" --markdown
-```
-
-**Filter Features:**
-- 🔍 Case-insensitive matching
-- 🌐 Site filter matches partial domains (e.g., "notino.pt" matches "www.notino.pt")
-- 📝 Product filter uses substring matching (e.g., "Crystal" matches "Medik8 Crystal Retinal 6")
-- ➕ Multiple values use OR logic (matches any of the specified values)
-- 🔗 Filters can be combined (AND logic between --sites and --products)
-
-## Features
-
-- 🛒 Scrapes prices from multiple retailers with automatic retry on failures
-- 💰 Prioritizes discounted prices over original prices
-- 📦 Excludes out-of-stock products from comparison
-- 🔍 Filter by sites and products via CLI parameters
-- ⚙️ Configurable via environment variables
-- 🤖 Smart bot detection evasion with randomized delays
-- 📊 Dual output formats (text and markdown)
 
 ## Configuration
 
-All settings can be customized using environment variables with the `DEAL_CRAWLER_` prefix:
+All parameters work as **both CLI flags and environment variables** (CLI flags override env vars):
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DEAL_CRAWLER_MIN_PRICE` | `1.0` | Minimum valid price (filters out parsing errors) |
-| `DEAL_CRAWLER_MAX_PRICE` | `1000.0` | Maximum valid price (filters out parsing errors) |
-| `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
-| `DEAL_CRAWLER_MAX_RETRIES` | `2` | Number of retry attempts for failed requests |
-| `DEAL_CRAWLER_NOTINO_DELAY_MIN` | `4.0` | Minimum delay before Notino requests (seconds) |
-| `DEAL_CRAWLER_NOTINO_DELAY_MAX` | `7.0` | Maximum delay before Notino requests (seconds) |
-| `DEAL_CRAWLER_DEFAULT_DELAY_MIN` | `1.0` | Minimum delay before other site requests (seconds) |
-| `DEAL_CRAWLER_DEFAULT_DELAY_MAX` | `2.0` | Maximum delay before other site requests (seconds) |
-| `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Minimum delay before retry attempts (seconds) |
-| `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Maximum delay before retry attempts (seconds) |
-| `DEAL_CRAWLER_CACHE_DURATION` | `3600` | HTTP cache lifetime in seconds (1 hour) |
-| `DEAL_CRAWLER_CACHE_FILE` | `.http_cache.json` | HTTP cache file path |
-| `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Products data file path |
+| CLI Flag | Environment Variable | Default | Description |
+|----------|---------------------|---------|-------------|
+| `--markdown` | `DEAL_CRAWLER_MARKDOWN` | `false` | Output in markdown format |
+| `--sites` | `DEAL_CRAWLER_SITES` | - | Filter by site domains (comma-separated) |
+| `--products` | `DEAL_CRAWLER_PRODUCTS` | - | Filter by product names (comma-separated) |
+| `--all-sizes` | `DEAL_CRAWLER_ALL_SIZES` | `false` | Show all product sizes instead of best value |
+| `--no-cache` | `DEAL_CRAWLER_NO_CACHE` | `false` | Bypass HTTP cache |
+| `--cache-duration` | `DEAL_CRAWLER_CACHE_DURATION` | `3600` | HTTP cache lifetime in seconds |
+| `--request-timeout` | `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
+| `--products-file` | `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Path to products data file |
 
-## Caching
+### Advanced Configuration
 
-Successful HTTP responses are cached for 1 hour by default. Configure with `DEAL_CRAWLER_CACHE_DURATION` (seconds). Clear the cache by deleting the cache file (`.http_cache.json`) or bypass caching with the `--no-cache` flag.
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `DEAL_CRAWLER_MIN_PRICE` | `1.0` | Minimum valid price |
+| `DEAL_CRAWLER_MAX_PRICE` | `1000.0` | Maximum valid price |
+| `DEAL_CRAWLER_MAX_RETRIES` | `2` | Retry attempts for failed requests |
+| `DEAL_CRAWLER_CACHE_FILE` | `.http_cache.json` | Cache file path |
+| `DEAL_CRAWLER_NOTINO_DELAY_MIN` | `4.0` | Min delay for Notino (seconds) |
+| `DEAL_CRAWLER_NOTINO_DELAY_MAX` | `7.0` | Max delay for Notino (seconds) |
+| `DEAL_CRAWLER_DEFAULT_DELAY_MIN` | `1.0` | Min delay for other sites (seconds) |
+| `DEAL_CRAWLER_DEFAULT_DELAY_MAX` | `2.0` | Max delay for other sites (seconds) |
+| `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Min delay before retry (seconds) |
+| `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Max delay before retry (seconds) |
+
+## Features
+
+- 🛒 Multi-retailer price scraping with automatic retry
+- 💰 Prioritizes discounted prices
+- 📦 Excludes out-of-stock products
+- 🔍 Flexible filtering (sites, products, sizes)
+- ⚙️ Configurable via CLI flags or environment variables
+- 🤖 Bot detection evasion with randomized delays
+- 📊 Text and markdown output formats
+- 💾 HTTP response caching (1 hour default)
 
 ## Contributing
 
-Contributions are welcome! 
+Contributions are welcome!

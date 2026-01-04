@@ -430,6 +430,54 @@ class TestHttpClient(unittest.TestCase):
 
         client.close()
 
+    @patch("utils.http_client.HttpCache")
+    def test_initialization_with_custom_cache_duration(self, mock_cache_class):
+        """Test HttpClient can be initialized with custom cache_duration."""
+        mock_cache = MagicMock()
+        mock_cache_class.return_value = mock_cache
+
+        client = HttpClient(cache_duration=7200)
+
+        # Verify HttpCache was initialized with custom cache_duration
+        mock_cache_class.assert_called_once_with(config.cache_file, 7200)
+        client.close()
+
+    @patch("utils.http_client.HttpCache")
+    def test_initialization_with_custom_cache_file(self, mock_cache_class):
+        """Test HttpClient can be initialized with custom cache_file."""
+        mock_cache = MagicMock()
+        mock_cache_class.return_value = mock_cache
+
+        client = HttpClient(cache_file="custom_cache.json")
+
+        # Verify HttpCache was initialized with custom cache_file
+        mock_cache_class.assert_called_once_with("custom_cache.json", config.cache_duration)
+        client.close()
+
+    @patch("utils.http_client.HttpCache")
+    def test_initialization_with_custom_cache_duration_and_file(self, mock_cache_class):
+        """Test HttpClient can be initialized with both custom cache_duration and cache_file."""
+        mock_cache = MagicMock()
+        mock_cache_class.return_value = mock_cache
+
+        client = HttpClient(cache_duration=7200, cache_file="custom_cache.json")
+
+        # Verify HttpCache was initialized with both custom parameters
+        mock_cache_class.assert_called_once_with("custom_cache.json", 7200)
+        client.close()
+
+    @patch("utils.http_client.HttpCache")
+    def test_initialization_cache_duration_defaults_to_config(self, mock_cache_class):
+        """Test HttpClient uses config.cache_duration when not specified."""
+        mock_cache = MagicMock()
+        mock_cache_class.return_value = mock_cache
+
+        client = HttpClient()
+
+        # Verify HttpCache was initialized with default cache_duration from config
+        mock_cache_class.assert_called_once_with(config.cache_file, config.cache_duration)
+        client.close()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
