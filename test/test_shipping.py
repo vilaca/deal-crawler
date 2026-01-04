@@ -19,11 +19,7 @@ class TestShippingInfoCalculation(unittest.TestCase):
         Then shipping cost should be €0.00
         """
         # Given
-        shipping_info = ShippingInfo(
-            site="example.com",
-            shipping_cost=3.99,
-            free_over=50.00
-        )
+        shipping_info = ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
 
         # When
         subtotal = 50.00
@@ -39,11 +35,7 @@ class TestShippingInfoCalculation(unittest.TestCase):
         Then shipping cost should be €0.00
         """
         # Given
-        shipping_info = ShippingInfo(
-            site="example.com",
-            shipping_cost=3.99,
-            free_over=50.00
-        )
+        shipping_info = ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
 
         # When
         subtotal = 75.00
@@ -59,11 +51,7 @@ class TestShippingInfoCalculation(unittest.TestCase):
         Then shipping cost should be €3.99
         """
         # Given
-        shipping_info = ShippingInfo(
-            site="example.com",
-            shipping_cost=3.99,
-            free_over=50.00
-        )
+        shipping_info = ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
 
         # When
         subtotal = 49.99
@@ -79,11 +67,7 @@ class TestShippingInfoCalculation(unittest.TestCase):
         Then shipping cost should be €3.99
         """
         # Given
-        shipping_info = ShippingInfo(
-            site="example.com",
-            shipping_cost=3.99,
-            free_over=50.00
-        )
+        shipping_info = ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
 
         # When
         subtotal = 0.0
@@ -159,11 +143,11 @@ class TestShippingConfigLoading(unittest.TestCase):
         Then FileNotFoundError should be raised
         """
         # Given
-        nonexistent_path = "/tmp/nonexistent_shipping_file_12345.yaml"
+        nonexistent_path = Path(tempfile.gettempdir()) / "nonexistent_shipping_file_12345.yaml"
 
         # When/Then
         with self.assertRaises(FileNotFoundError):
-            ShippingConfig.load_from_file(nonexistent_path)
+            ShippingConfig.load_from_file(str(nonexistent_path))
 
     def test_when_invalid_yaml_then_raises_error(self):
         """
@@ -194,11 +178,7 @@ class TestShippingConfigRetrieval(unittest.TestCase):
         Then the correct ShippingInfo should be returned
         """
         # Given
-        shipping_info = ShippingInfo(
-            site="example.com",
-            shipping_cost=3.99,
-            free_over=50.00
-        )
+        shipping_info = ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
         config = ShippingConfig(stores={"example.com": shipping_info})
 
         # When

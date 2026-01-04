@@ -1,10 +1,12 @@
 """Formatters for displaying optimized shopping plans."""
 
+from typing import Optional
+
 from .optimizer import OptimizedPlan
 from .shipping import ShippingConfig
 
 
-def print_plan_text(plan: OptimizedPlan, shipping_config: ShippingConfig = None) -> None:
+def print_plan_text(plan: OptimizedPlan, shipping_config: Optional[ShippingConfig] = None) -> None:
     """Print optimized plan in text format (terminal-friendly).
 
     Args:
@@ -55,7 +57,7 @@ def print_plan_text(plan: OptimizedPlan, shipping_config: ShippingConfig = None)
     print()
 
 
-def print_plan_markdown(plan: OptimizedPlan, shipping_config: ShippingConfig = None) -> None:
+def print_plan_markdown(plan: OptimizedPlan, shipping_config: Optional[ShippingConfig] = None) -> None:
     """Print optimized plan in markdown format.
 
     Args:

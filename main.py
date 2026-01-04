@@ -148,6 +148,58 @@ def _display_results(search_results: SearchResults, markdown: bool) -> None:
     search_results.print_summary(markdown=markdown)
 
 
+def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namespace) -> None:
+    """Run optimization mode to find optimal shopping plan.
+
+    Args:
+        products: Filtered products dictionary
+        args: Parsed command line arguments
+    """
+    with HttpClient(
+        use_cache=not args.no_cache,
+        timeout=args.request_timeout,
+        cache_duration=args.cache_duration,
+    ) as http_client:
+        all_prices = find_all_prices(products, http_client)
+
+    # Load shipping configuration
+    try:
+        shipping_config = ShippingConfig.load_from_file("shipping.yaml")
+    except FileNotFoundError:
+        print("Error: shipping.yaml not found", file=sys.stderr)
+        sys.exit(1)
+
+    # Optimize and display
+    optimized_plan = optimize_shopping_plan(all_prices, shipping_config, args.optimize_for_value)
+
+    if args.markdown:
+        print_plan_markdown(optimized_plan, shipping_config)
+    else:
+        print_plan_text(optimized_plan, shipping_config)
+
+
+def _run_standard_mode(products: Dict[str, List[str]], args: argparse.Namespace) -> None:
+    """Run standard mode to find cheapest prices.
+
+    Args:
+        products: Filtered products dictionary
+        args: Parsed command line arguments
+    """
+    with HttpClient(
+        use_cache=not args.no_cache,
+        timeout=args.request_timeout,
+        cache_duration=args.cache_duration,
+    ) as http_client:
+        search_results = find_cheapest_prices(products, http_client)
+
+    # Filter by best value if requested
+    if not args.all_sizes:
+        search_results = filter_best_value_sizes(search_results)
+
+    # Display results
+    _display_results(search_results, args.markdown)
+
+
 def main() -> None:
     """Main function to run the price scraper."""
     # Parse arguments
@@ -159,63 +211,27 @@ def main() -> None:
         print("Error: --plan and --products cannot be used together", file=sys.stderr)
         sys.exit(1)
 
-    # Load products
+    # Load and filter products
     products = load_products(args.products_file)
     if not products:
         print("\nNo products to compare. Exiting.", file=sys.stderr)
         sys.exit(1)
 
-    # Apply filters
     products = _apply_filters(products, args)
 
-    # Check if optimization mode is enabled
-    if args.plan is not None:
-        # Optimization mode: find optimal store/size combinations
-        if args.plan:  # If plan has a value, filter products
-            plan_products = [p.strip() for p in args.plan.split(",")]
-            products = filter_by_products(products, plan_products)
-            if not products:
-                print(f"\nNo products matching: {', '.join(plan_products)}", file=sys.stderr)
-                sys.exit(1)
-
-        with HttpClient(
-            use_cache=not args.no_cache,
-            timeout=args.request_timeout,
-            cache_duration=args.cache_duration,
-        ) as http_client:
-            # Collect all prices for optimization
-            all_prices = find_all_prices(products, http_client)
-
-        # Load shipping configuration
-        try:
-            shipping_config = ShippingConfig.load_from_file("shipping.yaml")
-        except FileNotFoundError:
-            print("Error: shipping.yaml not found", file=sys.stderr)
+    # Additional filtering for plan mode
+    if args.plan is not None and args.plan:
+        plan_products = [p.strip() for p in args.plan.split(",")]
+        products = filter_by_products(products, plan_products)
+        if not products:
+            print(f"\nNo products matching: {', '.join(plan_products)}", file=sys.stderr)
             sys.exit(1)
 
-        # Optimize shopping plan
-        optimized_plan = optimize_shopping_plan(all_prices, shipping_config, args.optimize_for_value)
-
-        # Display optimized plan
-        if args.markdown:
-            print_plan_markdown(optimized_plan, shipping_config)
-        else:
-            print_plan_text(optimized_plan, shipping_config)
+    # Run appropriate mode
+    if args.plan is not None:
+        _run_optimization_mode(products, args)
     else:
-        # Standard mode: find cheapest prices
-        with HttpClient(
-            use_cache=not args.no_cache,
-            timeout=args.request_timeout,
-            cache_duration=args.cache_duration,
-        ) as http_client:
-            search_results = find_cheapest_prices(products, http_client)
-
-        # Filter by best value if requested
-        if not args.all_sizes:
-            search_results = filter_best_value_sizes(search_results)
-
-        # Display results
-        _display_results(search_results, args.markdown)
+        _run_standard_mode(products, args)
 
 
 if __name__ == "__main__":
