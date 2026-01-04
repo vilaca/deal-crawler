@@ -11,6 +11,9 @@ import pulp  # type: ignore[import-untyped]
 from .finder import PriceResult
 from .shipping import ShippingConfig
 
+# Scale factor for value optimization to make price_per_100ml comparable to shipping costs
+VALUE_OPTIMIZATION_SCALE_FACTOR = 10.0
+
 
 def _extract_base_product_name(product_name: str) -> str:
     """Extract base product name without size information.
@@ -61,7 +64,7 @@ def _extract_domain(url: str) -> str:
     domain = parsed.netloc
     # Remove www. prefix if present
     if domain.startswith("www."):
-        return domain
+        return domain[4:]  # Remove "www."
     return domain
 
 
@@ -134,9 +137,21 @@ def _create_objective(
     if optimize_for_value:
 
         def get_value_cost(key: tuple[str, str, int]) -> float:
+            """Calculate value-based cost for a product option.
+
+            Uses price per 100ml scaled by VALUE_OPTIMIZATION_SCALE_FACTOR
+            to make comparable with shipping costs.
+            Falls back to regular price if volume info is unavailable.
+
+            Args:
+                key: Tuple of (product, store, size_index)
+
+            Returns:
+                Scaled value cost or regular price
+            """
             price_result = price_options[key]
             if price_result.price_per_100ml is not None:
-                return price_result.price_per_100ml * 10.0
+                return price_result.price_per_100ml * VALUE_OPTIMIZATION_SCALE_FACTOR
             return price_result.price
 
         product_cost = pulp.lpSum(get_value_cost((p, s, i)) * x.get((p, s, i), 0) for (p, s, i) in price_options)
@@ -205,7 +220,7 @@ def _add_constraints(
 
 
 def _extract_solution(
-    x: Dict,
+    x: Dict[Any, Any],
     price_options: Dict[tuple[str, str, int], PriceResult],
     shipping_config: ShippingConfig,
 ) -> OptimizedPlan:

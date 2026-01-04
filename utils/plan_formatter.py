@@ -3,7 +3,21 @@
 from typing import Optional
 
 from .optimizer import OptimizedPlan
-from .shipping import ShippingConfig
+from .shipping import ShippingConfig, NO_FREE_SHIPPING_THRESHOLD
+
+
+def _pluralize(count: int, singular: str, plural: str) -> str:
+    """Return singular or plural form based on count.
+
+    Args:
+        count: The number to check
+        singular: Singular form (e.g., "item")
+        plural: Plural form (e.g., "items")
+
+    Returns:
+        Appropriate form based on count
+    """
+    return singular if count == 1 else plural
 
 
 def print_plan_text(plan: OptimizedPlan, shipping_config: Optional[ShippingConfig] = None) -> None:
@@ -25,7 +39,7 @@ def print_plan_text(plan: OptimizedPlan, shipping_config: Optional[ShippingConfi
         threshold_info = ""
         if shipping_config:
             shipping_info = shipping_config.get_shipping_info(cart.site)
-            if shipping_info.free_over < 999999:
+            if shipping_info.free_over < NO_FREE_SHIPPING_THRESHOLD:
                 threshold_info = f" (Free shipping over €{shipping_info.free_over:.2f})"
 
         print(f"Store: {cart.site}{threshold_info}")
@@ -52,7 +66,9 @@ def print_plan_text(plan: OptimizedPlan, shipping_config: Optional[ShippingConfi
     print("═" * 60)
     print(f"Grand Total: €{plan.grand_total:.2f}")
     print(f"Total Shipping: €{plan.total_shipping:.2f}")
-    print(f"Products: {plan.total_products} items from {len(plan.carts)} store(s)")
+    item_word = _pluralize(plan.total_products, "item", "items")
+    store_word = _pluralize(len(plan.carts), "store", "stores")
+    print(f"Products: {plan.total_products} {item_word} from {len(plan.carts)} {store_word}")
     print("═" * 60)
     print()
 
@@ -75,7 +91,7 @@ def print_plan_markdown(plan: OptimizedPlan, shipping_config: Optional[ShippingC
         threshold_info = ""
         if shipping_config:
             shipping_info = shipping_config.get_shipping_info(cart.site)
-            if shipping_info.free_over < 999999:
+            if shipping_info.free_over < NO_FREE_SHIPPING_THRESHOLD:
                 threshold_info = f" *(Free shipping over €{shipping_info.free_over:.2f})*"
 
         print(f"## Store: {cart.site}{threshold_info}\n")
@@ -104,4 +120,6 @@ def print_plan_markdown(plan: OptimizedPlan, shipping_config: Optional[ShippingC
     print("---\n")
     print(f"**Grand Total:** €{plan.grand_total:.2f}  ")
     print(f"**Total Shipping:** €{plan.total_shipping:.2f}  ")
-    print(f"**Products:** {plan.total_products} items from {len(plan.carts)} store(s)\n")
+    item_word = _pluralize(plan.total_products, "item", "items")
+    store_word = _pluralize(len(plan.carts), "store", "stores")
+    print(f"**Products:** {plan.total_products} {item_word} from {len(plan.carts)} {store_word}\n")

@@ -5,6 +5,8 @@ import os
 import sys
 from typing import Dict, List
 
+import yaml
+
 from utils.config import config
 from utils.data_loader import load_products
 from utils.filters import filter_by_sites, filter_by_products
@@ -168,6 +170,12 @@ def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namesp
     except FileNotFoundError:
         print("Error: shipping.yaml not found", file=sys.stderr)
         sys.exit(1)
+    except yaml.YAMLError as e:
+        print(f"Error: shipping.yaml is not valid YAML: {e}", file=sys.stderr)
+        sys.exit(1)
+    except KeyError as e:
+        print(f"Error: shipping.yaml is missing required field: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Optimize and display
     optimized_plan = optimize_shopping_plan(all_prices, shipping_config, args.optimize_for_value)
@@ -220,7 +228,7 @@ def main() -> None:
     products = _apply_filters(products, args)
 
     # Additional filtering for plan mode
-    if args.plan is not None and args.plan:
+    if args.plan:
         plan_products = [p.strip() for p in args.plan.split(",")]
         products = filter_by_products(products, plan_products)
         if not products:
@@ -228,7 +236,7 @@ def main() -> None:
             sys.exit(1)
 
     # Run appropriate mode
-    if args.plan is not None:
+    if args.plan:
         _run_optimization_mode(products, args)
     else:
         _run_standard_mode(products, args)

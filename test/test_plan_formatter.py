@@ -431,7 +431,7 @@ class TestMarkdownFormatterMultipleStores(unittest.TestCase):
         self.assertIn("## Store: store1.com", result)
         self.assertIn("## Store: store2.com", result)
         self.assertIn("**Total Shipping:** €7.50", result)
-        self.assertIn("**Products:** 2 items from 2 store(s)", result)
+        self.assertIn("**Products:** 2 items from 2 stores", result)
 
 
 class TestFormatterSummaryStatistics(unittest.TestCase):
@@ -469,7 +469,7 @@ class TestFormatterSummaryStatistics(unittest.TestCase):
 
         # Then
         result = output.getvalue()
-        self.assertIn("Products: 2 items from 2 store(s)", result)
+        self.assertIn("Products: 2 items from 2 stores", result)
 
     def test_when_plan_has_statistics_then_displays_in_markdown(self):
         """
@@ -495,7 +495,7 @@ class TestFormatterSummaryStatistics(unittest.TestCase):
 
         # Then
         result = output.getvalue()
-        self.assertIn("**Products:** 1 items from 1 store(s)", result)
+        self.assertIn("**Products:** 1 item from 1 store", result)
 
 
 if __name__ == "__main__":
