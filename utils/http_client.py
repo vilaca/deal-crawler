@@ -25,7 +25,13 @@ class HttpClient:
     """HTTP client for fetching web pages with session management."""
 
     def __init__(
-        self, timeout: Optional[int] = None, max_retries: Optional[int] = None, use_cache: bool = True
+        self,
+        *,
+        timeout: Optional[int] = None,
+        max_retries: Optional[int] = None,
+        use_cache: bool = True,
+        cache_duration: Optional[int] = None,
+        cache_file: Optional[str] = None,
     ) -> None:
         """Initialize HTTP client with configuration.
 
@@ -33,12 +39,18 @@ class HttpClient:
             timeout: Request timeout in seconds (uses config default if None)
             max_retries: Maximum number of retry attempts (uses config default if None)
             use_cache: Whether to use HTTP response cache (default: True)
+            cache_duration: Cache lifetime in seconds (uses config default if None)
+            cache_file: Cache file path (uses config default if None)
         """
         self.timeout = timeout if timeout is not None else config.request_timeout
         self.max_retries = max_retries if max_retries is not None else config.max_retries
         self.use_cache = use_cache
         self.session = requests.Session()
-        self.cache = HttpCache(config.cache_file, config.cache_duration) if use_cache else None
+
+        # Use provided cache settings or fall back to config defaults
+        _cache_duration = cache_duration if cache_duration is not None else config.cache_duration
+        _cache_file = cache_file if cache_file is not None else config.cache_file
+        self.cache = HttpCache(_cache_file, _cache_duration) if use_cache else None
 
     def __enter__(self) -> Self:
         """Context manager entry."""
