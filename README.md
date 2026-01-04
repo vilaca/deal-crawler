@@ -68,6 +68,7 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 | `--cache-duration` | `DEAL_CRAWLER_CACHE_DURATION` | `3600` | HTTP cache lifetime in seconds |
 | `--request-timeout` | `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
 | `--products-file` | `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Path to products data file |
+| `--shipping-file` | `DEAL_CRAWLER_SHIPPING_FILE` | `shipping.yaml` | Path to shipping config file |
 
 ### Advanced Configuration
 

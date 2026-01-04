@@ -3,8 +3,8 @@
 import unittest
 from typing import Dict, List
 
-from utils.finder import PriceResult
-from utils.optimizer import _extract_base_product_name, optimize_shopping_plan
+from utils.finder import PriceResult, extract_base_product_name
+from utils.optimizer import optimize_shopping_plan
 from utils.shipping import ShippingConfig, ShippingInfo
 
 
@@ -21,7 +21,7 @@ class TestBaseProductNameExtraction(unittest.TestCase):
         product_name = "Cerave Foaming Cleanser (236ml)"
 
         # When
-        base_name = _extract_base_product_name(product_name)
+        base_name = extract_base_product_name(product_name)
 
         # Then
         self.assertEqual(base_name, "Cerave Foaming Cleanser")
@@ -36,7 +36,7 @@ class TestBaseProductNameExtraction(unittest.TestCase):
         product_name = "Medik8 Serum (2x30ml)"
 
         # When
-        base_name = _extract_base_product_name(product_name)
+        base_name = extract_base_product_name(product_name)
 
         # Then
         self.assertEqual(base_name, "Medik8 Serum")
@@ -51,7 +51,7 @@ class TestBaseProductNameExtraction(unittest.TestCase):
         product_name = "Cerave Moisturizing Cream"
 
         # When
-        base_name = _extract_base_product_name(product_name)
+        base_name = extract_base_product_name(product_name)
 
         # Then
         self.assertEqual(base_name, "Cerave Moisturizing Cream")

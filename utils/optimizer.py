@@ -8,25 +8,26 @@ from urllib.parse import urlparse
 
 import pulp  # type: ignore[import-untyped]
 
-from .finder import PriceResult
+from .finder import PriceResult, extract_base_product_name
 from .shipping import ShippingConfig
 
 # Scale factor for value optimization to make price_per_100ml comparable to shipping costs
 VALUE_OPTIMIZATION_SCALE_FACTOR = 10.0
 
 
-def _extract_base_product_name(product_name: str) -> str:
-    """Extract base product name without size information.
+def _sanitize_constraint_name(name: str) -> str:
+    """Sanitize a name for use in PuLP constraint names.
+
+    Replaces special characters that might not be valid in constraint names
+    (spaces, dots, hyphens, parentheses) with underscores.
 
     Args:
-        product_name: Full product name (e.g., "Cerave Foaming Cleanser (236ml)")
+        name: Name to sanitize (e.g., "notino.pt", "Product (100ml)")
 
     Returns:
-        Base product name (e.g., "Cerave Foaming Cleanser")
+        Sanitized name safe for constraint names (e.g., "notino_pt", "Product__100ml_")
     """
-    # Remove size patterns: (236ml), (2x236ml), (1000ml), etc.
-    base_name = re.sub(r"\s*\([\d.]+(?:x[\d.]+)?ml\)\s*$", "", product_name, flags=re.IGNORECASE)
-    return base_name.strip()
+    return re.sub(r"[.\s\-()]", "_", name)
 
 
 @dataclass
@@ -104,7 +105,7 @@ def _group_product_families(products: List[str]) -> Dict[str, List[str]]:
     """
     product_families: Dict[str, List[str]] = {}
     for product in products:
-        base_name = _extract_base_product_name(product)
+        base_name = extract_base_product_name(product)
         if base_name not in product_families:
             product_families[base_name] = []
         product_families[base_name].append(product)
@@ -202,12 +203,12 @@ def _add_constraints(
                 if (product, s, i) in price_options
             )
             == 1,
-            f"Buy_{base_name.replace(' ', '_')}_once",
+            f"Buy_{_sanitize_constraint_name(base_name)}_once",
         )
 
     # Constraint 2: Link product selection to store usage
     for p, s, i in price_options:
-        prob += x[(p, s, i)] <= use_store[s], f"Link_{p}_{s}_{i}_to_store"
+        prob += x[(p, s, i)] <= use_store[s], f"Link_{_sanitize_constraint_name(p)}_{_sanitize_constraint_name(s)}_{i}_to_store"
 
     # Constraint 3: Free shipping threshold
     for store in stores:
@@ -215,8 +216,9 @@ def _add_constraints(
         subtotal = pulp.lpSum(
             price_options[(p, s, i)].price * x.get((p, s, i), 0) for (p, s, i) in price_options if s == store
         )
-        prob += subtotal >= shipping_info.free_over * free_ship[store], f"Free_shipping_threshold_{store}"
-        prob += free_ship[store] <= use_store[store], f"Free_ship_requires_use_{store}"
+        sanitized_store = _sanitize_constraint_name(store)
+        prob += subtotal >= shipping_info.free_over * free_ship[store], f"Free_shipping_threshold_{sanitized_store}"
+        prob += free_ship[store] <= use_store[store], f"Free_ship_requires_use_{sanitized_store}"
 
 
 def _extract_solution(
