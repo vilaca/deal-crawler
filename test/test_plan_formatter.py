@@ -1,7 +1,6 @@
 """Tests for optimized plan formatters (BDD style)."""
 
 import io
-import sys
 import unittest
 from contextlib import redirect_stdout
 
@@ -49,14 +48,9 @@ class TestTextFormatterSingleStore(unittest.TestCase):
             subtotal=25.00,
             shipping_cost=3.99,
             total=28.99,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
-        plan = OptimizedPlan(
-            carts=[cart],
-            grand_total=28.99,
-            total_products=1,
-            total_shipping=3.99
-        )
+        plan = OptimizedPlan(carts=[cart], grand_total=28.99, total_products=1, total_shipping=3.99)
 
         # When
         output = io.StringIO()
@@ -85,7 +79,7 @@ class TestTextFormatterSingleStore(unittest.TestCase):
             subtotal=15.00,
             shipping_cost=0.0,
             total=15.00,
-            free_shipping_eligible=True
+            free_shipping_eligible=True,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=15.00, total_products=1, total_shipping=0.0)
 
@@ -112,7 +106,7 @@ class TestTextFormatterSingleStore(unittest.TestCase):
             subtotal=55.00,
             shipping_cost=0.0,
             total=55.00,
-            free_shipping_eligible=True
+            free_shipping_eligible=True,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=55.00, total_products=1, total_shipping=0.0)
 
@@ -138,12 +132,12 @@ class TestTextFormatterSingleStore(unittest.TestCase):
             subtotal=25.00,
             shipping_cost=3.99,
             total=28.99,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=28.99, total_products=1, total_shipping=3.99)
-        shipping_config = ShippingConfig(stores={
-            "example.com": ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
-        })
+        shipping_config = ShippingConfig(
+            stores={"example.com": ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)}
+        )
 
         # When
         output = io.StringIO()
@@ -171,7 +165,7 @@ class TestTextFormatterMultipleStores(unittest.TestCase):
             subtotal=10.00,
             shipping_cost=3.50,
             total=13.50,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
         cart2 = StoreCart(
             site="store2.com",
@@ -179,14 +173,9 @@ class TestTextFormatterMultipleStores(unittest.TestCase):
             subtotal=20.00,
             shipping_cost=4.00,
             total=24.00,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
-        plan = OptimizedPlan(
-            carts=[cart1, cart2],
-            grand_total=37.50,
-            total_products=2,
-            total_shipping=7.50
-        )
+        plan = OptimizedPlan(carts=[cart1, cart2], grand_total=37.50, total_products=2, total_shipping=7.50)
 
         # When
         output = io.StringIO()
@@ -219,7 +208,7 @@ class TestTextFormatterMultipleStores(unittest.TestCase):
             subtotal=45.00,
             shipping_cost=3.99,
             total=48.99,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=48.99, total_products=3, total_shipping=3.99)
 
@@ -274,7 +263,7 @@ class TestMarkdownFormatterSingleStore(unittest.TestCase):
             subtotal=25.00,
             shipping_cost=3.99,
             total=28.99,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=28.99, total_products=1, total_shipping=3.99)
 
@@ -306,7 +295,7 @@ class TestMarkdownFormatterSingleStore(unittest.TestCase):
             subtotal=15.00,
             shipping_cost=0.0,
             total=15.00,
-            free_shipping_eligible=True
+            free_shipping_eligible=True,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=15.00, total_products=1, total_shipping=0.0)
 
@@ -332,7 +321,7 @@ class TestMarkdownFormatterSingleStore(unittest.TestCase):
             subtotal=15.00,
             shipping_cost=0.0,
             total=15.00,
-            free_shipping_eligible=True
+            free_shipping_eligible=True,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=15.00, total_products=1, total_shipping=0.0)
 
@@ -344,8 +333,8 @@ class TestMarkdownFormatterSingleStore(unittest.TestCase):
         # Then
         result = output.getvalue()
         # Check that product row has a dash for value
-        lines = result.split('\n')
-        product_line = [line for line in lines if 'Test Product' in line][0]
+        lines = result.split("\n")
+        product_line = [line for line in lines if "Test Product" in line][0]
         self.assertIn("| - |", product_line)
 
     def test_when_free_shipping_then_displays_free_bold(self):
@@ -361,7 +350,7 @@ class TestMarkdownFormatterSingleStore(unittest.TestCase):
             subtotal=55.00,
             shipping_cost=0.0,
             total=55.00,
-            free_shipping_eligible=True
+            free_shipping_eligible=True,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=55.00, total_products=1, total_shipping=0.0)
 
@@ -387,12 +376,12 @@ class TestMarkdownFormatterSingleStore(unittest.TestCase):
             subtotal=25.00,
             shipping_cost=3.99,
             total=28.99,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
         plan = OptimizedPlan(carts=[cart], grand_total=28.99, total_products=1, total_shipping=3.99)
-        shipping_config = ShippingConfig(stores={
-            "example.com": ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)
-        })
+        shipping_config = ShippingConfig(
+            stores={"example.com": ShippingInfo(site="example.com", shipping_cost=3.99, free_over=50.00)}
+        )
 
         # When
         output = io.StringIO()
@@ -420,7 +409,7 @@ class TestMarkdownFormatterMultipleStores(unittest.TestCase):
             subtotal=10.00,
             shipping_cost=3.50,
             total=13.50,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
         cart2 = StoreCart(
             site="store2.com",
@@ -428,14 +417,9 @@ class TestMarkdownFormatterMultipleStores(unittest.TestCase):
             subtotal=20.00,
             shipping_cost=4.00,
             total=24.00,
-            free_shipping_eligible=False
+            free_shipping_eligible=False,
         )
-        plan = OptimizedPlan(
-            carts=[cart1, cart2],
-            grand_total=37.50,
-            total_products=2,
-            total_shipping=7.50
-        )
+        plan = OptimizedPlan(carts=[cart1, cart2], grand_total=37.50, total_products=2, total_shipping=7.50)
 
         # When
         output = io.StringIO()
@@ -460,8 +444,22 @@ class TestFormatterSummaryStatistics(unittest.TestCase):
         Then should display total products and store count
         """
         # Given
-        cart1 = StoreCart(site="store1.com", items=[("A", PriceResult(10.0, "url"))], subtotal=10, shipping_cost=0, total=10, free_shipping_eligible=True)
-        cart2 = StoreCart(site="store2.com", items=[("B", PriceResult(20.0, "url"))], subtotal=20, shipping_cost=0, total=20, free_shipping_eligible=True)
+        cart1 = StoreCart(
+            site="store1.com",
+            items=[("A", PriceResult(10.0, "url"))],
+            subtotal=10,
+            shipping_cost=0,
+            total=10,
+            free_shipping_eligible=True,
+        )
+        cart2 = StoreCart(
+            site="store2.com",
+            items=[("B", PriceResult(20.0, "url"))],
+            subtotal=20,
+            shipping_cost=0,
+            total=20,
+            free_shipping_eligible=True,
+        )
         plan = OptimizedPlan(carts=[cart1, cart2], grand_total=30.0, total_products=2, total_shipping=0.0)
 
         # When
@@ -480,7 +478,14 @@ class TestFormatterSummaryStatistics(unittest.TestCase):
         Then should display total products and store count in bold
         """
         # Given
-        cart = StoreCart(site="store.com", items=[("A", PriceResult(10.0, "url"))], subtotal=10, shipping_cost=0, total=10, free_shipping_eligible=True)
+        cart = StoreCart(
+            site="store.com",
+            items=[("A", PriceResult(10.0, "url"))],
+            subtotal=10,
+            shipping_cost=0,
+            total=10,
+            free_shipping_eligible=True,
+        )
         plan = OptimizedPlan(carts=[cart], grand_total=10.0, total_products=1, total_shipping=0.0)
 
         # When

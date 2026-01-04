@@ -3,10 +3,10 @@
 import re
 import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Any, Dict, List
 from urllib.parse import urlparse
 
-import pulp
+import pulp  # type: ignore[import-untyped]
 
 from .finder import PriceResult
 from .shipping import ShippingConfig
@@ -65,113 +65,118 @@ def _extract_domain(url: str) -> str:
     return domain
 
 
-def optimize_shopping_plan(
+def _build_price_index(
     all_prices: Dict[str, List[PriceResult]],
-    shipping_config: ShippingConfig,
-    optimize_for_value: bool = False,
-) -> OptimizedPlan:
-    """Optimize shopping plan using Mixed Integer Linear Programming.
+) -> tuple[List[str], List[str], Dict[tuple[str, str, int], PriceResult]]:
+    """Build index structures from all_prices.
 
     Args:
         all_prices: Dict mapping product names to lists of PriceResult objects
-        shipping_config: Shipping configuration with costs and thresholds
-        optimize_for_value: If True, optimize for best price per 100ml instead of lowest total cost
 
     Returns:
-        OptimizedPlan with optimal store assignments
-
-    MILP Formulation:
-        Decision Variables:
-            - x[p,s,i]: Binary, 1 if product p bought in size i from store s
-            - use_store[s]: Binary, 1 if any product bought from store s
-            - free_ship[s]: Binary, 1 if store s qualifies for free shipping
-
-        Objective (cost mode):
-            Minimize: sum of product prices + shipping costs
-
-        Objective (value mode):
-            Minimize: sum of (price_per_100ml * scaling_factor) + shipping costs
-            Prefers products with better price per ml, even if absolute price is higher
-
-        Constraints:
-            1. Each product bought exactly once:
-               sum_{s,i} x[p,s,i] = 1  for all p
-            2. Link product selection to store usage:
-               x[p,s,i] <= use_store[s]  for all p,s,i
-            3. Free shipping threshold:
-               subtotal[s] >= free_threshold[s] * free_ship[s]
-               free_ship[s] <= use_store[s]
+        Tuple of (products, stores, price_options)
     """
-    # Create the optimization problem
-    prob = pulp.LpProblem("Shopping_Optimization", pulp.LpMinimize)
-
-    # Build index structures
     products = list(all_prices.keys())
-    stores = set()
-
-    # Map (product, store, size_index) to PriceResult
+    stores_set = set()
     price_options: Dict[tuple[str, str, int], PriceResult] = {}
 
     for product, price_list in all_prices.items():
         for size_idx, price_result in enumerate(price_list):
             store = _extract_domain(price_result.url)
-            stores.add(store)
+            stores_set.add(store)
             price_options[(product, store, size_idx)] = price_result
 
-    stores = sorted(stores)
+    stores = sorted(stores_set)
+    return products, stores, price_options
 
-    if not products or not stores:
-        return OptimizedPlan()
 
-    # Decision variables
-    # x[p,s,i] = 1 if we buy product p in size i from store s
-    x = pulp.LpVariable.dicts(
-        "buy",
-        ((p, s, i) for p in products for s in stores for i in range(len(all_prices[p]))),
-        cat=pulp.LpBinary,
-    )
+def _group_product_families(products: List[str]) -> Dict[str, List[str]]:
+    """Group products by their base name (without size info).
 
-    # use_store[s] = 1 if we buy anything from store s
-    use_store = pulp.LpVariable.dicts("use_store", stores, cat=pulp.LpBinary)
+    Args:
+        products: List of product names
 
-    # free_ship[s] = 1 if store s gets free shipping
-    free_ship = pulp.LpVariable.dicts("free_ship", stores, cat=pulp.LpBinary)
-
-    # Objective: minimize total cost or value
-    if optimize_for_value:
-        # In value mode, prefer products with better price per 100ml
-        # Use price_per_100ml when available, fallback to price for products without volume info
-        # Scale by 10 to make magnitudes comparable with shipping costs
-        product_cost = pulp.lpSum(
-            (price_options[(p, s, i)].price_per_100ml * 10.0
-             if price_options[(p, s, i)].price_per_100ml is not None
-             else price_options[(p, s, i)].price) * x.get((p, s, i), 0)
-            for (p, s, i) in price_options.keys()
-        )
-    else:
-        # In cost mode, minimize absolute prices
-        product_cost = pulp.lpSum(
-            price_options[(p, s, i)].price * x.get((p, s, i), 0)
-            for (p, s, i) in price_options.keys()
-        )
-
-    shipping_cost = pulp.lpSum(
-        shipping_config.get_shipping_info(s).shipping_cost * (use_store[s] - free_ship[s])
-        for s in stores
-    )
-
-    prob += product_cost + shipping_cost, "Total_Cost"
-
-    # Constraint 1: Each product family (base name) must be bought exactly once
-    # Group products by base name (without size info)
+    Returns:
+        Dict mapping base names to lists of product names
+    """
     product_families: Dict[str, List[str]] = {}
     for product in products:
         base_name = _extract_base_product_name(product)
         if base_name not in product_families:
             product_families[base_name] = []
         product_families[base_name].append(product)
+    return product_families
 
-    # For each product family, buy exactly one size
+
+def _create_objective(
+    prob: Any,
+    x: Dict[Any, Any],
+    *,
+    price_options: Dict[tuple[str, str, int], PriceResult],
+    use_store: Dict[Any, Any],
+    free_ship: Dict[Any, Any],
+    stores: List[str],
+    shipping_config: ShippingConfig,
+    optimize_for_value: bool,
+) -> None:
+    """Create and add objective function to MILP problem.
+
+    Args:
+        prob: PuLP problem instance
+        x: Buy decision variables
+        price_options: Price options mapping
+        use_store: Store usage variables
+        free_ship: Free shipping variables
+        stores: List of stores
+        shipping_config: Shipping configuration
+        optimize_for_value: Whether to optimize for value or cost
+    """
+    if optimize_for_value:
+
+        def get_value_cost(key: tuple[str, str, int]) -> float:
+            price_result = price_options[key]
+            if price_result.price_per_100ml is not None:
+                return price_result.price_per_100ml * 10.0
+            return price_result.price
+
+        product_cost = pulp.lpSum(get_value_cost((p, s, i)) * x.get((p, s, i), 0) for (p, s, i) in price_options)
+    else:
+        product_cost = pulp.lpSum(price_options[(p, s, i)].price * x.get((p, s, i), 0) for (p, s, i) in price_options)
+
+    shipping_cost = pulp.lpSum(
+        shipping_config.get_shipping_info(s).shipping_cost * (use_store[s] - free_ship[s]) for s in stores
+    )
+    prob += product_cost + shipping_cost, "Total_Cost"
+
+
+def _add_constraints(
+    prob: Any,
+    x: Dict[Any, Any],
+    *,
+    use_store: Dict[Any, Any],
+    free_ship: Dict[Any, Any],
+    products: List[str],
+    stores: List[str],
+    product_families: Dict[str, List[str]],
+    price_options: Dict[tuple[str, str, int], PriceResult],
+    all_prices: Dict[str, List[PriceResult]],
+    shipping_config: ShippingConfig,
+) -> None:
+    """Add all constraints to MILP problem.
+
+    Args:
+        prob: PuLP problem instance
+        x: Buy decision variables
+        use_store: Store usage variables
+        free_ship: Free shipping variables
+        products: List of products
+        stores: List of stores
+        product_families: Product families mapping
+        price_options: Price options mapping
+        all_prices: All prices dictionary
+        shipping_config: Shipping configuration
+    """
+    # Constraint 1: Each product family bought exactly once
     for base_name, family_products in product_families.items():
         prob += (
             pulp.lpSum(
@@ -185,40 +190,35 @@ def optimize_shopping_plan(
             f"Buy_{base_name.replace(' ', '_')}_once",
         )
 
-    # Constraint 2: Link x to use_store
-    for (p, s, i) in price_options.keys():
+    # Constraint 2: Link product selection to store usage
+    for p, s, i in price_options:
         prob += x[(p, s, i)] <= use_store[s], f"Link_{p}_{s}_{i}_to_store"
 
     # Constraint 3: Free shipping threshold
     for store in stores:
         shipping_info = shipping_config.get_shipping_info(store)
-
-        # Calculate subtotal for this store
         subtotal = pulp.lpSum(
-            price_options[(p, s, i)].price * x.get((p, s, i), 0)
-            for (p, s, i) in price_options.keys()
-            if s == store
+            price_options[(p, s, i)].price * x.get((p, s, i), 0) for (p, s, i) in price_options if s == store
         )
-
-        # If free_ship[store] = 1, then subtotal >= free_threshold
-        prob += (
-            subtotal >= shipping_info.free_over * free_ship[store],
-            f"Free_shipping_threshold_{store}",
-        )
-
-        # free_ship can only be 1 if we use the store
+        prob += subtotal >= shipping_info.free_over * free_ship[store], f"Free_shipping_threshold_{store}"
         prob += free_ship[store] <= use_store[store], f"Free_ship_requires_use_{store}"
 
-    # Solve the problem
-    prob.solve(pulp.PULP_CBC_CMD(msg=0))
 
-    # Check if solution was found
-    if prob.status != pulp.LpStatusOptimal:
-        print(f"Warning: Optimization did not find optimal solution. Status: {pulp.LpStatus[prob.status]}",
-              file=sys.stderr)
-        return OptimizedPlan()
+def _extract_solution(
+    x: Dict,
+    price_options: Dict[tuple[str, str, int], PriceResult],
+    shipping_config: ShippingConfig,
+) -> OptimizedPlan:
+    """Extract solution from solved MILP problem.
 
-    # Extract solution
+    Args:
+        x: Decision variables dict
+        price_options: Price options mapping
+        shipping_config: Shipping configuration
+
+    Returns:
+        OptimizedPlan with store assignments
+    """
     plan = OptimizedPlan()
     store_carts: Dict[str, StoreCart] = {}
 
@@ -244,3 +244,72 @@ def optimize_shopping_plan(
     plan.grand_total = sum(cart.total for cart in plan.carts)
 
     return plan
+
+
+def optimize_shopping_plan(
+    all_prices: Dict[str, List[PriceResult]],
+    shipping_config: ShippingConfig,
+    optimize_for_value: bool = False,
+) -> OptimizedPlan:
+    """Optimize shopping plan using Mixed Integer Linear Programming.
+
+    Args:
+        all_prices: Dict mapping product names to lists of PriceResult objects
+        shipping_config: Shipping configuration with costs and thresholds
+        optimize_for_value: If True, optimize for best price per 100ml instead of lowest total cost
+
+    Returns:
+        OptimizedPlan with optimal store assignments
+    """
+    # Build index structures
+    products, stores, price_options = _build_price_index(all_prices)
+
+    if not products or not stores:
+        return OptimizedPlan()
+
+    # Create MILP problem and decision variables
+    prob = pulp.LpProblem("Shopping_Optimization", pulp.LpMinimize)
+    x = pulp.LpVariable.dicts(
+        "buy",
+        ((p, s, i) for p in products for s in stores for i in range(len(all_prices[p]))),
+        cat=pulp.LpBinary,
+    )
+    use_store = pulp.LpVariable.dicts("use_store", stores, cat=pulp.LpBinary)
+    free_ship = pulp.LpVariable.dicts("free_ship", stores, cat=pulp.LpBinary)
+
+    # Set objective and constraints
+    _create_objective(
+        prob,
+        x,
+        price_options=price_options,
+        use_store=use_store,
+        free_ship=free_ship,
+        stores=stores,
+        shipping_config=shipping_config,
+        optimize_for_value=optimize_for_value,
+    )
+    product_families = _group_product_families(products)
+    _add_constraints(
+        prob,
+        x,
+        use_store=use_store,
+        free_ship=free_ship,
+        products=products,
+        stores=stores,
+        product_families=product_families,
+        price_options=price_options,
+        all_prices=all_prices,
+        shipping_config=shipping_config,
+    )
+
+    # Solve
+    prob.solve(pulp.PULP_CBC_CMD(msg=0))
+
+    if prob.status != pulp.LpStatusOptimal:
+        print(
+            f"Warning: Optimization did not find optimal solution. Status: {pulp.LpStatus[prob.status]}",
+            file=sys.stderr,
+        )
+        return OptimizedPlan()
+
+    return _extract_solution(x, price_options, shipping_config)

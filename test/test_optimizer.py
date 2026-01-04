@@ -1,14 +1,10 @@
 """Tests for shopping plan optimizer using MILP (BDD style)."""
 
 import unittest
+from typing import Dict, List
 
 from utils.finder import PriceResult
-from utils.optimizer import (
-    OptimizedPlan,
-    StoreCart,
-    _extract_base_product_name,
-    optimize_shopping_plan,
-)
+from utils.optimizer import _extract_base_product_name, optimize_shopping_plan
 from utils.shipping import ShippingConfig, ShippingInfo
 
 
@@ -71,14 +67,10 @@ class TestSingleProductOptimization(unittest.TestCase):
         Then that product should be selected from that store
         """
         # Given
-        all_prices = {
-            "Product A": [
-                PriceResult(price=10.00, url="https://store1.com/product-a", price_per_100ml=4.00)
-            ]
-        }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00)
-        })
+        all_prices = {"Product A": [PriceResult(price=10.00, url="https://store1.com/product-a", price_per_100ml=4.00)]}
+        shipping_config = ShippingConfig(
+            stores={"store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00)}
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -106,11 +98,13 @@ class TestSingleProductOptimization(unittest.TestCase):
                 PriceResult(price=18.00, url="https://store3.com/product-a"),
             ]
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.99, free_over=50.00),
-            "store3.com": ShippingInfo(site="store3.com", shipping_cost=3.99, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.99, free_over=50.00),
+                "store3.com": ShippingInfo(site="store3.com", shipping_cost=3.99, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -142,10 +136,12 @@ class TestMultipleProductOptimization(unittest.TestCase):
                 PriceResult(price=25.00, url="https://store2.com/product-b"),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.99, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.99, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -174,10 +170,12 @@ class TestMultipleProductOptimization(unittest.TestCase):
                 PriceResult(price=20.00, url="https://store2.com/product-b"),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.99, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.99, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -211,10 +209,12 @@ class TestFreeShippingOptimization(unittest.TestCase):
                 PriceResult(price=45.00, url="https://store2.com/product-b"),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.50, free_over=50.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.00, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.50, free_over=50.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.00, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -243,9 +243,11 @@ class TestFreeShippingOptimization(unittest.TestCase):
                 PriceResult(price=50.01, url="https://store1.com/product-a"),
             ]
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -267,9 +269,11 @@ class TestFreeShippingOptimization(unittest.TestCase):
                 PriceResult(price=49.99, url="https://store1.com/product-a"),
             ]
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -301,9 +305,11 @@ class TestProductFamilyOptimization(unittest.TestCase):
                 PriceResult(price=35.00, url="https://store1.com/large", price_per_100ml=3.50),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -336,9 +342,11 @@ class TestProductFamilyOptimization(unittest.TestCase):
                 PriceResult(price=30.00, url="https://store1.com/b-large"),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.99, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -366,9 +374,11 @@ class TestProductFamilyOptimization(unittest.TestCase):
                 PriceResult(price=52.00, url="https://store1.com/large"),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
@@ -399,9 +409,11 @@ class TestValueOptimization(unittest.TestCase):
                 PriceResult(price=100.00, url="https://store1.com/large", price_per_100ml=20.00),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=200.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=200.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config, optimize_for_value=True)
@@ -428,9 +440,11 @@ class TestValueOptimization(unittest.TestCase):
                 PriceResult(price=100.00, url="https://store1.com/large", price_per_100ml=20.00),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=200.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=200.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config, optimize_for_value=False)
@@ -457,10 +471,12 @@ class TestValueOptimization(unittest.TestCase):
                 PriceResult(price=75.00, url="https://store2.com/large", price_per_100ml=15.00),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=200.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.00, free_over=200.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=200.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.00, free_over=200.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config, optimize_for_value=True)
@@ -486,9 +502,11 @@ class TestValueOptimization(unittest.TestCase):
                 PriceResult(price=55.00, url="https://store1.com/large", price_per_100ml=11.00),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=10.00, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=10.00, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config, optimize_for_value=True)
@@ -513,10 +531,12 @@ class TestValueOptimization(unittest.TestCase):
                 PriceResult(price=25.00, url="https://store2.com/product-z"),
             ]
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=100.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.00, free_over=100.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=5.00, free_over=100.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=3.00, free_over=100.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config, optimize_for_value=True)
@@ -537,7 +557,7 @@ class TestEdgeCases(unittest.TestCase):
         Then an empty plan should be returned
         """
         # Given
-        all_prices = {}
+        all_prices: Dict[str, List[PriceResult]] = {}
         shipping_config = ShippingConfig(stores={})
 
         # When
@@ -556,7 +576,7 @@ class TestEdgeCases(unittest.TestCase):
         Then an empty plan should be returned
         """
         # Given
-        all_prices = {
+        all_prices: Dict[str, List[PriceResult]] = {
             "Product A": [],
             "Product B": [],
         }
@@ -616,10 +636,12 @@ class TestPlanSummaryStatistics(unittest.TestCase):
                 PriceResult(price=15.00, url="https://store2.com/product-c"),
             ],
         }
-        shipping_config = ShippingConfig(stores={
-            "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.50, free_over=50.00),
-            "store2.com": ShippingInfo(site="store2.com", shipping_cost=4.00, free_over=50.00),
-        })
+        shipping_config = ShippingConfig(
+            stores={
+                "store1.com": ShippingInfo(site="store1.com", shipping_cost=3.50, free_over=50.00),
+                "store2.com": ShippingInfo(site="store2.com", shipping_cost=4.00, free_over=50.00),
+            }
+        )
 
         # When
         plan = optimize_shopping_plan(all_prices, shipping_config)
