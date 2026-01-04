@@ -10,6 +10,7 @@ from .http_client import HttpClient
 from .stock_checker import is_out_of_stock
 from .extractors import extract_price
 from .product_info import calculate_price_per_100ml, parse_product_name
+from .string_utils import pluralize
 
 
 @dataclass
@@ -39,10 +40,6 @@ class SearchResults:
     # Detailed tracking
     out_of_stock_items: Dict[str, List[str]] = field(default_factory=dict)  # product -> URLs
     failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
-
-    def _pluralize(self, count: int, singular: str, plural: str) -> str:
-        """Return singular or plural form based on count."""
-        return singular if count == 1 else plural
 
     def _extract_domain(self, url: str) -> str:
         """Extract domain from URL with fallback for malformed URLs.
@@ -76,7 +73,7 @@ class SearchResults:
         Args:
             markdown: If True, format for markdown; otherwise format for terminal
         """
-        products_text = self._pluralize(self.total_products, "product", "products")
+        products_text = pluralize(self.total_products, "product", "products")
 
         if self.total_urls_checked == 0:
             if markdown:
@@ -85,7 +82,7 @@ class SearchResults:
 
         success_rate = (self.prices_found / self.total_urls_checked) * 100
         emoji = self._get_success_emoji(success_rate)
-        urls_text = self._pluralize(self.total_urls_checked, "URL", "URLs")
+        urls_text = pluralize(self.total_urls_checked, "URL", "URLs")
 
         if markdown:
             return (
@@ -109,10 +106,10 @@ class SearchResults:
         if self.out_of_stock > 0:
             issues.append(f"📦 {self.out_of_stock} out of stock")
         if self.fetch_errors > 0:
-            error_text = self._pluralize(self.fetch_errors, "fetch error", "fetch errors")
+            error_text = pluralize(self.fetch_errors, "fetch error", "fetch errors")
             issues.append(f"🌐 {self.fetch_errors} {error_text}")
         if self.extraction_errors > 0:
-            error_text = self._pluralize(self.extraction_errors, "extraction error", "extraction errors")
+            error_text = pluralize(self.extraction_errors, "extraction error", "extraction errors")
             issues.append(f"🔍 {self.extraction_errors} {error_text}")
 
         if not issues:
@@ -186,7 +183,7 @@ class SearchResults:
         print()  # Empty line at end
 
 
-def _extract_base_product_name(product_name: str) -> str:
+def extract_base_product_name(product_name: str) -> str:
     """Extract base product name without size information.
 
     Args:
@@ -198,6 +195,10 @@ def _extract_base_product_name(product_name: str) -> str:
     # Remove size patterns: (236ml), (2x236ml), etc.
     base_name = re.sub(r"\s*\(\d+(?:x\d+)?(?:\.\d+)?ml\)\s*$", "", product_name, flags=re.IGNORECASE)
     return base_name.strip()
+
+
+# Keep private alias for backward compatibility within this module
+_extract_base_product_name = extract_base_product_name
 
 
 def _group_products_by_base_name(

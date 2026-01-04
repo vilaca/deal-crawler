@@ -79,6 +79,12 @@ def _create_argument_parser() -> argparse.ArgumentParser:
         help=f"Path to products data file (env: DEAL_CRAWLER_PRODUCTS_FILE, default: {config.products_file})",
     )
     parser.add_argument(
+        "--shipping-file",
+        type=str,
+        default=config.shipping_file,
+        help=f"Path to shipping config file (env: DEAL_CRAWLER_SHIPPING_FILE, default: {config.shipping_file})",
+    )
+    parser.add_argument(
         "--all-sizes",
         action="store_true",
         default=_get_env_bool("DEAL_CRAWLER_ALL_SIZES"),
@@ -166,15 +172,15 @@ def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namesp
 
     # Load shipping configuration
     try:
-        shipping_config = ShippingConfig.load_from_file("shipping.yaml")
+        shipping_config = ShippingConfig.load_from_file(args.shipping_file)
     except FileNotFoundError:
-        print("Error: shipping.yaml not found", file=sys.stderr)
+        print(f"Error: {args.shipping_file} not found", file=sys.stderr)
         sys.exit(1)
     except yaml.YAMLError as e:
-        print(f"Error: shipping.yaml is not valid YAML: {e}", file=sys.stderr)
+        print(f"Error: {args.shipping_file} is not valid YAML: {e}", file=sys.stderr)
         sys.exit(1)
     except KeyError as e:
-        print(f"Error: shipping.yaml is missing required field: {e}", file=sys.stderr)
+        print(f"Error: {args.shipping_file} is missing required field: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Optimize and display

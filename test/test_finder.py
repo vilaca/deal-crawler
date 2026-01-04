@@ -227,12 +227,13 @@ class TestSearchResults(unittest.TestCase):
 
     def test_pluralize(self):
         """Test pluralization logic."""
-        results = SearchResults()
+        from utils.string_utils import pluralize
+
         # Singular (count = 1)
-        self.assertEqual(results._pluralize(1, "product", "products"), "product")
+        self.assertEqual(pluralize(1, "product", "products"), "product")
         # Plural (count != 1)
-        self.assertEqual(results._pluralize(0, "product", "products"), "products")
-        self.assertEqual(results._pluralize(2, "product", "products"), "products")
+        self.assertEqual(pluralize(0, "product", "products"), "products")
+        self.assertEqual(pluralize(2, "product", "products"), "products")
 
     def test_extract_domain_normal_url(self):
         """Test domain extraction from normal URL."""
