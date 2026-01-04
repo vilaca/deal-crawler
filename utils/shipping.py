@@ -5,6 +5,9 @@ from typing import Dict
 
 import yaml
 
+# Constant representing no free shipping available (threshold unreachably high)
+NO_FREE_SHIPPING_THRESHOLD = 999999.99
+
 
 @dataclass
 class ShippingInfo:
@@ -80,5 +83,5 @@ class ShippingConfig:
         return ShippingInfo(
             site=site,
             shipping_cost=default_shipping,
-            free_over=999999.99,  # High threshold means no free shipping
+            free_over=NO_FREE_SHIPPING_THRESHOLD,
         )

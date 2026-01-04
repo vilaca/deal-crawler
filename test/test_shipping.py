@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from utils.shipping import ShippingConfig, ShippingInfo
+from utils.shipping import ShippingConfig, ShippingInfo, NO_FREE_SHIPPING_THRESHOLD
 
 
 class TestShippingInfoCalculation(unittest.TestCase):
@@ -204,7 +204,7 @@ class TestShippingConfigRetrieval(unittest.TestCase):
         # Then
         self.assertEqual(result.site, "unknown.com")
         self.assertEqual(result.shipping_cost, 3.99)  # Default
-        self.assertEqual(result.free_over, 999999.99)  # High threshold (no free shipping)
+        self.assertEqual(result.free_over, NO_FREE_SHIPPING_THRESHOLD)
 
     def test_when_store_not_found_then_custom_default_used(self):
         """
@@ -221,7 +221,7 @@ class TestShippingConfigRetrieval(unittest.TestCase):
         # Then
         self.assertEqual(result.site, "unknown.com")
         self.assertEqual(result.shipping_cost, 5.50)
-        self.assertEqual(result.free_over, 999999.99)
+        self.assertEqual(result.free_over, NO_FREE_SHIPPING_THRESHOLD)
 
 
 if __name__ == "__main__":
