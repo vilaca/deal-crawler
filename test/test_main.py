@@ -327,8 +327,8 @@ class TestMainFunction(unittest.TestCase):
         # Run main
         main()
 
-        # Verify HttpClient was called with use_cache=False
-        mock_http_client.assert_called_once_with(use_cache=False)
+        # Verify HttpClient was called with use_cache=False and default timeout/cache_duration
+        mock_http_client.assert_called_once_with(use_cache=False, timeout=15, cache_duration=3600)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -348,8 +348,8 @@ class TestMainFunction(unittest.TestCase):
         # Run main
         main()
 
-        # Verify HttpClient was called with use_cache=True (default)
-        mock_http_client.assert_called_once_with(use_cache=True)
+        # Verify HttpClient was called with use_cache=True (default) and default timeout/cache_duration
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=3600)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -464,23 +464,22 @@ class TestMainFunction(unittest.TestCase):
         # Verify original results were used for display
         mock_print_text.assert_called_once_with(mock_results)
 
-    @patch("main.config")
     @patch("main.filter_best_value_sizes")
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
     @patch("main.HttpClient")
     @patch("main.print_results_text")
     @patch("sys.argv", ["main.py"])
-    def test_main_respects_env_variable_for_show_all_sizes(  # pylint: disable=too-many-positional-arguments
+    @patch.dict("os.environ", {"DEAL_CRAWLER_ALL_SIZES": "true"})
+    def test_main_respects_env_variable_for_all_sizes(  # pylint: disable=too-many-positional-arguments
         self,
         mock_print_text,
         mock_http_client,
         mock_load_products,
         mock_find_prices,
         mock_filter_sizes,
-        mock_config,
     ):
-        """Test main() respects SHOW_ALL_SIZES environment variable."""
+        """Test main() respects DEAL_CRAWLER_ALL_SIZES environment variable."""
         # Setup mocks
         mock_products = {"Product A": ["https://example.com/a"]}
         mock_load_products.return_value = mock_products
@@ -489,11 +488,7 @@ class TestMainFunction(unittest.TestCase):
         mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
         mock_find_prices.return_value = mock_results
 
-        # Set env variable to true
-        mock_config.show_all_sizes = True
-        mock_config.products_file = "products.yml"
-
-        # Run main
+        # Run main (with DEAL_CRAWLER_ALL_SIZES=true set via patch.dict)
         main()
 
         # Verify filter_best_value_sizes was NOT called
@@ -501,6 +496,174 @@ class TestMainFunction(unittest.TestCase):
 
         # Verify original results were used for display
         mock_print_text.assert_called_once_with(mock_results)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--cache-duration", "7200", "--all-sizes"])
+    def test_main_with_custom_cache_duration(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() passes custom cache_duration to HttpClient."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with custom cache_duration
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--request-timeout", "30", "--all-sizes"])
+    def test_main_with_custom_request_timeout(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() passes custom timeout to HttpClient."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with custom timeout
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--all-sizes"])
+    @patch.dict("os.environ", {"DEAL_CRAWLER_CACHE_DURATION": "7200"})
+    def test_main_respects_env_variable_for_cache_duration(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() respects DEAL_CRAWLER_CACHE_DURATION environment variable."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with cache_duration from env var
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--all-sizes"])
+    @patch.dict("os.environ", {"DEAL_CRAWLER_REQUEST_TIMEOUT": "30"})
+    def test_main_respects_env_variable_for_request_timeout(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() respects DEAL_CRAWLER_REQUEST_TIMEOUT environment variable."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with timeout from env var
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--request-timeout", "45", "--all-sizes"])
+    @patch.dict("os.environ", {"DEAL_CRAWLER_REQUEST_TIMEOUT": "30"})
+    def test_main_cli_overrides_env_variable_for_timeout(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() CLI flag overrides environment variable for timeout."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with CLI flag value (45), not env var (30)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=45, cache_duration=3600)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--markdown", "--all-sizes"])
+    @patch.dict("os.environ", {"DEAL_CRAWLER_MARKDOWN": "false"})
+    def test_main_cli_overrides_env_variable_for_markdown(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() CLI flag overrides environment variable for markdown."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main (CLI has --markdown despite env var being false)
+        main()
+
+        # Verify markdown format was used (CLI flag wins)
+        mock_print_text.assert_not_called()
+        mock_results.print_summary.assert_called_once_with(markdown=True)
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_markdown")
+    @patch("sys.argv", ["main.py", "--all-sizes"])
+    @patch.dict("os.environ", {"DEAL_CRAWLER_MARKDOWN": "true"})
+    def test_main_respects_env_variable_for_markdown(
+        self, mock_print_markdown, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test main() respects DEAL_CRAWLER_MARKDOWN environment variable."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify markdown format was used
+        mock_print_markdown.assert_called_once_with(mock_results)
+        mock_results.print_summary.assert_called_once_with(markdown=True)
 
 
 if __name__ == "__main__":
