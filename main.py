@@ -1,6 +1,7 @@
 """CLI entry point for Deal Crawler price scraper."""
 
 import argparse
+import os
 import sys
 from typing import Dict, List
 
@@ -13,6 +14,22 @@ from utils.markdown_formatter import print_results_markdown
 from utils.text_formatter import print_results_text
 
 
+def _get_env_bool(key: str, default: bool = False) -> bool:
+    """Get boolean value from environment variable.
+
+    Args:
+        key: Environment variable name
+        default: Default value if not set
+
+    Returns:
+        Boolean value from environment variable or default
+    """
+    value = os.getenv(key)
+    if value is None:
+        return default
+    return value.lower() in ("true", "1", "yes")
+
+
 def _create_argument_parser() -> argparse.ArgumentParser:
     """Create and configure the argument parser.
 
@@ -23,33 +40,50 @@ def _create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--markdown",
         action="store_true",
-        help="Output in markdown format (default: text format for terminal)",
+        default=_get_env_bool("DEAL_CRAWLER_MARKDOWN"),
+        help="Output in markdown format (env: DEAL_CRAWLER_MARKDOWN)",
     )
     parser.add_argument(
         "--sites",
         type=str,
-        help="Filter by site domains (comma-separated, e.g., 'notino.pt,wells.pt')",
+        default=os.getenv("DEAL_CRAWLER_SITES"),
+        help="Filter by site domains, comma-separated (env: DEAL_CRAWLER_SITES)",
     )
     parser.add_argument(
         "--products",
         type=str,
-        help="Filter by product name substrings (comma-separated, case-insensitive)",
+        default=os.getenv("DEAL_CRAWLER_PRODUCTS"),
+        help="Filter by product name substrings, comma-separated (env: DEAL_CRAWLER_PRODUCTS)",
     )
     parser.add_argument(
         "--no-cache",
         action="store_true",
-        help="Bypass HTTP cache (force fresh requests)",
+        default=_get_env_bool("DEAL_CRAWLER_NO_CACHE"),
+        help="Bypass HTTP cache (env: DEAL_CRAWLER_NO_CACHE)",
     )
     parser.add_argument(
         "--products-file",
         type=str,
         default=config.products_file,
-        help=f"Path to products data file (default: {config.products_file})",
+        help=f"Path to products data file (env: DEAL_CRAWLER_PRODUCTS_FILE, default: {config.products_file})",
     )
     parser.add_argument(
         "--all-sizes",
         action="store_true",
-        help="Show all product sizes (default: only show best value per 100ml)",
+        default=_get_env_bool("DEAL_CRAWLER_ALL_SIZES"),
+        help="Show all product sizes (env: DEAL_CRAWLER_ALL_SIZES)",
+    )
+    parser.add_argument(
+        "--cache-duration",
+        type=int,
+        default=int(os.getenv("DEAL_CRAWLER_CACHE_DURATION", "3600")),
+        help="HTTP cache lifetime in seconds (env: DEAL_CRAWLER_CACHE_DURATION, default: 3600)",
+    )
+    parser.add_argument(
+        "--request-timeout",
+        type=int,
+        default=int(os.getenv("DEAL_CRAWLER_REQUEST_TIMEOUT", "15")),
+        help="HTTP request timeout in seconds (env: DEAL_CRAWLER_REQUEST_TIMEOUT, default: 15)",
     )
     return parser
 
@@ -115,12 +149,15 @@ def main() -> None:
     products = _apply_filters(products, args)
 
     # Find cheapest prices
-    with HttpClient(use_cache=not args.no_cache) as http_client:
+    with HttpClient(
+        use_cache=not args.no_cache,
+        timeout=args.request_timeout,
+        cache_duration=args.cache_duration,
+    ) as http_client:
         search_results = find_cheapest_prices(products, http_client)
 
     # Filter by best value if requested
-    show_all_sizes = args.all_sizes or config.show_all_sizes
-    if not show_all_sizes:
+    if not args.all_sizes:
         search_results = filter_best_value_sizes(search_results)
 
     # Display results
