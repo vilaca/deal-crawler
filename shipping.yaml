@@ -31,3 +31,10 @@
 - site: www.sweetcare.pt
   shipping: 2.90
   free-over: 65.00
+- site: www.farmaciacarvalho.pt
+  shipping: 4.20
+  free-over: 50.00
+- site: easyfarma.pt
+  shipping: 3.70
+  free-over: 59.00
+  flat-shipping-rate: false
