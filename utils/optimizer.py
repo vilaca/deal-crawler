@@ -53,16 +53,21 @@ class OptimizedPlan:
 
 
 def _extract_domain(url: str) -> str:
-    """Extract domain from URL.
+    """Extract domain from URL with fallback for malformed URLs.
 
     Args:
         url: Full URL
 
     Returns:
-        Domain (e.g., 'notino.pt')
+        Domain (e.g., 'notino.pt'), or the full URL if domain cannot be extracted
     """
     parsed = urlparse(url)
     domain = parsed.netloc
+    
+    # Fallback to full URL if netloc is empty (malformed URL)
+    if not domain:
+        return url
+    
     # Remove www. prefix if present
     if domain.startswith("www."):
         return domain[4:]  # Remove "www."

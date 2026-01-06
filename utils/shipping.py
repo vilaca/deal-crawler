@@ -51,17 +51,36 @@ class ShippingConfig:
             FileNotFoundError: If file doesn't exist
             yaml.YAMLError: If YAML is invalid
             KeyError: If required fields are missing
+            ValueError: If the YAML structure is not a list or values are invalid
         """
         with open(filepath, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
+        if data is None or not isinstance(data, list):
+            raise ValueError(
+                f"Invalid shipping configuration format in '{filepath}': expected a list of entries."
+            )
+
         stores = {}
         for entry in data:
             site = entry["site"]
+            shipping_cost = float(entry["shipping"])
+            free_over = float(entry["free-over"])
+            
+            # Validate that values are positive
+            if shipping_cost < 0:
+                raise ValueError(
+                    f"Invalid shipping cost for '{site}': {shipping_cost}. Must be >= 0."
+                )
+            if free_over < 0:
+                raise ValueError(
+                    f"Invalid free shipping threshold for '{site}': {free_over}. Must be >= 0."
+                )
+            
             stores[site] = ShippingInfo(
                 site=site,
-                shipping_cost=float(entry["shipping"]),
-                free_over=float(entry["free-over"]),
+                shipping_cost=shipping_cost,
+                free_over=free_over,
             )
 
         return cls(stores=stores)
