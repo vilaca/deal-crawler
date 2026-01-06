@@ -167,6 +167,92 @@ class TestShippingConfigLoading(unittest.TestCase):
         finally:
             Path(temp_path).unlink()
 
+    def test_when_yaml_is_not_list_then_raises_error(self):
+        """
+        Given a YAML file containing a dict instead of a list
+        When trying to load the config
+        Then ValueError should be raised
+        """
+        # Given
+        yaml_content = {"site": "store1.com", "shipping": 3.99, "free-over": 50.00}
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(yaml_content, f)
+            temp_path = f.name
+
+        try:
+            # When/Then
+            with self.assertRaises(ValueError) as context:
+                ShippingConfig.load_from_file(temp_path)
+            self.assertIn("expected a list", str(context.exception))
+        finally:
+            Path(temp_path).unlink()
+
+    def test_when_yaml_is_empty_then_raises_error(self):
+        """
+        Given an empty YAML file
+        When trying to load the config
+        Then ValueError should be raised
+        """
+        # Given
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            f.write("")
+            temp_path = f.name
+
+        try:
+            # When/Then
+            with self.assertRaises(ValueError) as context:
+                ShippingConfig.load_from_file(temp_path)
+            self.assertIn("expected a list", str(context.exception))
+        finally:
+            Path(temp_path).unlink()
+
+    def test_when_negative_shipping_cost_then_raises_error(self):
+        """
+        Given a YAML file with negative shipping cost
+        When trying to load the config
+        Then ValueError should be raised
+        """
+        # Given
+        yaml_content = [
+            {"site": "store1.com", "shipping": -3.99, "free-over": 50.00},
+        ]
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(yaml_content, f)
+            temp_path = f.name
+
+        try:
+            # When/Then
+            with self.assertRaises(ValueError) as context:
+                ShippingConfig.load_from_file(temp_path)
+            self.assertIn("Invalid shipping cost", str(context.exception))
+        finally:
+            Path(temp_path).unlink()
+
+    def test_when_negative_free_over_then_raises_error(self):
+        """
+        Given a YAML file with negative free shipping threshold
+        When trying to load the config
+        Then ValueError should be raised
+        """
+        # Given
+        yaml_content = [
+            {"site": "store1.com", "shipping": 3.99, "free-over": -50.00},
+        ]
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(yaml_content, f)
+            temp_path = f.name
+
+        try:
+            # When/Then
+            with self.assertRaises(ValueError) as context:
+                ShippingConfig.load_from_file(temp_path)
+            self.assertIn("Invalid free shipping threshold", str(context.exception))
+        finally:
+            Path(temp_path).unlink()
+
 
 class TestShippingConfigRetrieval(unittest.TestCase):
     """Test retrieving shipping info from config."""

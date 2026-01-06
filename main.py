@@ -181,6 +181,9 @@ def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namesp
     except KeyError as e:
         print(f"Error: {args.shipping_file} is missing required field: {e}", file=sys.stderr)
         sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {args.shipping_file} has invalid data: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Optimize and display
     optimized_plan = optimize_shopping_plan(all_prices, shipping_config, args.optimize_for_value)
