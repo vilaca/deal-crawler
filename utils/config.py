@@ -26,6 +26,7 @@ class Config:
 
         # Products file settings
         self.products_file = os.getenv("DEAL_CRAWLER_PRODUCTS_FILE", "products.yml")
+        self.shipping_file = os.getenv("DEAL_CRAWLER_SHIPPING_FILE", "shipping.yaml")
 
         # Display settings
         env_show_all_sizes = os.getenv("DEAL_CRAWLER_ALL_SIZES")
