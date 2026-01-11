@@ -25,14 +25,15 @@
 
 ## 📊 Search Summary
 
-**⚠️ 47/90 URLs** (52% success) · **26 products**
+**⚠️ 46/90 URLs** (51% success) · **26 products**
 
-_📦 5 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
+_📦 6 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: atida.com
 - **Cerave Hydrating Cleanser (236ml)**: aveirofarma.pt
 - **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
+- **LRP Anthelios UVMune 400 SPF50 - Oil control**: atida.com
 - **Medik8 Duo**: atida.com
 - **Paradontax pasta gums (75ml)**: atida.com
 
