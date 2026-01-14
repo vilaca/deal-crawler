@@ -4,10 +4,10 @@
 | Product | Price | Link |
 |---------|-------|------|
 | **Avène Couvrance Fluido Maquiagem** | €17.62 | [🔗 wells.pt](https://wells.pt/couvrance-fluid-foundation-corrector-3.0-3599509.html) |
-| **Cerave Hydrating Cleanser (1000ml)** | €16.51<br>_(€1.65/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cerave-creme-hidratante-de-limpeza-1000ml-) |
-| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €15.88<br>_(€3.36/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
+| **Cerave Hydrating Cleanser (2x1000ml)** | €29.99<br>_(€1.50/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
+| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €17.73<br>_(€3.75/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
 | **Cerave Micellar Water (2x295ml)** | €15.99<br>_(€2.71/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
-| **Dercos DS** | €20.42 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
+| **Dercos DS** | €20.39 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €19.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.67 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 3** | €47.03 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=02) |
@@ -25,18 +25,16 @@
 
 ## 📊 Search Summary
 
-**❌ 41/90 URLs** (46% success) · **26 products**
+**❌ 44/90 URLs** (49% success) · **26 products**
 
-_📦 11 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
+_📦 8 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: atida.com
-- **Cerave Hydrating Cleanser (1000ml)**: atida.com
-- **Cerave Hydrating Cleanser (236ml)**: aveirofarma.pt, atida.com
-- **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
-- **Cerave Hydrating Cleanser (2x236ml)**: atida.com
+- **Cerave Hydrating Cleanser (236ml)**: aveirofarma.pt
 - **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt
 - **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
+- **Cerave Hydrating Cream To Foam Cleanser (473ml)**: aveirofarma.pt
 - **LRP Anthelios UVMune 400 SPF50 - Oil control**: atida.com
 - **Medik8 Duo**: atida.com
 - **Paradontax pasta gums (75ml)**: atida.com
