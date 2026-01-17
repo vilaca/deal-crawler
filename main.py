@@ -1,6 +1,7 @@
 """CLI entry point for Deal Crawler price scraper."""
 
 import argparse
+import csv
 import os
 import sys
 from typing import Dict, List
@@ -14,7 +15,7 @@ from utils.finder import SearchResults, find_cheapest_prices, filter_best_value_
 from utils.http_client import HttpClient
 from utils.markdown_formatter import print_results_markdown, print_plan_markdown
 from utils.text_formatter import print_results_text, print_plan_text
-from utils.optimizer import optimize_shopping_plan
+from utils.optimizer import optimize_shopping_plan, OptimizedPlan
 from utils.shipping import ShippingConfig
 
 
@@ -107,6 +108,24 @@ def _create_argument_parser() -> argparse.ArgumentParser:
         default=int(os.getenv("DEAL_CRAWLER_REQUEST_TIMEOUT", "15")),
         help="HTTP request timeout in seconds (env: DEAL_CRAWLER_REQUEST_TIMEOUT, default: 15)",
     )
+    parser.add_argument(
+        "--dump",
+        type=str,
+        default=os.getenv("DEAL_CRAWLER_DUMP"),
+        help="Dump search results to CSV file (env: DEAL_CRAWLER_DUMP)",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=_get_env_bool("DEAL_CRAWLER_VERBOSE"),
+        help="Show detailed progress messages and disable progress bar (env: DEAL_CRAWLER_VERBOSE)",
+    )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        default=_get_env_bool("DEAL_CRAWLER_NO_PROGRESS"),
+        help="Disable progress bar (also disabled by --verbose) (env: DEAL_CRAWLER_NO_PROGRESS)",
+    )
     return parser
 
 
@@ -140,6 +159,67 @@ def _apply_filters(products: Dict[str, List[str]], args: argparse.Namespace) -> 
     return products
 
 
+def _dump_results_to_csv(search_results: SearchResults, filename: str) -> None:
+    """Dump search results to CSV file.
+
+    Args:
+        search_results: Search results to dump
+        filename: Output CSV filename
+    """
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Product", "Price", "Price per 100ml", "URL"])
+
+            for product_name, price_result in search_results.prices.items():
+                if price_result:
+                    price_per_100ml = (
+                        f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+                    )
+                    writer.writerow([
+                        product_name,
+                        f"{price_result.price:.2f}",
+                        price_per_100ml,
+                        price_result.url,
+                    ])
+                else:
+                    writer.writerow([product_name, "", "", ""])
+
+        print(f"\nResults dumped to {filename}", file=sys.stderr)
+    except OSError as e:
+        print(f"Error writing to {filename}: {e}", file=sys.stderr)
+
+
+def _dump_plan_to_csv(optimized_plan: OptimizedPlan, filename: str) -> None:
+    """Dump optimized plan to CSV file.
+
+    Args:
+        optimized_plan: Optimized plan to dump
+        filename: Output CSV filename
+    """
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Store", "Product", "Price", "Price per 100ml", "URL"])
+
+            for cart in optimized_plan.carts:
+                for product_name, price_result in cart.items:
+                    price_per_100ml = (
+                        f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+                    )
+                    writer.writerow([
+                        cart.site,
+                        product_name,
+                        f"{price_result.price:.2f}",
+                        price_per_100ml,
+                        price_result.url,
+                    ])
+
+        print(f"\nResults dumped to {filename}", file=sys.stderr)
+    except OSError as e:
+        print(f"Error writing to {filename}: {e}", file=sys.stderr)
+
+
 def _display_results(search_results: SearchResults, markdown: bool) -> None:
     """Display search results in the specified format.
 
@@ -166,8 +246,11 @@ def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namesp
         use_cache=not args.no_cache,
         timeout=args.request_timeout,
         cache_duration=args.cache_duration,
+        verbose=args.verbose,
     ) as http_client:
-        all_prices = find_all_prices(products, http_client)
+        all_prices = find_all_prices(
+            products, http_client, verbose=args.verbose, show_progress=not (args.no_progress or args.verbose)
+        )
 
     # Load shipping configuration
     try:
@@ -190,6 +273,10 @@ def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namesp
     else:
         print_plan_text(optimized_plan, shipping_config)
 
+    # Dump to CSV if requested
+    if args.dump:
+        _dump_plan_to_csv(optimized_plan, args.dump)
+
 
 def _run_standard_mode(products: Dict[str, List[str]], args: argparse.Namespace) -> None:
     """Run standard mode to find cheapest prices.
@@ -202,8 +289,11 @@ def _run_standard_mode(products: Dict[str, List[str]], args: argparse.Namespace)
         use_cache=not args.no_cache,
         timeout=args.request_timeout,
         cache_duration=args.cache_duration,
+        verbose=args.verbose,
     ) as http_client:
-        search_results = find_cheapest_prices(products, http_client)
+        search_results = find_cheapest_prices(
+            products, http_client, verbose=args.verbose, show_progress=not (args.no_progress or args.verbose)
+        )
 
     # Filter by best value if requested
     if not args.all_sizes:
@@ -211,6 +301,10 @@ def _run_standard_mode(products: Dict[str, List[str]], args: argparse.Namespace)
 
     # Display results
     _display_results(search_results, args.markdown)
+
+    # Dump to CSV if requested
+    if args.dump:
+        _dump_results_to_csv(search_results, args.dump)
 
 
 def main() -> None:

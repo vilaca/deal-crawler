@@ -32,6 +32,7 @@ class HttpClient:
         use_cache: bool = True,
         cache_duration: Optional[int] = None,
         cache_file: Optional[str] = None,
+        verbose: bool = False,
     ) -> None:
         """Initialize HTTP client with configuration.
 
@@ -41,10 +42,12 @@ class HttpClient:
             use_cache: Whether to use HTTP response cache (default: True)
             cache_duration: Cache lifetime in seconds (uses config default if None)
             cache_file: Cache file path (uses config default if None)
+            verbose: Whether to show verbose messages (default: False)
         """
         self.timeout = timeout if timeout is not None else config.request_timeout
         self.max_retries = max_retries if max_retries is not None else config.max_retries
         self.use_cache = use_cache
+        self.verbose = verbose
         self.session = requests.Session()
 
         # Use provided cache settings or fall back to config defaults
@@ -147,7 +150,8 @@ class HttpClient:
 
         cached_html = self.cache.get(url)
         if cached_html:
-            print("  📦 Using cached response", file=sys.stderr)
+            if self.verbose:
+                print("  📦 Using cached response", file=sys.stderr)
             return BeautifulSoup(cached_html, "lxml")
 
         return None
