@@ -10,7 +10,7 @@ from tqdm import tqdm
 from .http_client import HttpClient
 from .stock_checker import is_out_of_stock
 from .extractors import extract_price
-from .product_info import calculate_price_per_100ml, parse_product_name
+from .product_info import ProductInfo, calculate_price_per_100ml, parse_product_name
 
 
 @dataclass
@@ -168,6 +168,85 @@ def filter_best_value_sizes(results: SearchResults) -> SearchResults:
     return filtered_results
 
 
+def _update_progress_bar_on_error(pbar: Optional[tqdm]) -> None:  # type: ignore[type-arg]
+    """Update progress bar and flash red color on error.
+
+    Args:
+        pbar: tqdm progress bar instance (or None)
+    """
+    if pbar:
+        pbar.colour = "red"
+        pbar.update(1)
+        pbar.colour = "green"
+
+
+def _process_single_url(
+    url: str,
+    product_info: ProductInfo,
+    http_client: HttpClient,
+    verbose: bool,
+    pbar: Optional[tqdm],  # type: ignore[type-arg]
+) -> tuple[Optional[PriceResult], dict]:
+    """Process a single URL and return price result.
+
+    Args:
+        url: URL to fetch
+        product_info: Parsed product information
+        http_client: HttpClient instance
+        verbose: If True, print detailed messages
+        pbar: tqdm progress bar instance (or None)
+
+    Returns:
+        Tuple of (PriceResult or None, statistics dict with keys: fetch_error, out_of_stock, extraction_error)
+    """
+    stats = {"fetch_error": False, "out_of_stock": False, "extraction_error": False}
+
+    if verbose:
+        print(f"  Fetching: {url}", file=sys.stderr)
+
+    soup = http_client.fetch_page(url)
+
+    if not soup:
+        if verbose:
+            print("    Could not fetch page", file=sys.stderr)
+        stats["fetch_error"] = True
+        _update_progress_bar_on_error(pbar)
+        return None, stats
+
+    # Check stock status first
+    if is_out_of_stock(soup):
+        if verbose:
+            print("    Out of stock - skipping", file=sys.stderr)
+        stats["out_of_stock"] = True
+        _update_progress_bar_on_error(pbar)
+        return None, stats
+
+    price = extract_price(soup, url)
+
+    if not price:
+        if verbose:
+            print("    Could not find price", file=sys.stderr)
+        stats["extraction_error"] = True
+        _update_progress_bar_on_error(pbar)
+        http_client.remove_from_cache(url)
+        return None, stats
+
+    # Calculate price per 100ml if volume information is available
+    price_per_100ml = None
+    if product_info.total_volume_ml:
+        price_per_100ml = calculate_price_per_100ml(price, product_info.total_volume_ml)
+        if verbose:
+            print(f"    Found price: €{price:.2f} ({price_per_100ml:.2f}/100ml)", file=sys.stderr)
+    else:
+        if verbose:
+            print(f"    Found price: €{price:.2f}", file=sys.stderr)
+
+    if pbar:
+        pbar.update(1)
+
+    return PriceResult(price=price, url=url, price_per_100ml=price_per_100ml), stats
+
+
 def _collect_prices_for_products(
     products: Dict[str, List[str]],
     http_client: HttpClient,
@@ -195,14 +274,24 @@ def _collect_prices_for_products(
     results = SearchResults()
     results.total_products = len(products)
 
-    # Create progress bar wrapper
-    products_iter = (
-        tqdm(products.items(), desc=progress_desc, unit="product", file=sys.stderr)
+    # Calculate total URLs for progress bar
+    total_urls = sum(len(urls) for urls in products.values())
+
+    # Create progress bar tracking URLs (start with green)
+    pbar = (
+        tqdm(total=total_urls, desc=progress_desc, unit=" URL", file=sys.stderr, colour="green")
         if show_progress
-        else products.items()
+        else None
     )
 
-    for product_name, urls in products_iter:
+    product_count = 0
+    for product_name, urls in products.items():
+        product_count += 1
+
+        # Update progress bar with current product info
+        if pbar:
+            pbar.set_postfix_str(f"[{product_count}/{results.total_products} products] {product_name[:40]:<40}")
+
         if verbose:
             print(f"\nChecking prices for {product_name}...", file=sys.stderr)
         prices = []
@@ -212,54 +301,39 @@ def _collect_prices_for_products(
 
         for url in urls:
             results.total_urls_checked += 1
-            if verbose:
-                print(f"  Fetching: {url}", file=sys.stderr)
-            soup = http_client.fetch_page(url)
 
-            if not soup:
-                if verbose:
-                    print("    Could not fetch page", file=sys.stderr)
+            # Process URL and get result
+            price_result, stats = _process_single_url(url, product_info, http_client, verbose, pbar)
+
+            # Update statistics based on result
+            if stats["fetch_error"]:
                 results.fetch_errors += 1
                 results.failed_urls.append(url)
-                continue
-
-            # Check stock status first
-            if is_out_of_stock(soup):
-                if verbose:
-                    print("    Out of stock - skipping", file=sys.stderr)
+            elif stats["out_of_stock"]:
                 results.out_of_stock += 1
-                # Track which product is out of stock at which URL
                 results.out_of_stock_items.setdefault(product_name, []).append(url)
-                continue
-
-            price = extract_price(soup, url)
-
-            if price:
-                # Calculate price per 100ml if volume information is available
-                price_per_100ml = None
-                if product_info.total_volume_ml:
-                    price_per_100ml = calculate_price_per_100ml(price, product_info.total_volume_ml)
-                    if verbose:
-                        print(
-                            f"    Found price: €{price:.2f} ({price_per_100ml:.2f}/100ml)",
-                            file=sys.stderr,
-                        )
-                else:
-                    if verbose:
-                        print(f"    Found price: €{price:.2f}", file=sys.stderr)
-
-                price_result = PriceResult(price=price, url=url, price_per_100ml=price_per_100ml)
-                prices.append(price_result)
-                results.prices_found += 1
-            else:
-                if verbose:
-                    print("    Could not find price", file=sys.stderr)
+            elif stats["extraction_error"]:
                 results.extraction_errors += 1
                 results.failed_urls.append(url)
-                # Remove from cache so we can retry later
-                http_client.remove_from_cache(url)
+            elif price_result:
+                # Success - add price result
+                prices.append(price_result)
+                results.prices_found += 1
 
         all_prices[product_name] = prices
+
+    # Set final color based on overall results
+    if pbar:
+        if results.prices_found == total_urls:
+            # All URLs successful - green
+            pbar.colour = "green"
+        elif results.prices_found == 0:
+            # All URLs failed - red
+            pbar.colour = "red"
+        else:
+            # Some issues - yellow
+            pbar.colour = "yellow"
+        pbar.close()
 
     return all_prices, results
 
@@ -282,7 +356,7 @@ def find_cheapest_prices(
         SearchResults object with prices and summary statistics
     """
     all_prices, results = _collect_prices_for_products(
-        products, http_client, verbose, show_progress, "Finding cheapest prices"
+        products, http_client, verbose, show_progress, "Finding best prices"
     )
 
     # Select cheapest price for each product
