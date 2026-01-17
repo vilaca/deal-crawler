@@ -7,8 +7,8 @@
 | **Cerave Hydrating Cleanser (2x1000ml)** | €29.99<br>_(€1.50/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €17.73<br>_(€3.75/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
 | **Cerave Micellar Water (295ml)** | €9.63<br>_(€3.26/100ml)_ | [🔗 wells.pt](https://wells.pt/micellar-cleansing-water-6703198.html) |
-| **Dercos DS** | €20.33 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
-| **LRP Anthelios UVMune 400 SPF50** | €19.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
+| **Dercos DS** | €20.30 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
+| **LRP Anthelios UVMune 400 SPF50** | €20.02 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-7577494.html) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.67 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 3** | €49.40 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
 | **Medik8 Crystal Retinal 6** | €65.36 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
@@ -25,9 +25,9 @@
 
 ## 📊 Search Summary
 
-**❌ 43/90 URLs** (48% success) · **26 products**
+**❌ 42/90 URLs** (47% success) · **26 products**
 
-_📦 9 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
+_📦 10 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: atida.com
@@ -37,6 +37,7 @@ _📦 9 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
 - **Cerave Hydrating Cream To Foam Cleanser (473ml)**: aveirofarma.pt
 - **Cerave Micellar Water (295ml)**: atida.com
 - **Cerave Micellar Water (2x295ml)**: atida.com
+- **LRP Anthelios UVMune 400 SPF50**: atida.com
 - **LRP Anthelios UVMune 400 SPF50 - Oil control**: atida.com
 - **Medik8 Duo**: atida.com
 
