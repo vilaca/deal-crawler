@@ -112,16 +112,15 @@ jobs:
 
       - name: Check dead code
         run: |
-          vulture main.py utils test --min-confidence 100 > vulture-report.txt 2>&1 || true
+          make vulture > vulture-report.txt 2>&1 || true
 
       # FAILURE POINT 4: Missing docstrings
       # Possible causes:
       #   - Functions/classes/methods missing docstrings
       #   - Docstring coverage below 100%
-      # Fix: Run 'interrogate -v main.py utils test' locally, add docstrings to all functions/classes
+      # Fix: Run 'make interrogate' locally, add docstrings to all functions/classes
       - name: Check docstring coverage
-        run: |
-          interrogate -v main.py utils test --fail-under 100
+        run: make interrogate
 
       - name: Check code complexity
         run: make complexity > complexity-report.txt 2>&1 || true
@@ -180,7 +179,7 @@ jobs:
             comment += '**Symptoms:** interrogate reports missing docstrings\n\n';
             comment += '**Fix:**\n';
             comment += '```bash\n';
-            comment += 'interrogate -v main.py utils test  # See what needs docs\n';
+            comment += 'make interrogate  # See what needs docs\n';
             comment += '```\n';
             comment += '- Add docstrings to all public functions and classes\n';
             comment += '- Follow format: `"""Brief description.\\n\\nDetailed explanation."""`\n';
@@ -233,11 +232,11 @@ jobs:
 
       - name: Check security with bandit
         run: |
-          bandit -r main.py utils test -ll > bandit-report.txt 2>&1 || true
+          make bandit > bandit-report.txt 2>&1 || true
 
       - name: Check dependency vulnerabilities
         run: |
-          pip-audit --desc > pip-audit-report.txt 2>&1 || true
+          make pip-audit > pip-audit-report.txt 2>&1 || true
 
       - name: Post warnings as PR comment
         if: github.event_name == 'pull_request'

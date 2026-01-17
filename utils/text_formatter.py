@@ -2,7 +2,10 @@
 
 from typing import Dict, List, Optional
 
-from utils.finder import PriceResult, SearchResults
+from .finder import PriceResult, SearchResults
+from .optimizer import OptimizedPlan
+from .shipping import ShippingConfig, NO_FREE_SHIPPING_THRESHOLD
+from .string_utils import pluralize
 
 
 def _format_product_line(
@@ -121,7 +124,11 @@ def _calculate_column_widths(
 
 
 def print_results_text(search_results: SearchResults) -> None:
-    """Print results in text format optimized for terminal."""
+    """Print search results in text format optimized for terminal.
+
+    Args:
+        search_results: SearchResults object with prices
+    """
     # Minimum separator width for visual consistency
     min_separator_width = 50
 
@@ -154,3 +161,56 @@ def print_results_text(search_results: SearchResults) -> None:
     for line in formatted_lines:
         print(line)
     print("=" * separator_width)
+
+
+def print_plan_text(plan: OptimizedPlan, shipping_config: Optional[ShippingConfig] = None) -> None:
+    """Print optimized shopping plan in text format (terminal-friendly).
+
+    Args:
+        plan: OptimizedPlan to display
+        shipping_config: Optional shipping config to show thresholds
+    """
+    if not plan.carts:
+        print("\nNo shopping plan generated.")
+        return
+
+    print("\n🛒 Optimized Shopping Plan")
+    print()
+
+    for cart in plan.carts:
+        # Add free shipping threshold info if available
+        threshold_info = ""
+        if shipping_config:
+            shipping_info = shipping_config.get_shipping_info(cart.site)
+            if shipping_info.free_over < NO_FREE_SHIPPING_THRESHOLD:
+                threshold_info = f" (Free shipping over €{shipping_info.free_over:.2f})"
+
+        print(f"Store: {cart.site}{threshold_info}")
+        print("─" * 60)
+
+        for product_name, price_result in cart.items:
+            price_str = f"€{price_result.price:.2f}"
+
+            if price_result.price_per_100ml:
+                value_str = f"(€{price_result.price_per_100ml:.2f}/100ml)"
+                print(f"  {product_name:<42} {price_str:>8} {value_str}")
+            else:
+                print(f"  {product_name:<42} {price_str:>8}")
+
+        if cart.free_shipping_eligible:
+            print(f"  {'Shipping':<42} {'FREE':>8}")
+        else:
+            print(f"  {'Shipping':<42} €{cart.shipping_cost:>7.2f}")
+
+        print("  " + "─" * 58)
+        print(f"  {'Store Total':<42} €{cart.total:>7.2f}")
+        print()
+
+    print("═" * 60)
+    print(f"Grand Total: €{plan.grand_total:.2f}")
+    print(f"Total Shipping: €{plan.total_shipping:.2f}")
+    item_word = pluralize(plan.total_products, "item", "items")
+    store_word = pluralize(len(plan.carts), "store", "stores")
+    print(f"Products: {plan.total_products} {item_word} from {len(plan.carts)} {store_word}")
+    print("═" * 60)
+    print()

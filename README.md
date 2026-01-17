@@ -31,6 +31,12 @@ python main.py
 # Filter by sites and products
 python main.py --sites "notino.pt,wells.pt" --products "Cerave,Medik8"
 
+# Optimize shopping plan (minimize total cost including shipping)
+python main.py --plan "Cerave,Medik8"
+
+# Optimize for best value (price per ml) instead of lowest cost
+python main.py --plan "Cerave,Medik8" --optimize-for-value
+
 # Use environment variables instead
 export DEAL_CRAWLER_SITES="notino.pt,wells.pt"
 export DEAL_CRAWLER_PRODUCTS="Cerave,Medik8"
@@ -39,6 +45,12 @@ python main.py
 # Markdown output, bypass cache, show all sizes
 python main.py --markdown --no-cache --all-sizes
 ```
+
+## Shopping Plan Optimization
+
+The `--plan` flag uses Mixed Integer Linear Programming (MILP) to find the optimal way to purchase products across multiple stores, minimizing total cost (products + shipping) or maximizing value (best price per ml with `--optimize-for-value`).
+
+**How it works:** The optimizer considers all available product sizes and stores, automatically consolidating purchases to trigger free shipping thresholds when beneficial. It ensures exactly one size is selected per product while balancing individual prices, shipping costs, and free shipping eligibility across stores.
 
 ## Configuration
 
@@ -49,11 +61,14 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 | `--markdown` | `DEAL_CRAWLER_MARKDOWN` | `false` | Output in markdown format |
 | `--sites` | `DEAL_CRAWLER_SITES` | - | Filter by site domains (comma-separated) |
 | `--products` | `DEAL_CRAWLER_PRODUCTS` | - | Filter by product names (comma-separated) |
+| `--plan` | `DEAL_CRAWLER_PLAN` | - | Optimize shopping plan for products (comma-separated) |
+| `--optimize-for-value` | `DEAL_CRAWLER_OPTIMIZE_FOR_VALUE` | `false` | Optimize for best price per ml instead of lowest cost |
 | `--all-sizes` | `DEAL_CRAWLER_ALL_SIZES` | `false` | Show all product sizes instead of best value |
 | `--no-cache` | `DEAL_CRAWLER_NO_CACHE` | `false` | Bypass HTTP cache |
 | `--cache-duration` | `DEAL_CRAWLER_CACHE_DURATION` | `3600` | HTTP cache lifetime in seconds |
 | `--request-timeout` | `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
 | `--products-file` | `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Path to products data file |
+| `--shipping-file` | `DEAL_CRAWLER_SHIPPING_FILE` | `shipping.yaml` | Path to shipping config file |
 
 ### Advanced Configuration
 
@@ -76,6 +91,9 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 - 💰 Prioritizes discounted prices
 - 📦 Excludes out-of-stock products
 - 🔍 Flexible filtering (sites, products, sizes)
+- 🧮 **Shopping plan optimization** - Uses MILP to minimize total cost across stores
+- 📊 **Value optimization** - Optimize for best price per ml instead of lowest cost
+- 🚚 **Smart shipping** - Considers free shipping thresholds when optimizing
 - ⚙️ Configurable via CLI flags or environment variables
 - 🤖 Bot detection evasion with randomized delays
 - 📊 Text and markdown output formats
