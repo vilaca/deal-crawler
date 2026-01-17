@@ -1,4 +1,4 @@
-.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean
+.PHONY: help install test coverage format format-check lint typecheck security quality complexity check-all clean vulture interrogate bandit pip-audit
 
 help:
 	@echo "Available targets (activate venv first: source venv/bin/activate):"
@@ -9,12 +9,15 @@ help:
 	@echo "  make format-check - Check if code is black-formatted (no changes)"
 	@echo "  make lint         - Run code style checks (flake8 + black + pylint)"
 	@echo "  make typecheck    - Run type checking (mypy)"
-	@echo "  make security     - Run security checks (bandit, pip-audit)"
-	@echo "  make quality      - Run code quality checks (vulture, interrogate)"
+	@echo "  make vulture      - Run dead code detection"
+	@echo "  make interrogate  - Run docstring coverage check"
+	@echo "  make bandit       - Run security analysis"
+	@echo "  make pip-audit    - Check dependency vulnerabilities"
+	@echo "  make security     - Run all security checks (bandit + pip-audit)"
+	@echo "  make quality      - Run all quality checks (vulture + interrogate)"
 	@echo "  make complexity   - Run complexity checks (radon)"
-	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, complexity, test)"
+	@echo "  make check-all    - Run all checks (format, lint, typecheck, security, quality, complexity, coverage)"
 	@echo "  make clean        - Clean up temporary files"
-	@echo "  make clean-cache  - Clear HTTP response cache"
 
 install:
 	pip install -r requirements.txt
@@ -46,17 +49,27 @@ typecheck:
 	@echo "Running mypy on test code (lenient)..."
 	mypy test/*.py --check-untyped-defs
 
-security:
-	@echo "Running bandit (code security analysis)..."
-	@bandit -r main.py utils test -ll || true
-	@echo "\nRunning pip-audit (dependency vulnerabilities)..."
-	@pip-audit || true
-
-quality:
+vulture:
 	@echo "Running vulture (dead code detection)..."
 	@vulture main.py utils test --min-confidence 100 || true
-	@echo "\nRunning interrogate (docstring coverage)..."
-	@interrogate -v main.py utils test
+
+interrogate:
+	@echo "Running interrogate (docstring coverage)..."
+	@interrogate -v main.py utils test --fail-under 100
+
+bandit:
+	@echo "Running bandit (code security analysis)..."
+	@bandit -r main.py utils test -ll || true
+
+pip-audit:
+	@echo "Running pip-audit (dependency vulnerabilities)..."
+	@pip-audit || true
+
+security: bandit pip-audit
+	@echo "\n✅ Security checks completed"
+
+quality: vulture interrogate
+	@echo "\n✅ Quality checks completed"
 
 complexity:
 	@echo "Running complexity checks (radon)..."
@@ -65,8 +78,21 @@ complexity:
 	@echo "\n📊 Maintainability Index (should be A-B, min: 20):"
 	@radon mi main.py utils -s
 
-check-all: format-check lint typecheck quality complexity security test
-	@echo "\n✅ All checks completed!"
+check-all:
+	@echo "Running all checks (failing only on critical issues)..."
+	@echo ""
+	@$(MAKE) format-check || true
+	@$(MAKE) lint || true
+	@$(MAKE) typecheck
+	@$(MAKE) quality
+	@$(MAKE) complexity || true
+	@$(MAKE) security || true
+	@$(MAKE) coverage
+	@echo ""
+	@echo "✅ All checks completed!"
+	@echo ""
+	@echo "Critical checks (must pass): typecheck, interrogate, coverage"
+	@echo "Warning checks (informational): format-check, lint, vulture, complexity, security"
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

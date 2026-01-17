@@ -2,10 +2,19 @@
 
 import io
 import unittest
+from contextlib import redirect_stdout
 from unittest.mock import patch
 
 from utils.finder import PriceResult, SearchResults
-from utils.text_formatter import print_results_text
+from utils.text_formatter import print_results_text, print_plan_text
+from test.test_formatter_fixtures import (
+    create_empty_plan,
+    create_single_product_cart,
+    create_multi_product_cart,
+    create_plan_with_single_cart,
+    create_plan_with_multiple_carts,
+    create_shipping_config,
+)
 
 
 class TestPrintResultsText(unittest.TestCase):
@@ -393,6 +402,218 @@ class TestPrintResultsText(unittest.TestCase):
             max_content_len,
             "Separator should match the longest line",
         )
+
+    @patch("sys.stdout", new_callable=io.StringIO)
+    def test_print_results_text_with_price_per_100ml(self, mock_stdout):
+        """Test text output displays price per 100ml when available."""
+        results = SearchResults()
+        results.prices = {
+            "Product A": PriceResult(price=15.00, url="https://example.com/a", price_per_100ml=3.75),
+            "Product B": PriceResult(price=20.00, url="https://example.com/b"),
+        }
+
+        print_results_text(results)
+
+        output = mock_stdout.getvalue()
+        # Product A should show price per 100ml in parentheses
+        self.assertIn("€15.00 (€3.75/100ml)", output)
+        # Product B should show only regular price (without 100ml info)
+        self.assertIn("€20.00", output)
+        # Verify Product A line contains both price and 100ml value
+        lines = output.split("\n")
+        product_a_line = [line for line in lines if "Product A" in line][0]
+        self.assertIn("€15.00 (€3.75/100ml)", product_a_line)
+        # Verify Product B line does not contain 100ml info
+        product_b_line = [line for line in lines if "Product B" in line][0]
+        self.assertNotIn("100ml", product_b_line)
+
+
+class TestPlanTextFormatterEmptyPlan(unittest.TestCase):
+    """Test plan text formatter with empty plans."""
+
+    def test_when_no_carts_then_displays_no_plan_message(self):
+        """
+        Given an empty optimized plan
+        When printing in text format
+        Then should display "No shopping plan generated."
+        """
+        # Given
+        plan = create_empty_plan()
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("No shopping plan generated", result)
+
+
+class TestPlanTextFormatterSingleStore(unittest.TestCase):
+    """Test plan text formatter with single store plans."""
+
+    def test_when_single_store_single_product_then_displays_correctly(self):
+        """
+        Given a plan with one product from one store
+        When printing in text format
+        Then should display store name, product, price, shipping, and total
+        """
+        # Given
+        cart = create_single_product_cart(price=25.00, shipping_cost=3.99)
+        plan = create_plan_with_single_cart(cart)
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("example.com", result)
+        self.assertIn("Test Product", result)
+        self.assertIn("€25.00", result)
+        self.assertIn("€3.99", result)
+        self.assertIn("€28.99", result)
+        self.assertIn("Grand Total: €28.99", result)
+
+    def test_when_product_has_price_per_100ml_then_displays_value(self):
+        """
+        Given a product with price per 100ml information
+        When printing in text format
+        Then should display the price per 100ml alongside the price
+        """
+        # Given
+        cart = create_single_product_cart(price=15.00, free_shipping=True, price_per_100ml=3.75)
+        plan = create_plan_with_single_cart(cart)
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("€15.00", result)
+        self.assertIn("€3.75/100ml", result)
+
+    def test_when_free_shipping_eligible_then_displays_free(self):
+        """
+        Given a cart that qualifies for free shipping
+        When printing in text format
+        Then should display "FREE" for shipping
+        """
+        # Given
+        cart = create_single_product_cart(price=55.00, free_shipping=True)
+        plan = create_plan_with_single_cart(cart)
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("FREE", result)
+
+    def test_when_shipping_config_provided_then_displays_threshold(self):
+        """
+        Given a plan with shipping config
+        When printing in text format
+        Then should display free shipping threshold for each store
+        """
+        # Given
+        cart = create_single_product_cart(price=25.00, shipping_cost=3.99)
+        plan = create_plan_with_single_cart(cart)
+        shipping_config = create_shipping_config(shipping_cost=3.99, free_over=50.00)
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan, shipping_config)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("Free shipping over €50.00", result)
+
+
+class TestPlanTextFormatterMultipleStores(unittest.TestCase):
+    """Test plan text formatter with multiple stores."""
+
+    def test_when_multiple_stores_then_displays_all_stores(self):
+        """
+        Given a plan with products from multiple stores
+        When printing in text format
+        Then should display all stores with their products
+        """
+        # Given
+        cart1 = create_single_product_cart(site="store1.com", product_name="Product A", price=10.00, shipping_cost=3.50)
+        cart2 = create_single_product_cart(site="store2.com", product_name="Product B", price=20.00, shipping_cost=4.00)
+        plan = create_plan_with_multiple_carts([cart1, cart2])
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("store1.com", result)
+        self.assertIn("store2.com", result)
+        self.assertIn("Product A", result)
+        self.assertIn("Product B", result)
+        self.assertIn("Grand Total: €37.50", result)
+        self.assertIn("Total Shipping: €7.50", result)
+
+    def test_when_multiple_products_per_store_then_displays_all(self):
+        """
+        Given a plan with multiple products from one store
+        When printing in text format
+        Then should display all products
+        """
+        # Given
+        cart = create_multi_product_cart(
+            site="example.com",
+            products=[("Product A", 10.00), ("Product B", 15.00), ("Product C", 20.00)],
+            shipping_cost=3.99,
+        )
+        plan = create_plan_with_single_cart(cart)
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("Product A", result)
+        self.assertIn("Product B", result)
+        self.assertIn("Product C", result)
+        self.assertIn("3 items from 1 store", result)
+
+
+class TestPlanFormatterSummaryStatistics(unittest.TestCase):
+    """Test that plan summary statistics are displayed correctly."""
+
+    def test_when_plan_has_statistics_then_displays_in_text(self):
+        """
+        Given a plan with specific statistics
+        When printing in text format
+        Then should display total products and store count
+        """
+        # Given
+        cart1 = create_single_product_cart(site="store1.com", product_name="A", price=10.0, free_shipping=True)
+        cart2 = create_single_product_cart(site="store2.com", product_name="B", price=20.0, free_shipping=True)
+        plan = create_plan_with_multiple_carts([cart1, cart2])
+
+        # When
+        output = io.StringIO()
+        with redirect_stdout(output):
+            print_plan_text(plan)
+
+        # Then
+        result = output.getvalue()
+        self.assertIn("Products: 2 items from 2 stores", result)
 
 
 if __name__ == "__main__":
