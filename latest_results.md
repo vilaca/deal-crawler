@@ -3,8 +3,8 @@
 
 | Product | Price | Link |
 |---------|-------|------|
-| **Avène Couvrance Fluido Maquiagem** | €17.62 | [🔗 wells.pt](https://wells.pt/couvrance-fluid-foundation-corrector-3.0-3599509.html) |
-| **Cerave Hydrating Cleanser (2x1000ml)** | €29.99<br>_(€1.50/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
+| **Avène Couvrance Fluido Maquiagem** | _No prices found_ | - |
+| **Cerave Hydrating Cleanser (1000ml)** | €16.51<br>_(€1.65/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cerave-creme-hidratante-de-limpeza-1000ml-) |
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €17.73<br>_(€3.75/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
 | **Cerave Micellar Water (295ml)** | €9.63<br>_(€3.26/100ml)_ | [🔗 wells.pt](https://wells.pt/micellar-cleansing-water-6703198.html) |
 | **Dercos DS** | €20.30 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
@@ -25,15 +25,17 @@
 
 ## 📊 Search Summary
 
-**❌ 42/90 URLs** (47% success) · **26 products**
+**❌ 39/90 URLs** (43% success) · **26 products**
 
-_📦 10 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
+_📦 13 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
 
 **Out of Stock:**
-- **Avène Couvrance Fluido Maquiagem**: atida.com
+- **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
 - **Cerave Hydrating Cleanser (236ml)**: aveirofarma.pt
+- **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
 - **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt
 - **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
+- **Cerave Hydrating Cream To Foam Cleanser (2x236ml)**: atida.com
 - **Cerave Hydrating Cream To Foam Cleanser (473ml)**: aveirofarma.pt
 - **Cerave Micellar Water (295ml)**: atida.com
 - **Cerave Micellar Water (2x295ml)**: atida.com
