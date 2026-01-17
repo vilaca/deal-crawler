@@ -3,8 +3,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from main import main
+from main import _dump_plan_to_csv, _dump_results_to_csv, main
 from utils.finder import PriceResult, SearchResults
+from utils.optimizer import OptimizedPlan, StoreCart
 
 
 class TestMainFunction(unittest.TestCase):
@@ -100,7 +101,7 @@ class TestMainFunction(unittest.TestCase):
         mock_http_client.return_value.__exit__.assert_called_once()
 
         # Verify find_cheapest_prices was called with http_client instance
-        mock_find_prices.assert_called_once_with(mock_products, mock_http_instance)
+        mock_find_prices.assert_called_once_with(mock_products, mock_http_instance, verbose=False, show_progress=True)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -328,7 +329,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with use_cache=False and default timeout/cache_duration
-        mock_http_client.assert_called_once_with(use_cache=False, timeout=15, cache_duration=3600)
+        mock_http_client.assert_called_once_with(use_cache=False, timeout=15, cache_duration=3600, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -349,7 +350,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with use_cache=True (default) and default timeout/cache_duration
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=3600)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=3600, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -518,7 +519,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with custom cache_duration
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -541,7 +542,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with custom timeout
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -565,7 +566,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with cache_duration from env var
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -589,7 +590,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with timeout from env var
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -613,7 +614,7 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with CLI flag value (45), not env var (30)
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=45, cache_duration=3600)
+        mock_http_client.assert_called_once_with(use_cache=True, timeout=45, cache_duration=3600, verbose=False)
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -664,6 +665,290 @@ class TestMainFunction(unittest.TestCase):
         # Verify markdown format was used
         mock_print_markdown.assert_called_once_with(mock_results)
         mock_results.print_summary.assert_called_once_with(markdown=True)
+
+
+class TestDumpFunctionality(unittest.TestCase):
+    """Test --dump CSV export functionality."""
+
+    @patch("main._dump_results_to_csv")
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--dump", "output.csv", "--all-sizes"])
+    def test_dump_results_to_csv_called_with_filename(  # pylint: disable=too-many-positional-arguments
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices, mock_dump
+    ):
+        """Test that --dump calls _dump_results_to_csv with correct filename."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify dump was called
+        mock_dump.assert_called_once_with(mock_results, "output.csv")
+
+    @patch("main._dump_results_to_csv")
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--all-sizes"])
+    def test_dump_not_called_without_flag(  # pylint: disable=too-many-positional-arguments
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices, mock_dump
+    ):
+        """Test that dump is not called without --dump flag."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify dump was NOT called
+        mock_dump.assert_not_called()
+
+    @patch("main._dump_plan_to_csv")
+    @patch("main.optimize_shopping_plan")
+    @patch("main.find_all_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.ShippingConfig")
+    @patch("main.print_plan_text")
+    @patch("sys.argv", ["main.py", "--plan", "Product A", "--dump", "plan.csv"])
+    def test_dump_plan_to_csv_called_in_plan_mode(  # pylint: disable=too-many-positional-arguments
+        self,
+        mock_print_plan,
+        mock_shipping,
+        mock_http_client,
+        mock_load_products,
+        mock_find_all,
+        mock_optimize,
+        mock_dump_plan,
+    ):
+        """Test that --dump works in plan/optimization mode."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_find_all.return_value = {"Product A": [PriceResult(price=29.99, url="https://example.com/a")]}
+
+        mock_shipping_instance = MagicMock()
+        mock_shipping.load_from_file.return_value = mock_shipping_instance
+
+        mock_plan = MagicMock()
+        mock_optimize.return_value = mock_plan
+
+        # Run main
+        main()
+
+        # Verify plan dump was called
+        mock_dump_plan.assert_called_once_with(mock_plan, "plan.csv")
+
+
+class TestVerboseFlag(unittest.TestCase):
+    """Test --verbose flag functionality."""
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--verbose", "--all-sizes"])
+    def test_verbose_flag_passed_to_http_client(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test that --verbose flag is passed to HttpClient."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify HttpClient was called with verbose=True
+        mock_http_client.assert_called_once()
+        call_kwargs = mock_http_client.call_args[1]
+        self.assertTrue(call_kwargs["verbose"])
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--verbose", "--all-sizes"])
+    def test_verbose_flag_passed_to_find_cheapest_prices(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test that --verbose flag is passed to find_cheapest_prices."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with verbose=True
+        mock_find_prices.assert_called_once()
+        call_kwargs = mock_find_prices.call_args[1]
+        self.assertTrue(call_kwargs["verbose"])
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--verbose", "--all-sizes"])
+    def test_verbose_disables_progress_bar(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test that --verbose automatically disables progress bar."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with show_progress=False
+        mock_find_prices.assert_called_once()
+        call_kwargs = mock_find_prices.call_args[1]
+        self.assertFalse(call_kwargs["show_progress"])
+
+
+class TestNoProgressFlag(unittest.TestCase):
+    """Test --no-progress flag functionality."""
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--no-progress", "--all-sizes"])
+    def test_no_progress_disables_progress_bar(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test that --no-progress disables progress bar."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with show_progress=False
+        mock_find_prices.assert_called_once()
+        call_kwargs = mock_find_prices.call_args[1]
+        self.assertFalse(call_kwargs["show_progress"])
+
+    @patch("main.find_cheapest_prices")
+    @patch("main.load_products")
+    @patch("main.HttpClient")
+    @patch("main.print_results_text")
+    @patch("sys.argv", ["main.py", "--all-sizes"])
+    def test_progress_bar_enabled_by_default(
+        self, mock_print_text, mock_http_client, mock_load_products, mock_find_prices
+    ):
+        """Test that progress bar is enabled by default."""
+        # Setup mocks
+        mock_products = {"Product A": ["https://example.com/a"]}
+        mock_load_products.return_value = mock_products
+
+        mock_results = MagicMock(spec=SearchResults)
+        mock_results.prices = {"Product A": PriceResult(price=29.99, url="https://example.com/a")}
+        mock_find_prices.return_value = mock_results
+
+        # Run main
+        main()
+
+        # Verify find_cheapest_prices was called with show_progress=True
+        mock_find_prices.assert_called_once()
+        call_kwargs = mock_find_prices.call_args[1]
+        self.assertTrue(call_kwargs["show_progress"])
+
+
+class TestCSVDumpHelpers(unittest.TestCase):
+    """Test CSV dump helper functions."""
+
+    @patch("builtins.open", create=True)
+    @patch("main.csv.writer")
+    def test_dump_results_to_csv_writes_correct_format(self, mock_csv_writer, mock_open):
+        """Test _dump_results_to_csv writes correct CSV format."""
+        # Create mock results
+        results = SearchResults()
+        results.prices = {
+            "Product A (100ml)": PriceResult(price=29.99, url="https://example.com/a", price_per_100ml=29.99),
+            "Product B": PriceResult(price=15.50, url="https://example.com/b", price_per_100ml=None),
+            "Product C": None,
+        }
+
+        mock_writer_instance = MagicMock()
+        mock_csv_writer.return_value = mock_writer_instance
+
+        # Call function
+        _dump_results_to_csv(results, "test.csv")
+
+        # Verify file was opened
+        mock_open.assert_called_once_with("test.csv", "w", newline="", encoding="utf-8")
+
+        # Verify header was written
+        header_call = mock_writer_instance.writerow.call_args_list[0]
+        self.assertEqual(header_call[0][0], ["Product", "Price", "Price per 100ml", "URL"])
+
+        # Verify data rows
+        self.assertEqual(mock_writer_instance.writerow.call_count, 4)  # 1 header + 3 data rows
+
+    @patch("builtins.open", create=True)
+    @patch("main.csv.writer")
+    def test_dump_plan_to_csv_writes_correct_format(self, mock_csv_writer, mock_open):
+        """Test _dump_plan_to_csv writes correct CSV format."""
+        # Create mock optimized plan
+        cart = StoreCart(site="example.com")
+        cart.items = [
+            ("Product A", PriceResult(price=29.99, url="https://example.com/a", price_per_100ml=29.99)),
+            ("Product B", PriceResult(price=15.50, url="https://example.com/b", price_per_100ml=None)),
+        ]
+
+        plan = OptimizedPlan()
+        plan.carts = [cart]
+
+        mock_writer_instance = MagicMock()
+        mock_csv_writer.return_value = mock_writer_instance
+
+        # Call function
+        _dump_plan_to_csv(plan, "plan.csv")
+
+        # Verify file was opened
+        mock_open.assert_called_once_with("plan.csv", "w", newline="", encoding="utf-8")
+
+        # Verify header was written
+        header_call = mock_writer_instance.writerow.call_args_list[0]
+        self.assertEqual(header_call[0][0], ["Store", "Product", "Price", "Price per 100ml", "URL"])
+
+        # Verify data rows (2 products)
+        self.assertEqual(mock_writer_instance.writerow.call_count, 3)  # 1 header + 2 data rows
 
 
 if __name__ == "__main__":
