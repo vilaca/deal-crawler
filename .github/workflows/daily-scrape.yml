@@ -31,40 +31,61 @@ jobs:
 
       - name: Run scraper
         run: |
-          # Run scraper and capture exit code
-          python main.py --markdown --no-cache > latest_results.md
-          EXIT_CODE=$?
+          set -euo pipefail
 
-          # Check if scraper completed successfully
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "Error: Scraper failed with exit code $EXIT_CODE"
-            exit 1
-          fi
+          # Configuration
+          MARKDOWN_OUTPUT="latest_results.md"
+          HISTORY_DIR="history"
+          TODAY=$(date -u +'%Y-%m-%d')
+          HISTORY_FILE="$HISTORY_DIR/$TODAY.csv"
 
-          # Verify output file exists and has content
-          if [ ! -f latest_results.md ]; then
-            echo "Error: Output file was not created"
-            exit 1
-          fi
+          # Helper function: verify file exists and has content
+          verify_file() {
+            local file=$1
+            local description=$2
 
-          if [ ! -s latest_results.md ]; then
-            echo "Error: Output file is empty"
-            exit 1
-          fi
+            if [ ! -f "$file" ]; then
+              echo "Error: $description was not created"
+              exit 1
+            fi
 
-          # Verify file contains the expected markdown table structure
-          if ! grep -q "| Product | Price | Link |" latest_results.md; then
-            echo "Error: Output file does not contain expected price table"
-            cat latest_results.md
-            exit 1
-          fi
+            if [ ! -s "$file" ]; then
+              echo "Error: $description is empty"
+              exit 1
+            fi
+          }
+
+          # Helper function: verify file contains expected content
+          verify_content() {
+            local file=$1
+            local pattern=$2
+            local description=$3
+
+            if ! grep -q "$pattern" "$file"; then
+              echo "Error: $description does not contain expected content"
+              cat "$file"
+              exit 1
+            fi
+          }
+
+          # Create history directory and run scraper
+          mkdir -p "$HISTORY_DIR"
+          python main.py --markdown --no-cache --dump "$HISTORY_FILE" > "$MARKDOWN_OUTPUT"
+
+          # Verify outputs
+          verify_file "$MARKDOWN_OUTPUT" "Markdown output file"
+          verify_content "$MARKDOWN_OUTPUT" "| Product | Price | Link |" "Markdown output"
+          verify_file "$HISTORY_FILE" "History CSV file"
 
           echo "✓ Scraper completed successfully"
+          echo "✓ Results saved to $MARKDOWN_OUTPUT and $HISTORY_FILE"
 
       - name: Commit and push results
         run: |
+          TODAY=$(date -u +'%Y-%m-%d %H:%M UTC')
+
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add latest_results.md
-          git diff --staged --quiet || git commit -m "Update prices - $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git add latest_results.md history/
+          git diff --staged --quiet || git commit -m "Update prices - $TODAY"
           git push
