@@ -21,7 +21,7 @@ OUT_OF_STOCK_PATTERNS = [
 OUT_OF_STOCK_CLASS_PATTERN = re.compile(r"out.?of.?stock|sold.?out|unavailable|indispon[ií]vel", re.IGNORECASE)
 
 IN_STOCK_CLASS_PATTERN = re.compile(
-    r"(?<!back)in.?stock|em.?stock|(?<!in)disponível|(?<!in)disponivel|\bavailable\b",
+    r"in[-_\s]?stock|em[-_\s]?stock|(?<!in)disponível|(?<!in)disponivel|\bavailable\b",
     re.IGNORECASE,
 )
 
@@ -39,6 +39,11 @@ def _check_for_in_stock_indicators(soup: BeautifulSoup) -> Optional[bool]:
     for element in in_stock_elements:
         # Skip pure icon elements (i, svg, img tags typically have no meaningful text)
         if element.name in ["i", "svg", "img"]:
+            continue
+
+        # Skip "back in stock" notification elements (false positive)
+        classes = " ".join(element.get("class", []))
+        if re.search(r"back[-_\s]?in[-_\s]?stock", classes, re.IGNORECASE):
             continue
 
         text = element.get_text(strip=True)

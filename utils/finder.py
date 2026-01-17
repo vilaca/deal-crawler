@@ -4,7 +4,6 @@ import re
 import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
-from urllib.parse import urlparse
 
 from tqdm import tqdm
 
@@ -12,7 +11,6 @@ from .http_client import HttpClient
 from .stock_checker import is_out_of_stock
 from .extractors import extract_price
 from .product_info import calculate_price_per_100ml, parse_product_name
-from .string_utils import pluralize
 
 
 @dataclass
@@ -26,7 +24,11 @@ class PriceResult:
 
 @dataclass
 class SearchResults:
-    """Results from price search with summary statistics."""
+    """Results from price search with summary statistics.
+
+    This class is a pure data container following SRP.
+    For presentation/formatting, use SearchResultsFormatter.
+    """
 
     # Product name -> PriceResult or None
     prices: Dict[str, Optional[PriceResult]] = field(default_factory=dict)
@@ -43,146 +45,19 @@ class SearchResults:
     out_of_stock_items: Dict[str, List[str]] = field(default_factory=dict)  # product -> URLs
     failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
 
-    def _extract_domain(self, url: str) -> str:
-        """Extract domain from URL with fallback for malformed URLs.
-
-        Args:
-            url: URL to extract domain from
-
-        Returns:
-            Domain without 'www.' prefix, or full URL if parsing fails
-        """
-        parsed = urlparse(url)
-        domain = parsed.netloc.replace("www.", "")
-
-        # If netloc is empty (malformed URL), return the full URL as fallback
-        if not domain:
-            return url
-
-        return domain
-
-    def _get_success_emoji(self, success_rate: float) -> str:
-        """Get emoji based on success rate."""
-        if success_rate >= 80:
-            return "✅"
-        if success_rate >= 50:
-            return "⚠️"
-        return "❌"
-
-    def _format_success_line(self, markdown: bool = False) -> str:
-        """Format the success rate summary line.
-
-        Args:
-            markdown: If True, format for markdown; otherwise format for terminal
-        """
-        products_text = pluralize(self.total_products, "product", "products")
-
-        if self.total_urls_checked == 0:
-            if markdown:
-                return f"**{self.total_products} {products_text}** · No URLs checked"
-            return f"{self.total_products} {products_text} · No URLs checked"
-
-        success_rate = (self.prices_found / self.total_urls_checked) * 100
-        emoji = self._get_success_emoji(success_rate)
-        urls_text = pluralize(self.total_urls_checked, "URL", "URLs")
-
-        if markdown:
-            return (
-                f"**{emoji} {self.prices_found}/{self.total_urls_checked} {urls_text}** "
-                f"({success_rate:.0f}% success) · "
-                f"**{self.total_products} {products_text}**"
-            )
-
-        return (
-            f"{emoji} {self.prices_found}/{self.total_urls_checked} {urls_text} "
-            f"({success_rate:.0f}% success) · {self.total_products} {products_text}"
-        )
-
-    def _format_issues_line(self, markdown: bool = False) -> Optional[str]:
-        """Format the issues summary line.
-
-        Args:
-            markdown: If True, format for markdown; otherwise format for terminal
-        """
-        issues = []
-        if self.out_of_stock > 0:
-            issues.append(f"📦 {self.out_of_stock} out of stock")
-        if self.fetch_errors > 0:
-            error_text = pluralize(self.fetch_errors, "fetch error", "fetch errors")
-            issues.append(f"🌐 {self.fetch_errors} {error_text}")
-        if self.extraction_errors > 0:
-            error_text = pluralize(self.extraction_errors, "extraction error", "extraction errors")
-            issues.append(f"🔍 {self.extraction_errors} {error_text}")
-
-        if not issues:
-            return None
-
-        joined = " · ".join(issues)
-        return f"_{joined}_" if markdown else f"Issues: {joined}"
-
-    def _print_out_of_stock_items(self, markdown: bool = False) -> None:
-        """Print out of stock items grouped by product.
-
-        Args:
-            markdown: If True, format for markdown; otherwise format for terminal
-        """
-        if not self.out_of_stock_items:
-            return
-
-        if markdown:
-            print("\n**Out of Stock:**")
-            for product, urls in self.out_of_stock_items.items():
-                domains = [self._extract_domain(url) for url in urls]
-                print(f"- **{product}**: {', '.join(domains)}")
-        else:
-            print("\nOut of Stock:")
-            for product, urls in self.out_of_stock_items.items():
-                domains = [self._extract_domain(url) for url in urls]
-                print(f"  • {product}: {', '.join(domains)}")
-
-    def _print_failed_urls(self, markdown: bool = False) -> None:
-        """Print failed URLs (showing first 3).
-
-        Args:
-            markdown: If True, format for markdown; otherwise format for terminal
-        """
-        if not self.failed_urls:
-            return
-
-        if markdown:
-            print(f"\n**Failed URLs** ({len(self.failed_urls)}):")
-            for url in self.failed_urls[:3]:
-                print(f"- `{url}`")
-            if len(self.failed_urls) > 3:
-                print(f"- _{len(self.failed_urls) - 3} more..._")
-        else:
-            print(f"\nFailed URLs ({len(self.failed_urls)}):")
-            for url in self.failed_urls[:3]:
-                print(f"  • {url}")
-            if len(self.failed_urls) > 3:
-                print(f"  • {len(self.failed_urls) - 3} more...")
-
     def print_summary(self, markdown: bool = False) -> None:
         """Print a concise summary of the search results.
 
+        This is a convenience method that delegates to SearchResultsFormatter.
+        Kept for backward compatibility.
+
         Args:
             markdown: If True, format for markdown; otherwise format for terminal
         """
-        if markdown:
-            print("\n## 📊 Search Summary\n")
-        else:
-            print("\n📊 Search Summary")
-            print("=" * 70)
+        from .search_results_formatter import SearchResultsFormatter  # pylint: disable=import-outside-toplevel
 
-        print(self._format_success_line(markdown=markdown))
-
-        issues_line = self._format_issues_line(markdown=markdown)
-        if issues_line:
-            print(f"\n{issues_line}")
-
-        self._print_out_of_stock_items(markdown=markdown)
-        self._print_failed_urls(markdown=markdown)
-        print()  # Empty line at end
+        formatter = SearchResultsFormatter(self)
+        formatter.print_summary(markdown=markdown)
 
 
 def extract_base_product_name(product_name: str) -> str:
