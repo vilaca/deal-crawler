@@ -1,11 +1,14 @@
 """Tests for price comparison logic."""
 
+# pylint: disable=too-many-lines
+
 import io
 import unittest
 from unittest.mock import patch, MagicMock
 from bs4 import BeautifulSoup
 
 from utils.finder import find_cheapest_prices, find_all_prices, SearchResults
+from utils.search_results_formatter import SearchResultsFormatter
 from utils.string_utils import pluralize
 
 
@@ -224,7 +227,7 @@ class TestFindCheapestPrices(unittest.TestCase):
 
 
 class TestSearchResults(unittest.TestCase):
-    """Test SearchResults formatting and display methods."""
+    """Test SearchResultsFormatter formatting and display methods."""
 
     def test_pluralize(self):
         """Test pluralization logic."""
@@ -237,54 +240,61 @@ class TestSearchResults(unittest.TestCase):
     def test_extract_domain_normal_url(self):
         """Test domain extraction from normal URL."""
         results = SearchResults()
-        self.assertEqual(results._extract_domain("https://example.com/product"), "example.com")
+        formatter = SearchResultsFormatter(results)
+        self.assertEqual(formatter._extract_domain("https://example.com/product"), "example.com")
 
     def test_extract_domain_with_www(self):
         """Test domain extraction removes www. prefix."""
         results = SearchResults()
-        self.assertEqual(results._extract_domain("https://www.example.com/product"), "example.com")
+        formatter = SearchResultsFormatter(results)
+        self.assertEqual(formatter._extract_domain("https://www.example.com/product"), "example.com")
 
     def test_extract_domain_malformed_url(self):
         """Test domain extraction with malformed URLs returns full URL."""
         results = SearchResults()
+        formatter = SearchResultsFormatter(results)
         # Relative path (no netloc)
-        self.assertEqual(results._extract_domain("/path/to/resource"), "/path/to/resource")
+        self.assertEqual(formatter._extract_domain("/path/to/resource"), "/path/to/resource")
         # Just a path
-        self.assertEqual(results._extract_domain("product/123"), "product/123")
+        self.assertEqual(formatter._extract_domain("product/123"), "product/123")
 
     def test_extract_domain_no_scheme(self):
         """Test domain extraction from URL without scheme."""
         results = SearchResults()
+        formatter = SearchResultsFormatter(results)
         # Without scheme, urlparse might not extract netloc correctly
-        result = results._extract_domain("example.com/product")
+        result = formatter._extract_domain("example.com/product")
         # Should return the full string as fallback
         self.assertIn("example.com", result)
 
     def test_extract_domain_empty_string(self):
         """Test domain extraction with empty string."""
         results = SearchResults()
-        self.assertEqual(results._extract_domain(""), "")
+        formatter = SearchResultsFormatter(results)
+        self.assertEqual(formatter._extract_domain(""), "")
 
     def test_get_success_emoji(self):
         """Test emoji selection based on success rate."""
         results = SearchResults()
+        formatter = SearchResultsFormatter(results)
         # High (≥80%)
-        self.assertEqual(results._get_success_emoji(100.0), "✅")
-        self.assertEqual(results._get_success_emoji(80.0), "✅")
+        self.assertEqual(formatter._get_success_emoji(100.0), "✅")
+        self.assertEqual(formatter._get_success_emoji(80.0), "✅")
         # Medium (50-79%)
-        self.assertEqual(results._get_success_emoji(79.9), "⚠️")
-        self.assertEqual(results._get_success_emoji(50.0), "⚠️")
+        self.assertEqual(formatter._get_success_emoji(79.9), "⚠️")
+        self.assertEqual(formatter._get_success_emoji(50.0), "⚠️")
         # Low (<50%)
-        self.assertEqual(results._get_success_emoji(49.9), "❌")
-        self.assertEqual(results._get_success_emoji(0.0), "❌")
+        self.assertEqual(formatter._get_success_emoji(49.9), "❌")
+        self.assertEqual(formatter._get_success_emoji(0.0), "❌")
 
     def test_format_success_line_no_urls(self):
         """Test success line when no URLs were checked."""
         results = SearchResults()
         results.total_products = 5
         results.total_urls_checked = 0
+        formatter = SearchResultsFormatter(results)
 
-        line = results._format_success_line(markdown=True)
+        line = formatter._format_success_line(markdown=True)
         self.assertEqual(line, "**5 products** · No URLs checked")
 
     def test_format_success_line_with_urls(self):
@@ -293,8 +303,9 @@ class TestSearchResults(unittest.TestCase):
         results.total_products = 3
         results.total_urls_checked = 10
         results.prices_found = 8
+        formatter = SearchResultsFormatter(results)
 
-        line = results._format_success_line(markdown=True)
+        line = formatter._format_success_line(markdown=True)
         self.assertIn("8/10 URLs", line)
         self.assertIn("80% success", line)
         self.assertIn("3 products", line)
@@ -303,15 +314,17 @@ class TestSearchResults(unittest.TestCase):
     def test_format_issues_line_no_issues(self):
         """Test issues line when there are no issues."""
         results = SearchResults()
-        line = results._format_issues_line(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        line = formatter._format_issues_line(markdown=True)
         self.assertIsNone(line)
 
     def test_format_issues_line_single_issue(self):
         """Test issues line with single issue type."""
         results = SearchResults()
         results.out_of_stock = 3
+        formatter = SearchResultsFormatter(results)
 
-        line = results._format_issues_line(markdown=True)
+        line = formatter._format_issues_line(markdown=True)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("📦 3 out of stock", line)
         self.assertNotIn("fetch errors", line)
@@ -323,8 +336,9 @@ class TestSearchResults(unittest.TestCase):
         results.out_of_stock = 2
         results.fetch_errors = 1
         results.extraction_errors = 3
+        formatter = SearchResultsFormatter(results)
 
-        line = results._format_issues_line(markdown=True)
+        line = formatter._format_issues_line(markdown=True)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("📦 2 out of stock", line)
         self.assertIn("🌐 1 fetch error", line)
@@ -337,7 +351,8 @@ class TestSearchResults(unittest.TestCase):
         results.fetch_errors = 1
         results.extraction_errors = 1
 
-        line = results._format_issues_line(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        line = formatter._format_issues_line(markdown=True)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("🌐 1 fetch error", line)
         self.assertIn("🔍 1 extraction error", line)
@@ -347,7 +362,8 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_empty(self, mock_stdout):
         """Test printing out-of-stock items when none exist."""
         results = SearchResults()
-        results._print_out_of_stock_items(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertEqual(output, "")
@@ -358,7 +374,8 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.out_of_stock_items = {"Product A": ["https://www.example.com/product1", "https://store.com/item"]}
 
-        results._print_out_of_stock_items(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Out of Stock:**", output)
@@ -375,7 +392,8 @@ class TestSearchResults(unittest.TestCase):
             "Product B": ["https://store.com/b", "https://shop.com/b"],
         }
 
-        results._print_out_of_stock_items(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Product A**", output)
@@ -396,7 +414,8 @@ class TestSearchResults(unittest.TestCase):
             ]
         }
 
-        results._print_out_of_stock_items(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_out_of_stock_items(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Out of Stock:**", output)
@@ -410,7 +429,8 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_empty(self, mock_stdout):
         """Test printing failed URLs when none exist."""
         results = SearchResults()
-        results._print_failed_urls(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_failed_urls(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertEqual(output, "")
@@ -421,7 +441,8 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.failed_urls = ["https://example.com/1", "https://example.com/2"]
 
-        results._print_failed_urls(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_failed_urls(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Failed URLs** (2):", output)
@@ -441,7 +462,8 @@ class TestSearchResults(unittest.TestCase):
             "https://example.com/5",
         ]
 
-        results._print_failed_urls(markdown=True)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_failed_urls(markdown=True)
 
         output = mock_stdout.getvalue()
         self.assertIn("**Failed URLs** (5):", output)
@@ -512,7 +534,8 @@ class TestSearchResults(unittest.TestCase):
         results.total_products = 5
         results.total_urls_checked = 0
 
-        line = results._format_success_line(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        line = formatter._format_success_line(markdown=False)
         self.assertEqual(line, "5 products · No URLs checked")
         # Should NOT contain markdown bold markers
         self.assertNotIn("**", line)
@@ -524,7 +547,8 @@ class TestSearchResults(unittest.TestCase):
         results.total_urls_checked = 10
         results.prices_found = 8
 
-        line = results._format_success_line(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        line = formatter._format_success_line(markdown=False)
         self.assertIn("8/10 URLs", line)
         self.assertIn("80% success", line)
         self.assertIn("3 products", line)
@@ -539,7 +563,8 @@ class TestSearchResults(unittest.TestCase):
         results.fetch_errors = 1
         results.extraction_errors = 3
 
-        line = results._format_issues_line(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        line = formatter._format_issues_line(markdown=False)
         assert line is not None  # Type narrowing for mypy
         self.assertIn("Issues:", line)
         self.assertIn("📦 2 out of stock", line)
@@ -554,7 +579,8 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.out_of_stock_items = {"Product A": ["https://www.example.com/product1", "https://store.com/item"]}
 
-        results._print_out_of_stock_items(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_out_of_stock_items(markdown=False)
 
         output = mock_stdout.getvalue()
         self.assertIn("Out of Stock:", output)
@@ -575,7 +601,8 @@ class TestSearchResults(unittest.TestCase):
             "Product B": ["https://store.com/b", "https://shop.com/b"],
         }
 
-        results._print_out_of_stock_items(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_out_of_stock_items(markdown=False)
 
         output = mock_stdout.getvalue()
         self.assertIn("Product A", output)
@@ -595,7 +622,8 @@ class TestSearchResults(unittest.TestCase):
         results = SearchResults()
         results.failed_urls = ["https://example.com/1", "https://example.com/2"]
 
-        results._print_failed_urls(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_failed_urls(markdown=False)
 
         output = mock_stdout.getvalue()
         self.assertIn("Failed URLs (2):", output)
@@ -620,7 +648,8 @@ class TestSearchResults(unittest.TestCase):
             "https://example.com/5",
         ]
 
-        results._print_failed_urls(markdown=False)
+        formatter = SearchResultsFormatter(results)
+        formatter._print_failed_urls(markdown=False)
 
         output = mock_stdout.getvalue()
         self.assertIn("Failed URLs (5):", output)
