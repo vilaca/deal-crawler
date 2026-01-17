@@ -44,6 +44,15 @@ python main.py
 
 # Markdown output, bypass cache, show all sizes
 python main.py --markdown --no-cache --all-sizes
+
+# Export results to CSV file
+python main.py --dump results.csv
+
+# Verbose output with detailed progress
+python main.py --verbose
+
+# Disable progress bar
+python main.py --no-progress
 ```
 
 ## Shopping Plan Optimization
@@ -64,6 +73,9 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 | `--plan` | `DEAL_CRAWLER_PLAN` | - | Optimize shopping plan for products (comma-separated) |
 | `--optimize-for-value` | `DEAL_CRAWLER_OPTIMIZE_FOR_VALUE` | `false` | Optimize for best price per ml instead of lowest cost |
 | `--all-sizes` | `DEAL_CRAWLER_ALL_SIZES` | `false` | Show all product sizes instead of best value |
+| `--dump` | `DEAL_CRAWLER_DUMP` | - | Export results to CSV file |
+| `--verbose` | - | `false` | Show detailed progress messages |
+| `--no-progress` | - | `false` | Disable progress bar |
 | `--no-cache` | `DEAL_CRAWLER_NO_CACHE` | `false` | Bypass HTTP cache |
 | `--cache-duration` | `DEAL_CRAWLER_CACHE_DURATION` | `3600` | HTTP cache lifetime in seconds |
 | `--request-timeout` | `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP request timeout in seconds |
@@ -94,6 +106,10 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 - 🧮 **Shopping plan optimization** - Uses MILP to minimize total cost across stores
 - 📊 **Value optimization** - Optimize for best price per ml instead of lowest cost
 - 🚚 **Smart shipping** - Considers free shipping thresholds when optimizing
+- 📈 **Smart progress bar** - Tracks URLs with dynamic colors (green/yellow/red) and product info
+- 📁 **CSV export** - Export results to CSV files with `--dump`
+- 🗂️ **Historical data** - Daily price history saved automatically
+- 🔊 **Verbose mode** - Detailed progress output with `--verbose`
 - ⚙️ Configurable via CLI flags or environment variables
 - 🤖 Bot detection evasion with randomized delays
 - 📊 Text and markdown output formats
