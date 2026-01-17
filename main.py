@@ -173,15 +173,15 @@ def _dump_results_to_csv(search_results: SearchResults, filename: str) -> None:
 
             for product_name, price_result in search_results.prices.items():
                 if price_result:
-                    price_per_100ml = (
-                        f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+                    price_per_100ml = f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+                    writer.writerow(
+                        [
+                            product_name,
+                            f"{price_result.price:.2f}",
+                            price_per_100ml,
+                            price_result.url,
+                        ]
                     )
-                    writer.writerow([
-                        product_name,
-                        f"{price_result.price:.2f}",
-                        price_per_100ml,
-                        price_result.url,
-                    ])
                 else:
                     writer.writerow([product_name, "", "", ""])
 
@@ -204,16 +204,16 @@ def _dump_plan_to_csv(optimized_plan: OptimizedPlan, filename: str) -> None:
 
             for cart in optimized_plan.carts:
                 for product_name, price_result in cart.items:
-                    price_per_100ml = (
-                        f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+                    price_per_100ml = f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+                    writer.writerow(
+                        [
+                            cart.site,
+                            product_name,
+                            f"{price_result.price:.2f}",
+                            price_per_100ml,
+                            price_result.url,
+                        ]
                     )
-                    writer.writerow([
-                        cart.site,
-                        product_name,
-                        f"{price_result.price:.2f}",
-                        price_per_100ml,
-                        price_result.url,
-                    ])
 
         print(f"\nResults dumped to {filename}", file=sys.stderr)
     except OSError as e:

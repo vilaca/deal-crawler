@@ -293,29 +293,36 @@ def filter_best_value_sizes(results: SearchResults) -> SearchResults:
     return filtered_results
 
 
-def find_cheapest_prices(
+def _collect_prices_for_products(
     products: Dict[str, List[str]],
     http_client: HttpClient,
     verbose: bool = True,
     show_progress: bool = True,
-) -> SearchResults:
-    """Find the cheapest price for each product, excluding out-of-stock items.
+    progress_desc: str = "Collecting prices",
+) -> tuple[Dict[str, List[PriceResult]], SearchResults]:
+    """Collect all prices for products with detailed statistics tracking.
+
+    This is a private helper function that collects ALL prices for each product
+    and tracks comprehensive statistics. Public functions use this and process
+    the results according to their specific needs.
 
     Args:
         products: Dictionary mapping product names to lists of URLs
         http_client: HttpClient instance for fetching pages
         verbose: If True, print detailed progress messages
         show_progress: If True, display progress bar
+        progress_desc: Description for progress bar
 
     Returns:
-        SearchResults object with prices and summary statistics
+        Tuple of (all_prices_dict, search_results_with_statistics)
     """
+    all_prices: Dict[str, List[PriceResult]] = {}
     results = SearchResults()
     results.total_products = len(products)
 
     # Create progress bar wrapper
     products_iter = (
-        tqdm(products.items(), desc="Finding cheapest prices", unit="product", file=sys.stderr)
+        tqdm(products.items(), desc=progress_desc, unit="product", file=sys.stderr)
         if show_progress
         else products.items()
     )
@@ -377,6 +384,34 @@ def find_cheapest_prices(
                 # Remove from cache so we can retry later
                 http_client.remove_from_cache(url)
 
+        all_prices[product_name] = prices
+
+    return all_prices, results
+
+
+def find_cheapest_prices(
+    products: Dict[str, List[str]],
+    http_client: HttpClient,
+    verbose: bool = True,
+    show_progress: bool = True,
+) -> SearchResults:
+    """Find the cheapest price for each product, excluding out-of-stock items.
+
+    Args:
+        products: Dictionary mapping product names to lists of URLs
+        http_client: HttpClient instance for fetching pages
+        verbose: If True, print detailed progress messages
+        show_progress: If True, display progress bar
+
+    Returns:
+        SearchResults object with prices and summary statistics
+    """
+    all_prices, results = _collect_prices_for_products(
+        products, http_client, verbose, show_progress, "Finding cheapest prices"
+    )
+
+    # Select cheapest price for each product
+    for product_name, prices in all_prices.items():
         if prices:
             # Find cheapest by absolute price
             cheapest = min(prices, key=lambda x: x.price)
@@ -408,63 +443,5 @@ def find_all_prices(
         Dictionary mapping product names to lists of PriceResult objects
         (one per store with product in stock and valid price)
     """
-    all_prices: Dict[str, List[PriceResult]] = {}
-
-    # Create progress bar wrapper
-    products_iter = (
-        tqdm(products.items(), desc="Collecting all prices", unit="product", file=sys.stderr)
-        if show_progress
-        else products.items()
-    )
-
-    for product_name, urls in products_iter:
-        if verbose:
-            print(f"\nCollecting prices for {product_name}...", file=sys.stderr)
-        prices = []
-
-        # Parse product info once for all URLs of this product
-        product_info = parse_product_name(product_name)
-
-        for url in urls:
-            if verbose:
-                print(f"  Fetching: {url}", file=sys.stderr)
-            soup = http_client.fetch_page(url)
-
-            if not soup:
-                if verbose:
-                    print("    Could not fetch page", file=sys.stderr)
-                continue
-
-            # Check stock status first
-            if is_out_of_stock(soup):
-                if verbose:
-                    print("    Out of stock - skipping", file=sys.stderr)
-                continue
-
-            price = extract_price(soup, url)
-
-            if price:
-                # Calculate price per 100ml if volume information is available
-                price_per_100ml = None
-                if product_info.total_volume_ml:
-                    price_per_100ml = calculate_price_per_100ml(price, product_info.total_volume_ml)
-                    if verbose:
-                        print(
-                            f"    Found price: €{price:.2f} ({price_per_100ml:.2f}/100ml)",
-                            file=sys.stderr,
-                        )
-                else:
-                    if verbose:
-                        print(f"    Found price: €{price:.2f}", file=sys.stderr)
-
-                price_result = PriceResult(price=price, url=url, price_per_100ml=price_per_100ml)
-                prices.append(price_result)
-            else:
-                if verbose:
-                    print("    Could not find price", file=sys.stderr)
-                # Remove from cache so we can retry later
-                http_client.remove_from_cache(url)
-
-        all_prices[product_name] = prices
-
+    all_prices, _ = _collect_prices_for_products(products, http_client, verbose, show_progress, "Collecting all prices")
     return all_prices

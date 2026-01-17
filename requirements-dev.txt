@@ -29,3 +29,4 @@ vulture>=2.10
 types-PyYAML>=6.0.12
 types-requests>=2.32.0
 types-beautifulsoup4>=4.12.0
+types-tqdm>=4.66.0
