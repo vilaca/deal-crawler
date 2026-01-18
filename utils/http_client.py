@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from .config import Config
 from .http_cache import HttpCache
+from .rate_limiter import RateLimiter
 from .site_handlers import get_site_handler
 
 # Transient errors that should trigger retries
@@ -52,6 +53,7 @@ class HttpClient:
         self.use_cache = use_cache
         self.verbose = verbose
         self.session = requests.Session()
+        self.rate_limiter = RateLimiter(config)
 
         # Use provided cache settings or fall back to config defaults
         _cache_duration = cache_duration if cache_duration is not None else self.config.cache_duration
@@ -84,19 +86,6 @@ class HttpClient:
         """
         if self.cache:
             self.cache.remove(url)
-
-    def _get_delay_for_url(self, url: str) -> float:
-        """Calculate appropriate delay for the given URL.
-
-        Args:
-            url: The URL to calculate delay for
-
-        Returns:
-            Delay time in seconds
-        """
-        handler = get_site_handler(url, self.config)
-        min_delay, max_delay = handler.get_delay_range()
-        return random.uniform(min_delay, max_delay)
 
     def get_headers_for_site(self, url: str) -> dict:
         """Get appropriate headers for the given site.
@@ -184,7 +173,7 @@ class HttpClient:
         headers = self.get_headers_for_site(url)
 
         # Add rate limiting delay
-        delay = self._get_delay_for_url(url)
+        delay = self.rate_limiter.get_delay_for_url(url)
         time.sleep(delay)
 
         response = self.session.get(url, headers=headers, timeout=self.timeout)
@@ -220,30 +209,22 @@ class HttpClient:
         )
         time.sleep(wait_time)
 
-    def fetch_page(self, url: str, retry_count: Optional[int] = None) -> Optional[BeautifulSoup]:
-        """Fetch and parse a webpage with retry logic.
+    def _execute_request_with_retry(self, url: str, max_retries: int) -> Optional[requests.Response]:
+        """Execute HTTP request with retry logic for transient errors.
 
-        Retries on transient errors (connection errors, timeouts, 403 status).
+        Handles retries for connection errors, timeouts, and 403 status codes.
 
         Args:
             url: The URL to fetch
-            retry_count: Number of retries (uses self.max_retries if None)
+            max_retries: Maximum number of retry attempts
 
         Returns:
-            BeautifulSoup object if successful, None otherwise
+            Response object if successful, None otherwise
         """
-        # Check cache first
-        cached_result = self._check_cache(url)
-        if cached_result:
-            return cached_result
-
-        max_retries = retry_count if retry_count is not None else self.max_retries
-
         for attempt in range(max_retries + 1):
             try:
                 response = self._make_request(url)
-                self._cache_response(url, response)
-                return BeautifulSoup(response.text, "lxml")
+                return response
 
             except requests.exceptions.HTTPError as e:
                 if self._should_retry_http_error(e, attempt, max_retries):
@@ -265,3 +246,31 @@ class HttpClient:
                 return None
 
         return None  # Unreachable, but required for mypy type checking
+
+    def fetch_page(self, url: str, retry_count: Optional[int] = None) -> Optional[BeautifulSoup]:
+        """Fetch and parse a webpage with retry logic.
+
+        Retries on transient errors (connection errors, timeouts, 403 status).
+
+        Args:
+            url: The URL to fetch
+            retry_count: Number of retries (uses self.max_retries if None)
+
+        Returns:
+            BeautifulSoup object if successful, None otherwise
+        """
+        # Check cache first
+        cached_result = self._check_cache(url)
+        if cached_result:
+            return cached_result
+
+        # Execute request with retry logic
+        max_retries = retry_count if retry_count is not None else self.max_retries
+        response = self._execute_request_with_retry(url, max_retries)
+
+        if response is None:
+            return None
+
+        # Cache and parse successful response
+        self._cache_response(url, response)
+        return BeautifulSoup(response.text, "lxml")

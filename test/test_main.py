@@ -742,7 +742,7 @@ class TestDumpFunctionality(unittest.TestCase):
     @patch("sys.argv", ["main.py", "--plan", "Product A", "--dump", "plan.csv"])
     def test_dump_plan_to_csv_called_in_plan_mode(  # pylint: disable=too-many-positional-arguments
         self,
-        mock_print_plan,
+        _mock_print_plan,
         mock_shipping,
         mock_http_client,
         mock_load_products,
