@@ -246,16 +246,35 @@ def _extract_price_from_text_patterns(soup: BeautifulSoup) -> Optional[float]:
     return None
 
 
+def _get_extraction_strategies() -> List[Any]:
+    """Factory function returning price extraction strategies in priority order.
+
+    This factory makes strategy selection explicit and allows for easy
+    modification of the extraction pipeline. Strategies are tried in order
+    from most reliable to least reliable.
+
+    Returns:
+        List of extraction strategy functions in priority order:
+        1. Meta tags (structured data)
+        2. Data attributes (explicit pricing data)
+        3. Priority CSS classes (likely price elements)
+        4. Generic price classes (broad search)
+        5. Text patterns (last resort fallback)
+    """
+    return [
+        _extract_price_from_meta_tags,
+        _extract_price_from_data_attribute,
+        _extract_price_from_priority_classes,
+        _extract_price_from_generic_classes,
+        _extract_price_from_text_patterns,
+    ]
+
+
 def extract_price(soup: Optional[BeautifulSoup], url: str) -> Optional[float]:
     """Extract price from HTML using multiple strategies.
 
-    Tries strategies in order of reliability:
-    1. Site-specific extraction (if handler provides it)
-    2. Meta tags
-    3. Data attributes
-    4. Priority CSS classes
-    5. Generic price classes
-    6. Text patterns
+    Tries site-specific extraction first, then falls back to generic strategies
+    returned by the extraction factory.
 
     Args:
         soup: BeautifulSoup object to extract price from (or None)
@@ -273,15 +292,8 @@ def extract_price(soup: Optional[BeautifulSoup], url: str) -> Optional[float]:
     if price:
         return price
 
-    # Fallback to generic extraction strategies
-    strategies = [
-        _extract_price_from_meta_tags,
-        _extract_price_from_data_attribute,
-        _extract_price_from_priority_classes,
-        _extract_price_from_generic_classes,
-        _extract_price_from_text_patterns,
-    ]
-
+    # Fallback to generic extraction strategies from factory
+    strategies = _get_extraction_strategies()
     for strategy in strategies:
         price = strategy(soup)
         if price:

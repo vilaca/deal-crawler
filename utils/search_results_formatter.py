@@ -7,9 +7,9 @@ following the Single Responsibility Principle.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
-from urllib.parse import urlparse
 
 from .string_utils import pluralize
+from .url_utils import extract_domain
 
 if TYPE_CHECKING:
     from .finder import SearchResults
@@ -25,24 +25,6 @@ class SearchResultsFormatter:
             results: SearchResults to format
         """
         self.results = results
-
-    def _extract_domain(self, url: str) -> str:
-        """Extract domain from URL with fallback for malformed URLs.
-
-        Args:
-            url: URL to extract domain from
-
-        Returns:
-            Domain without 'www.' prefix, or full URL if parsing fails
-        """
-        parsed = urlparse(url)
-        domain = parsed.netloc.replace("www.", "")
-
-        # If netloc is empty (malformed URL), return the full URL as fallback
-        if not domain:
-            return url
-
-        return domain
 
     def _get_success_emoji(self, success_rate: float) -> str:
         """Get emoji based on success rate.
@@ -128,12 +110,12 @@ class SearchResultsFormatter:
         if markdown:
             print("\n**Out of Stock:**")
             for product, urls in self.results.out_of_stock_items.items():
-                domains = [self._extract_domain(url) for url in urls]
+                domains = [extract_domain(url) for url in urls]
                 print(f"- **{product}**: {', '.join(domains)}")
         else:
             print("\nOut of Stock:")
             for product, urls in self.results.out_of_stock_items.items():
-                domains = [self._extract_domain(url) for url in urls]
+                domains = [extract_domain(url) for url in urls]
                 print(f"  • {product}: {', '.join(domains)}")
 
     def _print_failed_urls(self, markdown: bool = False) -> None:

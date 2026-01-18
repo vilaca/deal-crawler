@@ -159,6 +159,25 @@ def _apply_filters(products: Dict[str, List[str]], args: argparse.Namespace) -> 
     return products
 
 
+def _dump_to_csv(filename: str, header: List[str], rows: List[List[str]]) -> None:
+    """Generic function to dump data to CSV file.
+
+    Args:
+        filename: Output CSV filename
+        header: List of column headers
+        rows: List of row data (each row is a list of strings)
+    """
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(header)
+            writer.writerows(rows)
+
+        print(f"\nResults dumped to {filename}", file=sys.stderr)
+    except OSError as e:
+        print(f"Error writing to {filename}: {e}", file=sys.stderr)
+
+
 def _dump_results_to_csv(search_results: SearchResults, filename: str) -> None:
     """Dump search results to CSV file.
 
@@ -166,28 +185,17 @@ def _dump_results_to_csv(search_results: SearchResults, filename: str) -> None:
         search_results: Search results to dump
         filename: Output CSV filename
     """
-    try:
-        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["Product", "Price", "Price per 100ml", "URL"])
+    header = ["Product", "Price", "Price per 100ml", "URL"]
+    rows = []
 
-            for product_name, price_result in search_results.prices.items():
-                if price_result:
-                    price_per_100ml = f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
-                    writer.writerow(
-                        [
-                            product_name,
-                            f"{price_result.price:.2f}",
-                            price_per_100ml,
-                            price_result.url,
-                        ]
-                    )
-                else:
-                    writer.writerow([product_name, "", "", ""])
+    for product_name, price_result in search_results.prices.items():
+        if price_result:
+            price_per_100ml = f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+            rows.append([product_name, f"{price_result.price:.2f}", price_per_100ml, price_result.url])
+        else:
+            rows.append([product_name, "", "", ""])
 
-        print(f"\nResults dumped to {filename}", file=sys.stderr)
-    except OSError as e:
-        print(f"Error writing to {filename}: {e}", file=sys.stderr)
+    _dump_to_csv(filename, header, rows)
 
 
 def _dump_plan_to_csv(optimized_plan: OptimizedPlan, filename: str) -> None:
@@ -197,27 +205,15 @@ def _dump_plan_to_csv(optimized_plan: OptimizedPlan, filename: str) -> None:
         optimized_plan: Optimized plan to dump
         filename: Output CSV filename
     """
-    try:
-        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["Store", "Product", "Price", "Price per 100ml", "URL"])
+    header = ["Store", "Product", "Price", "Price per 100ml", "URL"]
+    rows = []
 
-            for cart in optimized_plan.carts:
-                for product_name, price_result in cart.items:
-                    price_per_100ml = f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
-                    writer.writerow(
-                        [
-                            cart.site,
-                            product_name,
-                            f"{price_result.price:.2f}",
-                            price_per_100ml,
-                            price_result.url,
-                        ]
-                    )
+    for cart in optimized_plan.carts:
+        for product_name, price_result in cart.items:
+            price_per_100ml = f"{price_result.price_per_100ml:.2f}" if price_result.price_per_100ml else ""
+            rows.append([cart.site, product_name, f"{price_result.price:.2f}", price_per_100ml, price_result.url])
 
-        print(f"\nResults dumped to {filename}", file=sys.stderr)
-    except OSError as e:
-        print(f"Error writing to {filename}: {e}", file=sys.stderr)
+    _dump_to_csv(filename, header, rows)
 
 
 def _display_results(search_results: SearchResults, markdown: bool) -> None:

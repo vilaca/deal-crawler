@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from utils.finder import find_cheapest_prices, find_all_prices, SearchResults
 from utils.search_results_formatter import SearchResultsFormatter
 from utils.string_utils import pluralize
+from utils.url_utils import extract_domain
 
 
 class TestFindCheapestPrices(unittest.TestCase):
@@ -239,39 +240,29 @@ class TestSearchResults(unittest.TestCase):
 
     def test_extract_domain_normal_url(self):
         """Test domain extraction from normal URL."""
-        results = SearchResults()
-        formatter = SearchResultsFormatter(results)
-        self.assertEqual(formatter._extract_domain("https://example.com/product"), "example.com")
+        self.assertEqual(extract_domain("https://example.com/product"), "example.com")
 
     def test_extract_domain_with_www(self):
         """Test domain extraction removes www. prefix."""
-        results = SearchResults()
-        formatter = SearchResultsFormatter(results)
-        self.assertEqual(formatter._extract_domain("https://www.example.com/product"), "example.com")
+        self.assertEqual(extract_domain("https://www.example.com/product"), "example.com")
 
     def test_extract_domain_malformed_url(self):
         """Test domain extraction with malformed URLs returns full URL."""
-        results = SearchResults()
-        formatter = SearchResultsFormatter(results)
         # Relative path (no netloc)
-        self.assertEqual(formatter._extract_domain("/path/to/resource"), "/path/to/resource")
+        self.assertEqual(extract_domain("/path/to/resource"), "/path/to/resource")
         # Just a path
-        self.assertEqual(formatter._extract_domain("product/123"), "product/123")
+        self.assertEqual(extract_domain("product/123"), "product/123")
 
     def test_extract_domain_no_scheme(self):
         """Test domain extraction from URL without scheme."""
-        results = SearchResults()
-        formatter = SearchResultsFormatter(results)
         # Without scheme, urlparse might not extract netloc correctly
-        result = formatter._extract_domain("example.com/product")
+        result = extract_domain("example.com/product")
         # Should return the full string as fallback
         self.assertIn("example.com", result)
 
     def test_extract_domain_empty_string(self):
         """Test domain extraction with empty string."""
-        results = SearchResults()
-        formatter = SearchResultsFormatter(results)
-        self.assertEqual(formatter._extract_domain(""), "")
+        self.assertEqual(extract_domain(""), "")
 
     def test_get_success_emoji(self):
         """Test emoji selection based on success rate."""

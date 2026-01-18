@@ -168,6 +168,39 @@ def filter_best_value_sizes(results: SearchResults) -> SearchResults:
     return filtered_results
 
 
+def _create_progress_bar(
+    total_urls: int, progress_desc: str, show_progress: bool
+) -> Optional[tqdm]:  # type: ignore[type-arg]
+    """Create and initialize progress bar for URL tracking.
+
+    Args:
+        total_urls: Total number of URLs to process
+        progress_desc: Description text for the progress bar
+        show_progress: If True, create progress bar; otherwise return None
+
+    Returns:
+        tqdm progress bar instance or None if show_progress is False
+    """
+    if show_progress:
+        return tqdm(total=total_urls, desc=progress_desc, unit=" URL", file=sys.stderr, colour="green")
+    return None
+
+
+def _update_progress_bar_product_info(
+    pbar: Optional[tqdm], product_count: int, total_products: int, product_name: str  # type: ignore[type-arg]
+) -> None:
+    """Update progress bar with current product information.
+
+    Args:
+        pbar: tqdm progress bar instance (or None)
+        product_count: Current product number (1-based)
+        total_products: Total number of products
+        product_name: Name of current product being processed
+    """
+    if pbar:
+        pbar.set_postfix_str(f"[{product_count}/{total_products} products] {product_name[:40]:<40}")
+
+
 def _update_progress_bar_on_error(pbar: Optional[tqdm]) -> None:  # type: ignore[type-arg]
     """Update progress bar and flash red color on error.
 
@@ -178,6 +211,27 @@ def _update_progress_bar_on_error(pbar: Optional[tqdm]) -> None:  # type: ignore
         pbar.colour = "red"
         pbar.update(1)
         pbar.colour = "green"
+
+
+def _finalize_progress_bar(pbar: Optional[tqdm], prices_found: int, total_urls: int) -> None:  # type: ignore[type-arg]
+    """Set final color based on results and close progress bar.
+
+    Args:
+        pbar: tqdm progress bar instance (or None)
+        prices_found: Number of successful price extractions
+        total_urls: Total number of URLs processed
+    """
+    if pbar:
+        if prices_found == total_urls:
+            # All URLs successful - green
+            pbar.colour = "green"
+        elif prices_found == 0:
+            # All URLs failed - red
+            pbar.colour = "red"
+        else:
+            # Some issues - yellow
+            pbar.colour = "yellow"
+        pbar.close()
 
 
 def _process_single_url(
@@ -274,23 +328,16 @@ def _collect_prices_for_products(
     results = SearchResults()
     results.total_products = len(products)
 
-    # Calculate total URLs for progress bar
+    # Calculate total URLs and create progress bar
     total_urls = sum(len(urls) for urls in products.values())
-
-    # Create progress bar tracking URLs (start with green)
-    pbar = (
-        tqdm(total=total_urls, desc=progress_desc, unit=" URL", file=sys.stderr, colour="green")
-        if show_progress
-        else None
-    )
+    pbar = _create_progress_bar(total_urls, progress_desc, show_progress)
 
     product_count = 0
     for product_name, urls in products.items():
         product_count += 1
 
         # Update progress bar with current product info
-        if pbar:
-            pbar.set_postfix_str(f"[{product_count}/{results.total_products} products] {product_name[:40]:<40}")
+        _update_progress_bar_product_info(pbar, product_count, results.total_products, product_name)
 
         if verbose:
             print(f"\nChecking prices for {product_name}...", file=sys.stderr)
@@ -322,18 +369,8 @@ def _collect_prices_for_products(
 
         all_prices[product_name] = prices
 
-    # Set final color based on overall results
-    if pbar:
-        if results.prices_found == total_urls:
-            # All URLs successful - green
-            pbar.colour = "green"
-        elif results.prices_found == 0:
-            # All URLs failed - red
-            pbar.colour = "red"
-        else:
-            # Some issues - yellow
-            pbar.colour = "yellow"
-        pbar.close()
+    # Finalize progress bar with appropriate color
+    _finalize_progress_bar(pbar, results.prices_found, total_urls)
 
     return all_prices, results
 
