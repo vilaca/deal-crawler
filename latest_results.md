@@ -25,12 +25,13 @@
 
 ## 📊 Search Summary
 
-**❌ 39/90 URLs** (43% success) · **26 products**
+**❌ 38/90 URLs** (42% success) · **26 products**
 
-_📦 13 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
+_📦 14 out of stock · 🌐 18 fetch errors · 🔍 20 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
+- **Cerave Hydrating Cleanser (1000ml)**: atida.com
 - **Cerave Hydrating Cleanser (236ml)**: aveirofarma.pt
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
 - **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt
