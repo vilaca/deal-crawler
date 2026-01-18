@@ -12,7 +12,7 @@ from .string_utils import pluralize
 from .url_utils import extract_domain
 
 if TYPE_CHECKING:
-    from .finder import SearchResults
+    from .price_models import SearchResults
 
 
 class SearchResultsFormatter:

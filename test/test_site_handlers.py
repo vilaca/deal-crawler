@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 from bs4 import BeautifulSoup
 
+from utils.config import Config
 from utils.site_handlers import (
     DefaultSiteHandler,
     FarmacentralHandler,
@@ -18,7 +19,8 @@ class TestNotinoHandler(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.handler = NotinoHandler()
+        self.config = Config()
+        self.handler = NotinoHandler(self.config)
 
     def test_domain_pattern(self):
         """Test Notino domain pattern."""
@@ -132,7 +134,8 @@ class TestFarmacentralHandler(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.handler = FarmacentralHandler()
+        self.config = Config()
+        self.handler = FarmacentralHandler(self.config)
 
     def test_domain_pattern(self):
         """Test Farmacentral domain pattern."""
@@ -255,7 +258,8 @@ class TestDefaultSiteHandler(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.handler = DefaultSiteHandler()
+        self.config = Config()
+        self.handler = DefaultSiteHandler(self.config)
 
     def test_domain_pattern(self):
         """Test default domain pattern matches all."""
@@ -283,50 +287,52 @@ class TestDefaultSiteHandler(unittest.TestCase):
 class TestSiteHandlerRegistry(unittest.TestCase):
     """Test site handler registry."""
 
+    def setUp(self):
+        """Set up test fixtures."""
+        self.config = Config()
+
     def test_get_handler_for_notino(self):
         """Test registry returns Notino handler for Notino URL."""
         url = "https://www.notino.pt/product/123"
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         self.assertIsInstance(handler, NotinoHandler)
 
     def test_get_handler_for_notino_subdomain(self):
         """Test registry matches notino in subdomain."""
         url = "https://shop.notino.pt/product/456"
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         self.assertIsInstance(handler, NotinoHandler)
 
     def test_get_handler_for_farmacentral(self):
         """Test registry returns Farmacentral handler for Farmacentral URL."""
         url = "https://farmacentral.pt/pt/artigo/cerave-cleanser-hydrating-limpeza-facial-236ml"
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         self.assertIsInstance(handler, FarmacentralHandler)
 
     def test_get_handler_for_generic_site(self):
         """Test registry returns default handler for unknown site."""
         url = "https://www.example.com/product"
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         self.assertIsInstance(handler, DefaultSiteHandler)
 
     def test_get_handler_for_amazon(self):
         """Test registry returns default handler for Amazon (no handler yet)."""
         url = "https://www.amazon.com/product"
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         self.assertIsInstance(handler, DefaultSiteHandler)
 
     def test_registry_order_matters(self):
-        """Test first matching handler is returned."""
+        """Test first matching handler class is used."""
         registry = SiteHandlerRegistry()
-        handler1 = NotinoHandler()
-        handler2 = NotinoHandler()
 
-        registry.register(handler1)
-        registry.register(handler2)
+        registry.register(NotinoHandler)
+        registry.register(FarmacentralHandler)
 
         url = "https://www.notino.pt/product"
-        result = registry.get_handler(url)
+        result = registry.get_handler(url, self.config)
 
-        # Should return first registered handler
-        self.assertIs(result, handler1)
+        # Should return instance of first matching handler class
+        self.assertIsInstance(result, NotinoHandler)
 
     def test_registry_default_fallback(self):
         """Test registry falls back to default when no match."""
@@ -334,7 +340,7 @@ class TestSiteHandlerRegistry(unittest.TestCase):
         # Don't register any handlers
 
         url = "https://www.example.com/product"
-        handler = registry.get_handler(url)
+        handler = registry.get_handler(url, self.config)
 
         self.assertIsInstance(handler, DefaultSiteHandler)
 

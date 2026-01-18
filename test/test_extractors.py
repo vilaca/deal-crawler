@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 from bs4 import BeautifulSoup
 
+from utils.config import Config
 from utils.extractors import (
     parse_price_string,
     extract_price,
@@ -341,26 +342,30 @@ class TestIsInsideDeliveryContainer(unittest.TestCase):
 class TestExtractPrice(unittest.TestCase):
     """Test generic price extraction."""
 
+    def setUp(self):
+        """Set up test fixtures."""
+        self.config = Config()
+
     def create_soup(self, html):
         """Helper to create BeautifulSoup from HTML."""
         return BeautifulSoup(html, "lxml")
 
     def test_none_soup(self):
         """Test None soup returns None."""
-        self.assertIsNone(extract_price(None, "https://example.com"))
+        self.assertIsNone(extract_price(None, "https://example.com", self.config))
 
     def test_meta_tag_price(self):
         """Test extraction from meta tag."""
         html = '<meta property="product:price:amount" content="29.99">'
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 29.99)
 
     def test_data_price_attribute(self):
         """Test extraction from data-price attribute."""
         html = '<div data-price="69.41"></div>'
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 69.41)
 
     def test_actual_price_class(self):
@@ -370,7 +375,7 @@ class TestExtractPrice(unittest.TestCase):
         <span class="price-actual">69.99€</span>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 69.99)
 
     def test_ignores_old_price_class(self):
@@ -380,21 +385,21 @@ class TestExtractPrice(unittest.TestCase):
         <span class="price">69.99€</span>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 69.99)
 
     def test_text_pattern_extraction(self):
         """Test extraction from page text patterns."""
         html = "<div>The price is €45.50 for this item</div>"
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 45.50)
 
     def test_notino_url_uses_special_extraction(self):
         """Test notino.pt URL uses special extraction method."""
         html = '<script>var data = {"price": 83.20};</script>'
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://www.notino.pt/product")
+        price = extract_price(soup, "https://www.notino.pt/product", self.config)
         self.assertEqual(price, 83.20)
 
     def test_parse_price_string_with_attribute_error(self):
@@ -407,28 +412,28 @@ class TestExtractPrice(unittest.TestCase):
         """Test extraction from priority class with content attribute."""
         html = '<span class="price-actual" content="55.99">Display: 60</span>'
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 55.99)
 
     def test_priority_classes_with_text_only(self):
         """Test extraction from priority class with text content only."""
         html = '<span class="price-current">€48.75</span>'
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 48.75)
 
     def test_generic_classes_with_content_attribute(self):
         """Test extraction from generic price class with content attribute."""
         html = '<div class="product-price" content="39.99">Price</div>'
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 39.99)
 
     def test_text_pattern_with_price_range_validation(self):
         """Test text pattern extraction validates price range."""
         html = "<div>Price: €15000.00</div>"  # Outside MAX_PRICE
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         # Should not return prices outside the valid range
         self.assertIsNone(price)
 
@@ -439,7 +444,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="price-product">€ 60,47</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         # Should extract visible price, not hidden one
         self.assertEqual(price, 60.47)
 
@@ -450,7 +455,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="price">€ 50,00</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 50.0)
 
     def test_skips_d_none_class(self):
@@ -460,7 +465,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="price">€ 75,00</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 75.0)
 
     def test_skips_inline_style_display_none(self):
@@ -470,7 +475,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="price">€ 45,00</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 45.0)
 
     def test_skips_inline_style_visibility_hidden(self):
@@ -480,7 +485,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="price">€ 35,00</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         self.assertEqual(price, 35.0)
 
     def test_multiple_prices_picks_visible(self):
@@ -491,7 +496,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="price-product display-none">€ 79,07€ 87,86-10%</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         # Should get the visible price (60.47), not hidden ones
         self.assertEqual(price, 60.47)
 
@@ -503,7 +508,7 @@ class TestExtractPrice(unittest.TestCase):
         <div class="generic-price">€ 50,00</div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         # Should prioritize price-product class
         self.assertEqual(price, 79.07)
 
@@ -518,7 +523,7 @@ class TestExtractPrice(unittest.TestCase):
         </div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://www.blinkshop.com/product")
+        price = extract_price(soup, "https://www.blinkshop.com/product", self.config)
         # Should extract product price (66.01), not delivery threshold (50.00)
         self.assertEqual(price, 66.01)
 
@@ -533,7 +538,7 @@ class TestExtractPrice(unittest.TestCase):
         </div>
         """
         soup = self.create_soup(html)
-        price = extract_price(soup, "https://example.com")
+        price = extract_price(soup, "https://example.com", self.config)
         # Should extract product price (29.99), not shipping (5.99)
         self.assertEqual(price, 29.99)
 

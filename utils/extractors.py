@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup, Tag
 from typing import Any, Dict, List, Optional
 
-from .config import config
+from .config import Config
 from .site_handlers import get_site_handler
 
 # Compile regex patterns at module level for better performance
@@ -125,6 +125,99 @@ def _is_inside_delivery_container(element: Tag) -> bool:
     return False
 
 
+def _extract_price_from_element(
+    element: Tag,
+    *,
+    check_content: bool = True,
+    check_text: bool = True,
+    attribute_name: Optional[str] = None,
+) -> Optional[float]:
+    """Extract price from a single element using various strategies.
+
+    Args:
+        element: BeautifulSoup Tag element to extract price from
+        check_content: Whether to check 'content' attribute
+        check_text: Whether to check text content
+        attribute_name: Optional specific attribute to check (e.g., 'data-price')
+
+    Returns:
+        Extracted price or None if not found
+    """
+    # Check specific attribute if provided
+    if attribute_name:
+        attr_value = element.get(attribute_name)
+        if attr_value and isinstance(attr_value, str):
+            price = parse_price_string(attr_value)
+            if price:
+                return price
+
+    # Check content attribute
+    if check_content:
+        content = element.get("content")
+        if content and isinstance(content, str):
+            price = parse_price_string(content)
+            if price:
+                return price
+
+    # Check text content
+    if check_text:
+        text = element.get_text(strip=True)
+        price = parse_price_string(text)
+        if price:
+            return price
+
+    return None
+
+
+def _extract_price_from_elements(
+    elements: List[Tag],
+    *,
+    skip_hidden: bool = False,
+    skip_delivery: bool = False,
+    exclude_keywords: Optional[List[str]] = None,
+    check_content: bool = True,
+    check_text: bool = True,
+    attribute_name: Optional[str] = None,
+) -> Optional[float]:
+    """Extract price from a list of elements with filtering options.
+
+    Args:
+        elements: List of BeautifulSoup Tag elements to check
+        skip_hidden: Whether to skip hidden elements
+        skip_delivery: Whether to skip elements in delivery containers
+        exclude_keywords: Additional keywords to check when skipping hidden elements
+        check_content: Whether to check 'content' attribute
+        check_text: Whether to check text content
+        attribute_name: Optional specific attribute to check (e.g., 'data-price')
+
+    Returns:
+        First successfully extracted price or None
+    """
+    for element in elements:
+        if not isinstance(element, Tag):
+            continue
+
+        # Skip hidden elements if requested
+        if skip_hidden and _is_element_hidden(element, exclude_keywords):
+            continue
+
+        # Skip delivery container elements if requested
+        if skip_delivery and _is_inside_delivery_container(element):
+            continue
+
+        # Try to extract price from this element
+        price = _extract_price_from_element(
+            element,
+            check_content=check_content,
+            check_text=check_text,
+            attribute_name=attribute_name,
+        )
+        if price:
+            return price
+
+    return None
+
+
 def _extract_price_from_meta_tags(soup: BeautifulSoup) -> Optional[float]:
     """Extract price from meta tags (Strategy 1)."""
     meta_tags = [
@@ -136,25 +229,21 @@ def _extract_price_from_meta_tags(soup: BeautifulSoup) -> Optional[float]:
     for tag, attrs in meta_tags:
         element = soup.find(tag, attrs)
         if isinstance(element, Tag):
-            content = element.get("content")
-            if content and isinstance(content, str):
-                price = parse_price_string(content)
-                if price:
-                    return price
+            price = _extract_price_from_element(element, check_text=False)
+            if price:
+                return price
     return None
 
 
 def _extract_price_from_data_attribute(soup: BeautifulSoup) -> Optional[float]:
     """Extract price from data-price attribute (Strategy 2)."""
     data_price_elements = soup.find_all(attrs={"data-price": True})
-    for element in data_price_elements:
-        if isinstance(element, Tag):
-            data_price = element.get("data-price")
-            if data_price and isinstance(data_price, str):
-                price = parse_price_string(data_price)
-                if price:
-                    return price
-    return None
+    return _extract_price_from_elements(
+        data_price_elements,
+        check_content=False,
+        check_text=False,
+        attribute_name="data-price",
+    )
 
 
 def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]:
@@ -170,26 +259,9 @@ def _extract_price_from_priority_classes(soup: BeautifulSoup) -> Optional[float]
 
     for selector in priority_price_classes:
         elements = soup.find_all(attrs=selector)
-        for element in elements:
-            if not isinstance(element, Tag):
-                continue
-
-            # Skip hidden elements (e.g., alternative variants)
-            if _is_element_hidden(element):
-                continue
-
-            # Check content attribute first
-            content = element.get("content")
-            if content and isinstance(content, str):
-                price = parse_price_string(content)
-                if price:
-                    return price
-
-            # Check text content
-            text = element.get_text(strip=True)
-            price = parse_price_string(text)
-            if price:
-                return price
+        price = _extract_price_from_elements(elements, skip_hidden=True)
+        if price:
+            return price
     return None
 
 
@@ -199,35 +271,24 @@ def _extract_price_from_generic_classes(soup: BeautifulSoup) -> Optional[float]:
     Excludes classes that indicate old/original prices and delivery-related prices.
     """
     generic_price_elements = soup.find_all(class_=GENERIC_PRICE_CLASS_PATTERN)
-    for element in generic_price_elements:
-        if not isinstance(element, Tag):
-            continue
-
-        # Skip elements with classes indicating old/original prices or hidden elements
-        if _is_element_hidden(element, ["old", "original", "was", "before", "regular"]):
-            continue
-
-        # Skip elements inside delivery/shipping containers
-        if _is_inside_delivery_container(element):
-            continue
-
-        # Check content attribute first
-        content = element.get("content")
-        if content and isinstance(content, str):
-            price = parse_price_string(content)
-            if price:
-                return price
-
-        # Check text content
-        text = element.get_text(strip=True)
-        price = parse_price_string(text)
-        if price:
-            return price
-    return None
+    return _extract_price_from_elements(
+        generic_price_elements,
+        skip_hidden=True,
+        skip_delivery=True,
+        exclude_keywords=["old", "original", "was", "before", "regular"],
+    )
 
 
-def _extract_price_from_text_patterns(soup: BeautifulSoup) -> Optional[float]:
-    """Extract price from text patterns in page content (Strategy 5)."""
+def _extract_price_from_text_patterns(soup: BeautifulSoup, config: Config) -> Optional[float]:
+    """Extract price from text patterns in page content (Strategy 5).
+
+    Args:
+        soup: BeautifulSoup object to extract from
+        config: Configuration instance for price validation
+
+    Returns:
+        Extracted price or None
+    """
     all_text = soup.get_text()
     price_patterns = [
         r"€\s*(\d+[.,]\d{2})",  # €29.99 or € 29,99
@@ -246,12 +307,15 @@ def _extract_price_from_text_patterns(soup: BeautifulSoup) -> Optional[float]:
     return None
 
 
-def _get_extraction_strategies() -> List[Any]:
+def _get_extraction_strategies(config: Config) -> List[Any]:
     """Factory function returning price extraction strategies in priority order.
 
     This factory makes strategy selection explicit and allows for easy
     modification of the extraction pipeline. Strategies are tried in order
     from most reliable to least reliable.
+
+    Args:
+        config: Configuration instance for price validation
 
     Returns:
         List of extraction strategy functions in priority order:
@@ -266,11 +330,11 @@ def _get_extraction_strategies() -> List[Any]:
         _extract_price_from_data_attribute,
         _extract_price_from_priority_classes,
         _extract_price_from_generic_classes,
-        _extract_price_from_text_patterns,
+        lambda soup: _extract_price_from_text_patterns(soup, config),
     ]
 
 
-def extract_price(soup: Optional[BeautifulSoup], url: str) -> Optional[float]:
+def extract_price(soup: Optional[BeautifulSoup], url: str, config: Config) -> Optional[float]:
     """Extract price from HTML using multiple strategies.
 
     Tries site-specific extraction first, then falls back to generic strategies
@@ -279,6 +343,7 @@ def extract_price(soup: Optional[BeautifulSoup], url: str) -> Optional[float]:
     Args:
         soup: BeautifulSoup object to extract price from (or None)
         url: URL of the page (for site-specific handling)
+        config: Configuration instance (required)
 
     Returns:
         Extracted price as float, or None if not found
@@ -287,13 +352,13 @@ def extract_price(soup: Optional[BeautifulSoup], url: str) -> Optional[float]:
         return None
 
     # Try site-specific extraction first
-    handler = get_site_handler(url)
+    handler = get_site_handler(url, config)
     price = handler.extract_price(soup)
     if price:
         return price
 
     # Fallback to generic extraction strategies from factory
-    strategies = _get_extraction_strategies()
+    strategies = _get_extraction_strategies(config)
     for strategy in strategies:
         price = strategy(soup)
         if price:

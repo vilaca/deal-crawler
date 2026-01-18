@@ -1,10 +1,10 @@
 """Tests for main.py CLI entry point."""
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from main import _dump_plan_to_csv, _dump_results_to_csv, main
-from utils.finder import PriceResult, SearchResults
+from utils.price_models import PriceResult, SearchResults
 from utils.optimizer import OptimizedPlan, StoreCart
 
 
@@ -329,7 +329,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with use_cache=False and default timeout/cache_duration
-        mock_http_client.assert_called_once_with(use_cache=False, timeout=15, cache_duration=3600, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=False, timeout=15, cache_duration=3600, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -350,7 +352,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with use_cache=True (default) and default timeout/cache_duration
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=3600, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=True, timeout=15, cache_duration=3600, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -519,7 +523,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with custom cache_duration
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=True, timeout=15, cache_duration=7200, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -542,7 +548,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with custom timeout
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=True, timeout=30, cache_duration=3600, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -566,7 +574,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with cache_duration from env var
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=15, cache_duration=7200, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=True, timeout=15, cache_duration=7200, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -590,7 +600,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with timeout from env var
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=30, cache_duration=3600, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=True, timeout=30, cache_duration=3600, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")
@@ -614,7 +626,9 @@ class TestMainFunction(unittest.TestCase):
         main()
 
         # Verify HttpClient was called with CLI flag value (45), not env var (30)
-        mock_http_client.assert_called_once_with(use_cache=True, timeout=45, cache_duration=3600, verbose=False)
+        mock_http_client.assert_called_once_with(
+            config=ANY, use_cache=True, timeout=45, cache_duration=3600, verbose=False
+        )
 
     @patch("main.find_cheapest_prices")
     @patch("main.load_products")

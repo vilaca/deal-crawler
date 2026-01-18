@@ -3,7 +3,8 @@
 import unittest
 from typing import Dict, List
 
-from utils.finder import PriceResult, extract_base_product_name
+from utils.finder import extract_base_product_name
+from utils.price_models import PriceResult
 from utils.optimizer import optimize_shopping_plan
 from utils.shipping import ShippingConfig, ShippingInfo
 

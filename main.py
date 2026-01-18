@@ -11,7 +11,8 @@ import yaml
 from utils.config import config
 from utils.data_loader import load_products
 from utils.filters import filter_by_sites, filter_by_products
-from utils.finder import SearchResults, find_cheapest_prices, filter_best_value_sizes, find_all_prices
+from utils.finder import find_cheapest_prices, filter_best_value_sizes, find_all_prices
+from utils.price_models import SearchResults
 from utils.http_client import HttpClient
 from utils.markdown_formatter import print_results_markdown, print_plan_markdown
 from utils.text_formatter import print_results_text, print_plan_text
@@ -239,6 +240,7 @@ def _run_optimization_mode(products: Dict[str, List[str]], args: argparse.Namesp
         args: Parsed command line arguments
     """
     with HttpClient(
+        config=config,
         use_cache=not args.no_cache,
         timeout=args.request_timeout,
         cache_duration=args.cache_duration,
@@ -282,6 +284,7 @@ def _run_standard_mode(products: Dict[str, List[str]], args: argparse.Namespace)
         args: Parsed command line arguments
     """
     with HttpClient(
+        config=config,
         use_cache=not args.no_cache,
         timeout=args.request_timeout,
         cache_duration=args.cache_duration,

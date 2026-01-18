@@ -5,7 +5,7 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
-from utils.finder import PriceResult, SearchResults
+from utils.price_models import PriceResult, SearchResults
 from utils.text_formatter import print_results_text, print_plan_text
 from test.test_formatter_fixtures import (
     create_empty_plan,

@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from utils.finder import PriceResult
+from utils.price_models import PriceResult
 from utils.optimizer import OptimizedPlan, StoreCart
 from utils.shipping import ShippingConfig, ShippingInfo
 
