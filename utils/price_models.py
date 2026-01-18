@@ -29,17 +29,14 @@ class PriceProcessingResult:
 
 
 @dataclass
-class SearchResults:
-    """Results from price search with summary statistics.
+class SearchStatistics:
+    """Statistics from price search operations.
 
-    This class is a pure data container following SRP.
-    For presentation/formatting, use SearchResultsFormatter.
+    Encapsulates all metrics and tracking data from a price search,
+    following Interface Segregation Principle by separating statistics
+    from core search results.
     """
 
-    # Product name -> PriceResult or None
-    prices: Dict[str, Optional[PriceResult]] = field(default_factory=dict)
-
-    # Summary statistics
     total_products: int = 0
     total_urls_checked: int = 0
     prices_found: int = 0
@@ -50,6 +47,21 @@ class SearchResults:
     # Detailed tracking
     out_of_stock_items: Dict[str, List[str]] = field(default_factory=dict)  # product -> URLs
     failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
+
+
+@dataclass
+class SearchResults:
+    """Results from price search with summary statistics.
+
+    This class is a pure data container following SRP.
+    For presentation/formatting, use SearchResultsFormatter.
+    """
+
+    # Product name -> PriceResult or None
+    prices: Dict[str, Optional[PriceResult]] = field(default_factory=dict)
+
+    # Statistics about the search operation
+    statistics: SearchStatistics = field(default_factory=SearchStatistics)
 
     def print_summary(self, markdown: bool = False) -> None:
         """Print a concise summary of the search results.

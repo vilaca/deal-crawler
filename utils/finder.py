@@ -77,14 +77,7 @@ def _copy_search_statistics(source: SearchResults, target: SearchResults) -> Non
         source: Source SearchResults with statistics
         target: Target SearchResults to copy statistics to
     """
-    target.total_products = source.total_products
-    target.total_urls_checked = source.total_urls_checked
-    target.prices_found = source.prices_found
-    target.out_of_stock = source.out_of_stock
-    target.fetch_errors = source.fetch_errors
-    target.extraction_errors = source.extraction_errors
-    target.out_of_stock_items = source.out_of_stock_items
-    target.failed_urls = source.failed_urls
+    target.statistics = source.statistics
 
 
 def filter_best_value_sizes(results: SearchResults) -> SearchResults:

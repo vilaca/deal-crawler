@@ -50,27 +50,33 @@ class SearchResultsFormatter:
         Returns:
             Formatted success line
         """
-        products_text = pluralize(self.results.total_products, "product", "products")
+        products_text = pluralize(self.results.statistics.total_products, "product", "products")
 
-        if self.results.total_urls_checked == 0:
+        if self.results.statistics.total_urls_checked == 0:
             if markdown:
-                return f"**{self.results.total_products} {products_text}** · No URLs checked"
-            return f"{self.results.total_products} {products_text} · No URLs checked"
+                return f"**{self.results.statistics.total_products} {products_text}** · No URLs checked"
+            return f"{self.results.statistics.total_products} {products_text} · No URLs checked"
 
-        success_rate = (self.results.prices_found / self.results.total_urls_checked) * 100
+        success_rate = (self.results.statistics.prices_found / self.results.statistics.total_urls_checked) * 100
         emoji = self._get_success_emoji(success_rate)
-        urls_text = pluralize(self.results.total_urls_checked, "URL", "URLs")
+        urls_text = pluralize(self.results.statistics.total_urls_checked, "URL", "URLs")
 
         if markdown:
+            prices_found = self.results.statistics.prices_found
+            total_urls = self.results.statistics.total_urls_checked
+            total_products = self.results.statistics.total_products
             return (
-                f"**{emoji} {self.results.prices_found}/{self.results.total_urls_checked} {urls_text}** "
+                f"**{emoji} {prices_found}/{total_urls} {urls_text}** "
                 f"({success_rate:.0f}% success) · "
-                f"**{self.results.total_products} {products_text}**"
+                f"**{total_products} {products_text}**"
             )
 
+        prices_found = self.results.statistics.prices_found
+        total_urls = self.results.statistics.total_urls_checked
+        total_products = self.results.statistics.total_products
         return (
-            f"{emoji} {self.results.prices_found}/{self.results.total_urls_checked} {urls_text} "
-            f"({success_rate:.0f}% success) · {self.results.total_products} {products_text}"
+            f"{emoji} {prices_found}/{total_urls} {urls_text} "
+            f"({success_rate:.0f}% success) · {total_products} {products_text}"
         )
 
     def _format_issues_line(self, markdown: bool = False) -> Optional[str]:
@@ -83,14 +89,14 @@ class SearchResultsFormatter:
             Formatted issues line or None if no issues
         """
         issues = []
-        if self.results.out_of_stock > 0:
-            issues.append(f"📦 {self.results.out_of_stock} out of stock")
-        if self.results.fetch_errors > 0:
-            error_text = pluralize(self.results.fetch_errors, "fetch error", "fetch errors")
-            issues.append(f"🌐 {self.results.fetch_errors} {error_text}")
-        if self.results.extraction_errors > 0:
-            error_text = pluralize(self.results.extraction_errors, "extraction error", "extraction errors")
-            issues.append(f"🔍 {self.results.extraction_errors} {error_text}")
+        if self.results.statistics.out_of_stock > 0:
+            issues.append(f"📦 {self.results.statistics.out_of_stock} out of stock")
+        if self.results.statistics.fetch_errors > 0:
+            error_text = pluralize(self.results.statistics.fetch_errors, "fetch error", "fetch errors")
+            issues.append(f"🌐 {self.results.statistics.fetch_errors} {error_text}")
+        if self.results.statistics.extraction_errors > 0:
+            error_text = pluralize(self.results.statistics.extraction_errors, "extraction error", "extraction errors")
+            issues.append(f"🔍 {self.results.statistics.extraction_errors} {error_text}")
 
         if not issues:
             return None
@@ -104,17 +110,17 @@ class SearchResultsFormatter:
         Args:
             markdown: If True, format for markdown; otherwise format for terminal
         """
-        if not self.results.out_of_stock_items:
+        if not self.results.statistics.out_of_stock_items:
             return
 
         if markdown:
             print("\n**Out of Stock:**")
-            for product, urls in self.results.out_of_stock_items.items():
+            for product, urls in self.results.statistics.out_of_stock_items.items():
                 domains = [extract_domain(url) for url in urls]
                 print(f"- **{product}**: {', '.join(domains)}")
         else:
             print("\nOut of Stock:")
-            for product, urls in self.results.out_of_stock_items.items():
+            for product, urls in self.results.statistics.out_of_stock_items.items():
                 domains = [extract_domain(url) for url in urls]
                 print(f"  • {product}: {', '.join(domains)}")
 
@@ -124,21 +130,21 @@ class SearchResultsFormatter:
         Args:
             markdown: If True, format for markdown; otherwise format for terminal
         """
-        if not self.results.failed_urls:
+        if not self.results.statistics.failed_urls:
             return
 
         if markdown:
-            print(f"\n**Failed URLs** ({len(self.results.failed_urls)}):")
-            for url in self.results.failed_urls[:3]:
+            print(f"\n**Failed URLs** ({len(self.results.statistics.failed_urls)}):")
+            for url in self.results.statistics.failed_urls[:3]:
                 print(f"- `{url}`")
-            if len(self.results.failed_urls) > 3:
-                print(f"- _{len(self.results.failed_urls) - 3} more..._")
+            if len(self.results.statistics.failed_urls) > 3:
+                print(f"- _{len(self.results.statistics.failed_urls) - 3} more..._")
         else:
-            print(f"\nFailed URLs ({len(self.results.failed_urls)}):")
-            for url in self.results.failed_urls[:3]:
+            print(f"\nFailed URLs ({len(self.results.statistics.failed_urls)}):")
+            for url in self.results.statistics.failed_urls[:3]:
                 print(f"  • {url}")
-            if len(self.results.failed_urls) > 3:
-                print(f"  • {len(self.results.failed_urls) - 3} more...")
+            if len(self.results.statistics.failed_urls) > 3:
+                print(f"  • {len(self.results.statistics.failed_urls) - 3} more...")
 
     def print_summary(self, markdown: bool = False) -> None:
         """Print a concise summary of the search results.

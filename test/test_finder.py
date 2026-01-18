@@ -56,9 +56,9 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(result.url, "https://example.com/product2")
 
         # Check summary statistics
-        self.assertEqual(results.total_products, 1)
-        self.assertEqual(results.total_urls_checked, 3)
-        self.assertEqual(results.prices_found, 3)
+        self.assertEqual(results.statistics.total_products, 1)
+        self.assertEqual(results.statistics.total_urls_checked, 3)
+        self.assertEqual(results.statistics.prices_found, 3)
 
     @patch("utils.price_collection.is_out_of_stock")
     @patch("utils.price_collection.extract_price")
@@ -92,12 +92,12 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(result.url, "https://example.com/product3")
 
         # Check summary statistics
-        self.assertEqual(results.out_of_stock, 1)
-        self.assertEqual(results.prices_found, 2)
-        self.assertEqual(results.total_urls_checked, 3)
+        self.assertEqual(results.statistics.out_of_stock, 1)
+        self.assertEqual(results.statistics.prices_found, 2)
+        self.assertEqual(results.statistics.total_urls_checked, 3)
         # Check out_of_stock_items tracking
-        self.assertIn("Product B", results.out_of_stock_items)
-        self.assertEqual(results.out_of_stock_items["Product B"], ["https://example.com/product1"])
+        self.assertIn("Product B", results.statistics.out_of_stock_items)
+        self.assertEqual(results.statistics.out_of_stock_items["Product B"], ["https://example.com/product1"])
 
     @patch("utils.price_collection.is_out_of_stock")
     @patch("utils.price_collection.extract_price")
@@ -124,11 +124,11 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIsNone(results.prices["Product C"])
 
         # Check summary statistics
-        self.assertEqual(results.extraction_errors, 2)
+        self.assertEqual(results.statistics.extraction_errors, 2)
         # Check failed_urls tracking
-        self.assertEqual(len(results.failed_urls), 2)
-        self.assertIn("https://example.com/product1", results.failed_urls)
-        self.assertIn("https://example.com/product2", results.failed_urls)
+        self.assertEqual(len(results.statistics.failed_urls), 2)
+        self.assertIn("https://example.com/product1", results.statistics.failed_urls)
+        self.assertIn("https://example.com/product2", results.statistics.failed_urls)
 
     @patch("utils.price_collection.is_out_of_stock")
     @patch("utils.price_collection.extract_price")
@@ -154,7 +154,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIsNone(results.prices["Product D"])
 
         # Check summary statistics
-        self.assertEqual(results.out_of_stock, 2)
+        self.assertEqual(results.statistics.out_of_stock, 2)
 
     def test_handles_fetch_failure(self):
         """Test handles fetch_page returning None."""
@@ -170,10 +170,10 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIsNone(results.prices["Product E"])
 
         # Check summary statistics
-        self.assertEqual(results.fetch_errors, 1)
+        self.assertEqual(results.statistics.fetch_errors, 1)
         # Check failed_urls tracking
-        self.assertEqual(len(results.failed_urls), 1)
-        self.assertIn("https://example.com/product1", results.failed_urls)
+        self.assertEqual(len(results.statistics.failed_urls), 1)
+        self.assertIn("https://example.com/product1", results.statistics.failed_urls)
 
     @patch("utils.price_collection.is_out_of_stock")
     @patch("utils.price_collection.extract_price")
@@ -212,8 +212,8 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(result_b.url, "https://example.com/b1")
 
         # Check summary statistics
-        self.assertEqual(results.total_products, 2)
-        self.assertEqual(results.prices_found, 3)
+        self.assertEqual(results.statistics.total_products, 2)
+        self.assertEqual(results.statistics.prices_found, 3)
 
     def test_handles_empty_products(self):
         """Test handles empty products dictionary."""
@@ -225,7 +225,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         results = find_cheapest_prices(products, mock_client)
 
         self.assertEqual(results.prices, {})
-        self.assertEqual(results.total_products, 0)
+        self.assertEqual(results.statistics.total_products, 0)
 
 
 class TestSearchResults(unittest.TestCase):
@@ -282,8 +282,8 @@ class TestSearchResults(unittest.TestCase):
     def test_format_success_line_no_urls(self):
         """Test success line when no URLs were checked."""
         results = SearchResults()
-        results.total_products = 5
-        results.total_urls_checked = 0
+        results.statistics.total_products = 5
+        results.statistics.total_urls_checked = 0
         formatter = SearchResultsFormatter(results)
 
         line = formatter._format_success_line(markdown=True)
@@ -292,9 +292,9 @@ class TestSearchResults(unittest.TestCase):
     def test_format_success_line_with_urls(self):
         """Test success line with URLs checked."""
         results = SearchResults()
-        results.total_products = 3
-        results.total_urls_checked = 10
-        results.prices_found = 8
+        results.statistics.total_products = 3
+        results.statistics.total_urls_checked = 10
+        results.statistics.prices_found = 8
         formatter = SearchResultsFormatter(results)
 
         line = formatter._format_success_line(markdown=True)
@@ -313,7 +313,7 @@ class TestSearchResults(unittest.TestCase):
     def test_format_issues_line_single_issue(self):
         """Test issues line with single issue type."""
         results = SearchResults()
-        results.out_of_stock = 3
+        results.statistics.out_of_stock = 3
         formatter = SearchResultsFormatter(results)
 
         line = formatter._format_issues_line(markdown=True)
@@ -325,9 +325,9 @@ class TestSearchResults(unittest.TestCase):
     def test_format_issues_line_multiple_issues(self):
         """Test issues line with multiple issue types."""
         results = SearchResults()
-        results.out_of_stock = 2
-        results.fetch_errors = 1
-        results.extraction_errors = 3
+        results.statistics.out_of_stock = 2
+        results.statistics.fetch_errors = 1
+        results.statistics.extraction_errors = 3
         formatter = SearchResultsFormatter(results)
 
         line = formatter._format_issues_line(markdown=True)
@@ -340,8 +340,8 @@ class TestSearchResults(unittest.TestCase):
     def test_format_issues_line_singular_forms(self):
         """Test issues line uses singular forms when count is 1."""
         results = SearchResults()
-        results.fetch_errors = 1
-        results.extraction_errors = 1
+        results.statistics.fetch_errors = 1
+        results.statistics.extraction_errors = 1
 
         formatter = SearchResultsFormatter(results)
         line = formatter._format_issues_line(markdown=True)
@@ -364,7 +364,9 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_single_product(self, mock_stdout):
         """Test printing out-of-stock items for single product."""
         results = SearchResults()
-        results.out_of_stock_items = {"Product A": ["https://www.example.com/product1", "https://store.com/item"]}
+        results.statistics.out_of_stock_items = {
+            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
+        }
 
         formatter = SearchResultsFormatter(results)
         formatter._print_out_of_stock_items(markdown=True)
@@ -379,7 +381,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_multiple_products(self, mock_stdout):
         """Test printing out-of-stock items for multiple products."""
         results = SearchResults()
-        results.out_of_stock_items = {
+        results.statistics.out_of_stock_items = {
             "Product A": ["https://example.com/a"],
             "Product B": ["https://store.com/b", "https://shop.com/b"],
         }
@@ -398,7 +400,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_with_malformed_urls(self, mock_stdout):
         """Test printing out-of-stock items handles malformed URLs gracefully."""
         results = SearchResults()
-        results.out_of_stock_items = {
+        results.statistics.out_of_stock_items = {
             "Product A": [
                 "https://example.com/product",
                 "/relative/path",
@@ -431,7 +433,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_few(self, mock_stdout):
         """Test printing failed URLs when 3 or fewer."""
         results = SearchResults()
-        results.failed_urls = ["https://example.com/1", "https://example.com/2"]
+        results.statistics.failed_urls = ["https://example.com/1", "https://example.com/2"]
 
         formatter = SearchResultsFormatter(results)
         formatter._print_failed_urls(markdown=True)
@@ -446,7 +448,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_many(self, mock_stdout):
         """Test printing failed URLs with truncation (>3)."""
         results = SearchResults()
-        results.failed_urls = [
+        results.statistics.failed_urls = [
             "https://example.com/1",
             "https://example.com/2",
             "https://example.com/3",
@@ -470,9 +472,9 @@ class TestSearchResults(unittest.TestCase):
     def test_print_summary_minimal(self, mock_stdout):
         """Test print_summary with minimal data (uses singular forms)."""
         results = SearchResults()
-        results.total_products = 1
-        results.total_urls_checked = 1
-        results.prices_found = 1
+        results.statistics.total_products = 1
+        results.statistics.total_urls_checked = 1
+        results.statistics.prices_found = 1
 
         results.print_summary(markdown=True)
 
@@ -489,15 +491,15 @@ class TestSearchResults(unittest.TestCase):
     def test_print_summary_with_issues(self, mock_stdout):
         """Test print_summary with various issues."""
         results = SearchResults()
-        results.total_products = 5
-        results.total_urls_checked = 15
-        results.prices_found = 10
-        results.out_of_stock = 2
-        results.fetch_errors = 1
-        results.extraction_errors = 2
-        results.out_of_stock_items = {"Product A": ["https://example.com/a"]}
+        results.statistics.total_products = 5
+        results.statistics.total_urls_checked = 15
+        results.statistics.prices_found = 10
+        results.statistics.out_of_stock = 2
+        results.statistics.fetch_errors = 1
+        results.statistics.extraction_errors = 2
+        results.statistics.out_of_stock_items = {"Product A": ["https://example.com/a"]}
         # failed_urls should match fetch_errors + extraction_errors = 1 + 2 = 3
-        results.failed_urls = [
+        results.statistics.failed_urls = [
             "https://example.com/failed1",
             "https://example.com/failed2",
             "https://example.com/failed3",
@@ -523,8 +525,8 @@ class TestSearchResults(unittest.TestCase):
     def test_format_success_line_text_no_urls(self):
         """Test success line in text format when no URLs were checked."""
         results = SearchResults()
-        results.total_products = 5
-        results.total_urls_checked = 0
+        results.statistics.total_products = 5
+        results.statistics.total_urls_checked = 0
 
         formatter = SearchResultsFormatter(results)
         line = formatter._format_success_line(markdown=False)
@@ -535,9 +537,9 @@ class TestSearchResults(unittest.TestCase):
     def test_format_success_line_text_with_urls(self):
         """Test success line in text format with URLs checked."""
         results = SearchResults()
-        results.total_products = 3
-        results.total_urls_checked = 10
-        results.prices_found = 8
+        results.statistics.total_products = 3
+        results.statistics.total_urls_checked = 10
+        results.statistics.prices_found = 8
 
         formatter = SearchResultsFormatter(results)
         line = formatter._format_success_line(markdown=False)
@@ -551,9 +553,9 @@ class TestSearchResults(unittest.TestCase):
     def test_format_issues_line_text_multiple_issues(self):
         """Test issues line in text format with multiple issue types."""
         results = SearchResults()
-        results.out_of_stock = 2
-        results.fetch_errors = 1
-        results.extraction_errors = 3
+        results.statistics.out_of_stock = 2
+        results.statistics.fetch_errors = 1
+        results.statistics.extraction_errors = 3
 
         formatter = SearchResultsFormatter(results)
         line = formatter._format_issues_line(markdown=False)
@@ -569,7 +571,9 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_text_single_product(self, mock_stdout):
         """Test printing out-of-stock items in text format."""
         results = SearchResults()
-        results.out_of_stock_items = {"Product A": ["https://www.example.com/product1", "https://store.com/item"]}
+        results.statistics.out_of_stock_items = {
+            "Product A": ["https://www.example.com/product1", "https://store.com/item"]
+        }
 
         formatter = SearchResultsFormatter(results)
         formatter._print_out_of_stock_items(markdown=False)
@@ -588,7 +592,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_out_of_stock_items_text_multiple_products(self, mock_stdout):
         """Test printing out-of-stock items in text format for multiple products."""
         results = SearchResults()
-        results.out_of_stock_items = {
+        results.statistics.out_of_stock_items = {
             "Product A": ["https://example.com/a"],
             "Product B": ["https://store.com/b", "https://shop.com/b"],
         }
@@ -612,7 +616,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_text_few(self, mock_stdout):
         """Test printing failed URLs in text format when 3 or fewer."""
         results = SearchResults()
-        results.failed_urls = ["https://example.com/1", "https://example.com/2"]
+        results.statistics.failed_urls = ["https://example.com/1", "https://example.com/2"]
 
         formatter = SearchResultsFormatter(results)
         formatter._print_failed_urls(markdown=False)
@@ -632,7 +636,7 @@ class TestSearchResults(unittest.TestCase):
     def test_print_failed_urls_text_many(self, mock_stdout):
         """Test printing failed URLs in text format with truncation (>3)."""
         results = SearchResults()
-        results.failed_urls = [
+        results.statistics.failed_urls = [
             "https://example.com/1",
             "https://example.com/2",
             "https://example.com/3",
@@ -660,9 +664,9 @@ class TestSearchResults(unittest.TestCase):
     def test_print_summary_text_minimal(self, mock_stdout):
         """Test print_summary in text format with minimal data."""
         results = SearchResults()
-        results.total_products = 1
-        results.total_urls_checked = 1
-        results.prices_found = 1
+        results.statistics.total_products = 1
+        results.statistics.total_urls_checked = 1
+        results.statistics.prices_found = 1
 
         results.print_summary(markdown=False)
 
@@ -682,14 +686,14 @@ class TestSearchResults(unittest.TestCase):
     def test_print_summary_text_with_issues(self, mock_stdout):
         """Test print_summary in text format with various issues."""
         results = SearchResults()
-        results.total_products = 5
-        results.total_urls_checked = 15
-        results.prices_found = 10
-        results.out_of_stock = 2
-        results.fetch_errors = 1
-        results.extraction_errors = 2
-        results.out_of_stock_items = {"Product A": ["https://example.com/a"]}
-        results.failed_urls = [
+        results.statistics.total_products = 5
+        results.statistics.total_urls_checked = 15
+        results.statistics.prices_found = 10
+        results.statistics.out_of_stock = 2
+        results.statistics.fetch_errors = 1
+        results.statistics.extraction_errors = 2
+        results.statistics.out_of_stock_items = {"Product A": ["https://example.com/a"]}
+        results.statistics.failed_urls = [
             "https://example.com/failed1",
             "https://example.com/failed2",
             "https://example.com/failed3",

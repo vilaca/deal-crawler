@@ -87,13 +87,13 @@ class TestHttpClient(unittest.TestCase):
 
     def test_get_delay_for_notino_url(self):
         """Test delay calculation for notino.pt URLs."""
-        delay = self.client._get_delay_for_url("https://www.notino.pt/product")
+        delay = self.client.rate_limiter.get_delay_for_url("https://www.notino.pt/product")
         self.assertGreaterEqual(delay, config.notino_delay_min)
         self.assertLessEqual(delay, config.notino_delay_max)
 
     def test_get_delay_for_regular_url(self):
         """Test delay calculation for regular URLs."""
-        delay = self.client._get_delay_for_url("https://example.com/product")
+        delay = self.client.rate_limiter.get_delay_for_url("https://example.com/product")
         self.assertGreaterEqual(delay, config.default_delay_min)
         self.assertLessEqual(delay, config.default_delay_max)
 

@@ -12,70 +12,85 @@ from .product_info import ProductInfo, calculate_price_per_100ml, parse_product_
 from .stock_checker import is_out_of_stock
 
 
-def _create_progress_bar(
-    total_urls: int, progress_desc: str, show_progress: bool
-) -> Optional[tqdm]:  # type: ignore[type-arg]
-    """Create and initialize progress bar for URL tracking.
+class ProgressBarManager:
+    """Manages progress bar state and updates for price collection.
 
-    Args:
-        total_urls: Total number of URLs to process
-        progress_desc: Description text for the progress bar
-        show_progress: If True, create progress bar; otherwise return None
-
-    Returns:
-        tqdm progress bar instance or None if show_progress is False
+    Encapsulates progress bar creation, updates, and finalization logic
+    to avoid passing progress bar instance around as a parameter.
     """
-    if show_progress:
-        return tqdm(total=total_urls, desc=progress_desc, unit=" URL", file=sys.stderr, colour="green")
-    return None
 
+    def __init__(self, total_urls: int, description: str, enabled: bool):
+        """Initialize progress bar manager.
 
-def _update_progress_bar_product_info(
-    pbar: Optional[tqdm], product_count: int, total_products: int, product_name: str  # type: ignore[type-arg]
-) -> None:
-    """Update progress bar with current product information.
+        Args:
+            total_urls: Total number of URLs to process
+            description: Description text for the progress bar
+            enabled: If True, create progress bar; otherwise no-op
+        """
+        self.total_urls = total_urls
+        self.pbar: Optional[tqdm] = None  # type: ignore[type-arg]
+        self.base_desc = description  # Store base description
 
-    Args:
-        pbar: tqdm progress bar instance (or None)
-        product_count: Current product number (1-based)
-        total_products: Total number of products
-        product_name: Name of current product being processed
-    """
-    if pbar:
-        pbar.set_postfix_str(f"[{product_count}/{total_products} products] {product_name[:40]:<40}")
+        if enabled:
+            self.pbar = tqdm(
+                total=total_urls,
+                desc=description,
+                unit="URL",
+                file=sys.stderr,
+                colour="green",
+                # Use {desc} which we'll update to include product info
+                bar_format="{desc}|{percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt}|{elapsed}->{remaining}|{rate_fmt}",
+            )
 
+    def update_product_info(self, product_count: int, total_products: int, product_name: str) -> None:
+        """Update progress bar with current product information.
 
-def _update_progress_bar_on_error(pbar: Optional[tqdm]) -> None:  # type: ignore[type-arg]
-    """Update progress bar and flash red color on error.
+        Args:
+            product_count: Current product number (1-based)
+            total_products: Total number of products
+            product_name: Name of current product being processed
+        """
+        if self.pbar:
+            # Update bar_format to include product info at the end
+            product_suffix = f"|{product_count}/{total_products} products|{product_name[:40]:<40}"
+            self.pbar.bar_format = (
+                "{desc}|{percentage:3.0f}%|{bar}|{n_fmt}/{total_fmt}|{elapsed}->{remaining}|{rate_fmt}" + product_suffix
+            )
+            self.pbar.refresh()
 
-    Args:
-        pbar: tqdm progress bar instance (or None)
-    """
-    if pbar:
-        pbar.colour = "red"
-        pbar.update(1)
-        pbar.colour = "green"
+    def update_on_error(self) -> None:
+        """Update progress bar and flash red color on error."""
+        if self.pbar:
+            self.pbar.colour = "red"
+            self.pbar.update(1)
+            self.pbar.colour = "green"
 
+    def update(self, n: int = 1) -> None:
+        """Update progress by n steps.
 
-def _finalize_progress_bar(pbar: Optional[tqdm], prices_found: int, total_urls: int) -> None:  # type: ignore[type-arg]
-    """Set final color based on results and close progress bar.
+        Args:
+            n: Number of steps to increment (default: 1)
+        """
+        if self.pbar:
+            self.pbar.update(n)
 
-    Args:
-        pbar: tqdm progress bar instance (or None)
-        prices_found: Number of successful price extractions
-        total_urls: Total number of URLs processed
-    """
-    if pbar:
-        if prices_found == total_urls:
-            # All URLs successful - green
-            pbar.colour = "green"
-        elif prices_found == 0:
-            # All URLs failed - red
-            pbar.colour = "red"
-        else:
-            # Some issues - yellow
-            pbar.colour = "yellow"
-        pbar.close()
+    def finalize(self, prices_found: int) -> None:
+        """Set final color based on results and close progress bar.
+
+        Args:
+            prices_found: Number of successful price extractions
+        """
+        if self.pbar:
+            if prices_found == self.total_urls:
+                # All URLs successful - green
+                self.pbar.colour = "green"
+            elif prices_found == 0:
+                # All URLs failed - red
+                self.pbar.colour = "red"
+            else:
+                # Some issues - yellow
+                self.pbar.colour = "yellow"
+            self.pbar.close()
 
 
 def _process_single_url(
@@ -83,7 +98,7 @@ def _process_single_url(
     product_info: ProductInfo,
     http_client: HttpClient,
     verbose: bool,
-    pbar: Optional[tqdm],  # type: ignore[type-arg]
+    progress: ProgressBarManager,
 ) -> PriceProcessingResult:
     """Process a single URL and return price result.
 
@@ -92,7 +107,7 @@ def _process_single_url(
         product_info: Parsed product information
         http_client: HttpClient instance
         verbose: If True, print detailed messages
-        pbar: tqdm progress bar instance (or None)
+        progress: Progress bar manager for tracking progress
 
     Returns:
         PriceProcessingResult with price and status information
@@ -105,14 +120,14 @@ def _process_single_url(
     if not soup:
         if verbose:
             print("    Could not fetch page", file=sys.stderr)
-        _update_progress_bar_on_error(pbar)
+        progress.update_on_error()
         return PriceProcessingResult(price_result=None, fetch_error=True)
 
     # Check stock status first
     if is_out_of_stock(soup):
         if verbose:
             print("    Out of stock - skipping", file=sys.stderr)
-        _update_progress_bar_on_error(pbar)
+        progress.update_on_error()
         return PriceProcessingResult(price_result=None, out_of_stock=True)
 
     price = extract_price(soup, url, http_client.config)
@@ -120,7 +135,7 @@ def _process_single_url(
     if not price:
         if verbose:
             print("    Could not find price", file=sys.stderr)
-        _update_progress_bar_on_error(pbar)
+        progress.update_on_error()
         http_client.remove_from_cache(url)
         return PriceProcessingResult(price_result=None, extraction_error=True)
 
@@ -134,8 +149,7 @@ def _process_single_url(
         if verbose:
             print(f"    Found price: €{price:.2f}", file=sys.stderr)
 
-    if pbar:
-        pbar.update(1)
+    progress.update()
 
     price_result = PriceResult(price=price, url=url, price_per_100ml=price_per_100ml)
     return PriceProcessingResult(price_result=price_result)
@@ -148,7 +162,7 @@ def _process_url_list_for_product(
     http_client: HttpClient,
     *,
     verbose: bool,
-    pbar: Optional[tqdm],
+    progress: ProgressBarManager,
     results: SearchResults,
 ) -> List[PriceResult]:
     """Process all URLs for a single product, updating results.
@@ -159,7 +173,7 @@ def _process_url_list_for_product(
         product_info: Parsed product information
         http_client: HttpClient instance for fetching pages
         verbose: If True, print detailed progress messages
-        pbar: Progress bar instance (or None)
+        progress: Progress bar manager for tracking progress
         results: SearchResults object to update with statistics
 
     Returns:
@@ -168,25 +182,25 @@ def _process_url_list_for_product(
     prices = []
 
     for url in urls:
-        results.total_urls_checked += 1
+        results.statistics.total_urls_checked += 1
 
         # Process URL and get result
-        result = _process_single_url(url, product_info, http_client, verbose, pbar)
+        result = _process_single_url(url, product_info, http_client, verbose, progress)
 
         # Update statistics based on result
         if result.fetch_error:
-            results.fetch_errors += 1
-            results.failed_urls.append(url)
+            results.statistics.fetch_errors += 1
+            results.statistics.failed_urls.append(url)
         elif result.out_of_stock:
-            results.out_of_stock += 1
-            results.out_of_stock_items.setdefault(product_name, []).append(url)
+            results.statistics.out_of_stock += 1
+            results.statistics.out_of_stock_items.setdefault(product_name, []).append(url)
         elif result.extraction_error:
-            results.extraction_errors += 1
-            results.failed_urls.append(url)
+            results.statistics.extraction_errors += 1
+            results.statistics.failed_urls.append(url)
         elif result.is_success and result.price_result:
             # Success - add price result
             prices.append(result.price_result)
-            results.prices_found += 1
+            results.statistics.prices_found += 1
 
     return prices
 
@@ -216,18 +230,18 @@ def collect_prices_for_products(
     """
     all_prices: Dict[str, List[PriceResult]] = {}
     results = SearchResults()
-    results.total_products = len(products)
+    results.statistics.total_products = len(products)
 
-    # Calculate total URLs and create progress bar
+    # Calculate total URLs and create progress bar manager
     total_urls = sum(len(urls) for urls in products.values())
-    pbar = _create_progress_bar(total_urls, progress_desc, show_progress)
+    progress = ProgressBarManager(total_urls, progress_desc, show_progress)
 
     product_count = 0
     for product_name, urls in products.items():
         product_count += 1
 
         # Update progress bar with current product info
-        _update_progress_bar_product_info(pbar, product_count, results.total_products, product_name)
+        progress.update_product_info(product_count, results.statistics.total_products, product_name)
 
         if verbose:
             print(f"\nChecking prices for {product_name}...", file=sys.stderr)
@@ -237,12 +251,12 @@ def collect_prices_for_products(
 
         # Process all URLs for this product
         prices = _process_url_list_for_product(
-            product_name, urls, product_info, http_client, verbose=verbose, pbar=pbar, results=results
+            product_name, urls, product_info, http_client, verbose=verbose, progress=progress, results=results
         )
 
         all_prices[product_name] = prices
 
     # Finalize progress bar with appropriate color
-    _finalize_progress_bar(pbar, results.prices_found, total_urls)
+    progress.finalize(results.statistics.prices_found)
 
     return all_prices, results
