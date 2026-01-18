@@ -20,7 +20,7 @@ class TestHttpClient(unittest.TestCase):
         mock_cache.get.return_value = None  # Always cache miss
         mock_cache_class.return_value = mock_cache
 
-        self.client = HttpClient()
+        self.client = HttpClient(config)
         self.mock_cache = mock_cache
 
     def tearDown(self):
@@ -60,7 +60,7 @@ class TestHttpClient(unittest.TestCase):
 
     def test_context_manager(self):
         """Test HttpClient works as context manager."""
-        with HttpClient() as client:
+        with HttpClient(config) as client:
             self.assertIsNotNone(client.session)
         # Session should be closed after exiting context
         # We can't directly test if session is closed, but we can verify
@@ -73,14 +73,14 @@ class TestHttpClient(unittest.TestCase):
         mock_session = MagicMock()
         mock_session_class.return_value = mock_session
 
-        client = HttpClient()
+        client = HttpClient(config)
         client.close()
 
         mock_session.close.assert_called_once()
 
     def test_initialization_with_custom_config(self):
         """Test HttpClient can be initialized with custom configuration."""
-        client = HttpClient(timeout=30, max_retries=5)
+        client = HttpClient(config, timeout=30, max_retries=5)
         self.assertEqual(client.timeout, 30)
         self.assertEqual(client.max_retries, 5)
         client.close()
@@ -366,7 +366,7 @@ class TestHttpClient(unittest.TestCase):
 
     def test_use_cache_false_disables_caching(self):
         """Test that use_cache=False disables cache."""
-        client = HttpClient(use_cache=False)
+        client = HttpClient(config, use_cache=False)
 
         # Cache should be None when disabled
         self.assertIsNone(client.cache)
@@ -380,7 +380,7 @@ class TestHttpClient(unittest.TestCase):
         """Test that use_cache=False bypasses cache read."""
         # Create client with caching disabled
         with patch("utils.http_client.HttpCache"):
-            client = HttpClient(use_cache=False)
+            client = HttpClient(config, use_cache=False)
 
         # Mock successful response
         mock_response = Mock()
@@ -408,7 +408,7 @@ class TestHttpClient(unittest.TestCase):
         """Test that use_cache=False bypasses cache write."""
         # Create client with caching disabled
         with patch("utils.http_client.HttpCache"):
-            client = HttpClient(use_cache=False)
+            client = HttpClient(config, use_cache=False)
 
         # Mock successful response
         mock_response = Mock()
@@ -436,7 +436,7 @@ class TestHttpClient(unittest.TestCase):
         mock_cache = MagicMock()
         mock_cache_class.return_value = mock_cache
 
-        client = HttpClient(cache_duration=7200)
+        client = HttpClient(config, cache_duration=7200)
 
         # Verify HttpCache was initialized with custom cache_duration
         mock_cache_class.assert_called_once_with(config.cache_file, 7200)
@@ -448,7 +448,7 @@ class TestHttpClient(unittest.TestCase):
         mock_cache = MagicMock()
         mock_cache_class.return_value = mock_cache
 
-        client = HttpClient(cache_file="custom_cache.json")
+        client = HttpClient(config, cache_file="custom_cache.json")
 
         # Verify HttpCache was initialized with custom cache_file
         mock_cache_class.assert_called_once_with("custom_cache.json", config.cache_duration)
@@ -460,7 +460,7 @@ class TestHttpClient(unittest.TestCase):
         mock_cache = MagicMock()
         mock_cache_class.return_value = mock_cache
 
-        client = HttpClient(cache_duration=7200, cache_file="custom_cache.json")
+        client = HttpClient(config, cache_duration=7200, cache_file="custom_cache.json")
 
         # Verify HttpCache was initialized with both custom parameters
         mock_cache_class.assert_called_once_with("custom_cache.json", 7200)
@@ -472,7 +472,7 @@ class TestHttpClient(unittest.TestCase):
         mock_cache = MagicMock()
         mock_cache_class.return_value = mock_cache
 
-        client = HttpClient()
+        client = HttpClient(config)
 
         # Verify HttpCache was initialized with default cache_duration from config
         mock_cache_class.assert_called_once_with(config.cache_file, config.cache_duration)

@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Optional
 
-from .finder import PriceResult, SearchResults
+from .price_models import PriceResult, SearchResults
 from .optimizer import OptimizedPlan
 from .shipping import ShippingConfig, NO_FREE_SHIPPING_THRESHOLD
 from .string_utils import pluralize

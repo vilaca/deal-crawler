@@ -3,7 +3,7 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from .finder import SearchResults
+from .price_models import SearchResults
 from .optimizer import OptimizedPlan
 from .shipping import ShippingConfig, NO_FREE_SHIPPING_THRESHOLD
 from .string_utils import pluralize

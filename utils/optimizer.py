@@ -7,7 +7,8 @@ from typing import Any, Dict, List
 
 import pulp  # type: ignore[import-untyped]
 
-from .finder import PriceResult, extract_base_product_name
+from .finder import extract_base_product_name
+from .price_models import PriceResult
 from .shipping import ShippingConfig
 from .url_utils import extract_domain
 

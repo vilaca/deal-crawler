@@ -16,7 +16,7 @@ from typing import Dict, Optional
 
 from bs4 import BeautifulSoup
 
-from .config import config
+from .config import Config
 
 
 class SiteHandler(ABC):
@@ -27,6 +27,14 @@ class SiteHandler(ABC):
     - HTTP headers (anti-bot detection)
     - Price extraction (site-specific HTML structure)
     """
+
+    def __init__(self, config: Config) -> None:
+        """Initialize handler with configuration.
+
+        Args:
+            config: Configuration instance (required)
+        """
+        self.config = config
 
     @abstractmethod
     def get_domain_pattern(self) -> str:
@@ -119,7 +127,7 @@ class NotinoHandler(SiteHandler):
                     for price_str in price_matches:
                         price = float(price_str)
                         # Validate price is in acceptable range
-                        if config.min_price < price < config.max_price:
+                        if self.config.min_price < price < self.config.max_price:
                             return price
 
                 except ValueError:
@@ -156,7 +164,7 @@ class FarmacentralHandler(SiteHandler):
         Returns:
             True if price is valid, False otherwise
         """
-        return config.min_price < price < config.max_price
+        return self.config.min_price < price < self.config.max_price
 
     def _extract_from_nuxt_script(self, script_content: str) -> Optional[float]:
         """Extract price from Nuxt.js script content.
@@ -238,64 +246,65 @@ class DefaultSiteHandler(SiteHandler):
 
 
 class SiteHandlerRegistry:
-    """Registry for managing site handlers.
+    """Registry for managing site handler classes.
 
-    Handlers are checked in order of registration. The first handler
-    whose domain pattern matches the URL is used.
+    Handler classes are registered, and instances are created on demand
+    with the provided configuration.
     """
 
     def __init__(self) -> None:
-        """Initialize registry with empty handler list."""
-        self._handlers: list[SiteHandler] = []
-        self._default_handler: SiteHandler = DefaultSiteHandler()
+        """Initialize registry with empty handler class list."""
+        self._handler_classes: list[type[SiteHandler]] = []
+        self._default_handler_class: type[SiteHandler] = DefaultSiteHandler
 
-    def register(self, handler: SiteHandler) -> None:
-        """Register a site handler.
+    def register(self, handler_class: type[SiteHandler]) -> None:
+        """Register a site handler class.
 
         Args:
-            handler: SiteHandler instance to register
+            handler_class: SiteHandler class to register
         """
-        self._handlers.append(handler)
+        self._handler_classes.append(handler_class)
 
-    def get_handler(self, url: str) -> SiteHandler:
-        """Get appropriate handler for the given URL.
+    def get_handler(self, url: str, config: Config) -> SiteHandler:
+        """Get appropriate handler instance for the given URL.
 
         Args:
             url: URL to get handler for
+            config: Configuration instance (required)
 
         Returns:
-            Matching SiteHandler, or DefaultSiteHandler if no match
+            Matching SiteHandler instance, or DefaultSiteHandler if no match
         """
-        for handler in self._handlers:
-            pattern = handler.get_domain_pattern()
+        # Check registered handlers for match
+        for handler_class in self._handler_classes:
+            # Create temporary instance to check pattern
+            temp_handler = handler_class(config)
+            pattern = temp_handler.get_domain_pattern()
             if pattern != "*" and pattern in url:
-                return handler
+                return temp_handler
 
-        return self._default_handler
+        # Return default handler
+        return self._default_handler_class(config)
 
 
-# Global registry - register all site handlers here
+# Global registry - register all site handler classes here
 _registry = SiteHandlerRegistry()
-_registry.register(NotinoHandler())
-_registry.register(FarmacentralHandler())
+_registry.register(NotinoHandler)
+_registry.register(FarmacentralHandler)
 
 # Add more site handlers here as needed:
-# _registry.register(AmazonHandler())
-# _registry.register(EbayHandler())
+# _registry.register(AmazonHandler)
+# _registry.register(EbayHandler)
 
 
-def get_site_handler(url: str) -> SiteHandler:
-    """Get handler for the given URL.
+def get_site_handler(url: str, config: Config) -> SiteHandler:
+    """Get handler instance for the given URL.
 
     Args:
         url: URL to get handler for
+        config: Configuration instance (required)
 
     Returns:
         Appropriate SiteHandler instance
-
-    Example:
-        >>> handler = get_site_handler("https://www.notino.pt/product")
-        >>> isinstance(handler, NotinoHandler)
-        True
     """
-    return _registry.get_handler(url)
+    return _registry.get_handler(url, config)

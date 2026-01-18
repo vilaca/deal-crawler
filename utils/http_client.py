@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
-from .config import config
+from .config import Config
 from .http_cache import HttpCache
 from .site_handlers import get_site_handler
 
@@ -26,6 +26,7 @@ class HttpClient:
 
     def __init__(
         self,
+        config: Config,
         *,
         timeout: Optional[int] = None,
         max_retries: Optional[int] = None,
@@ -37,6 +38,7 @@ class HttpClient:
         """Initialize HTTP client with configuration.
 
         Args:
+            config: Configuration instance (required)
             timeout: Request timeout in seconds (uses config default if None)
             max_retries: Maximum number of retry attempts (uses config default if None)
             use_cache: Whether to use HTTP response cache (default: True)
@@ -44,15 +46,16 @@ class HttpClient:
             cache_file: Cache file path (uses config default if None)
             verbose: Whether to show verbose messages (default: False)
         """
-        self.timeout = timeout if timeout is not None else config.request_timeout
-        self.max_retries = max_retries if max_retries is not None else config.max_retries
+        self.config = config
+        self.timeout = timeout if timeout is not None else self.config.request_timeout
+        self.max_retries = max_retries if max_retries is not None else self.config.max_retries
         self.use_cache = use_cache
         self.verbose = verbose
         self.session = requests.Session()
 
         # Use provided cache settings or fall back to config defaults
-        _cache_duration = cache_duration if cache_duration is not None else config.cache_duration
-        _cache_file = cache_file if cache_file is not None else config.cache_file
+        _cache_duration = cache_duration if cache_duration is not None else self.config.cache_duration
+        _cache_file = cache_file if cache_file is not None else self.config.cache_file
         self.cache = HttpCache(_cache_file, _cache_duration) if use_cache else None
 
     def __enter__(self) -> Self:
@@ -91,7 +94,7 @@ class HttpClient:
         Returns:
             Delay time in seconds
         """
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         min_delay, max_delay = handler.get_delay_range()
         return random.uniform(min_delay, max_delay)
 
@@ -130,7 +133,7 @@ class HttpClient:
         }
 
         # Get site-specific headers and merge
-        handler = get_site_handler(url)
+        handler = get_site_handler(url, self.config)
         custom_headers = handler.get_custom_headers(domain)
         base_headers.update(custom_headers)
 
@@ -210,7 +213,7 @@ class HttpClient:
             attempt: Current attempt number (0-indexed)
             max_attempts: Maximum number of attempts
         """
-        wait_time = random.uniform(config.retry_delay_min, config.retry_delay_max)
+        wait_time = random.uniform(self.config.retry_delay_min, self.config.retry_delay_max)
         print(
             f"    {error_message}, waiting {wait_time:.1f}s before retry {attempt + 1}/{max_attempts}...",
             file=sys.stderr,

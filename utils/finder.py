@@ -1,63 +1,11 @@
-"""Main price comparison logic."""
+"""Main price comparison logic and public API."""
 
 import re
-import sys
-from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from tqdm import tqdm
-
 from .http_client import HttpClient
-from .stock_checker import is_out_of_stock
-from .extractors import extract_price
-from .product_info import ProductInfo, calculate_price_per_100ml, parse_product_name
-
-
-@dataclass
-class PriceResult:
-    """Single price result with value calculation."""
-
-    price: float
-    url: str
-    price_per_100ml: Optional[float] = None  # Price per 100ml (for value comparison)
-
-
-@dataclass
-class SearchResults:
-    """Results from price search with summary statistics.
-
-    This class is a pure data container following SRP.
-    For presentation/formatting, use SearchResultsFormatter.
-    """
-
-    # Product name -> PriceResult or None
-    prices: Dict[str, Optional[PriceResult]] = field(default_factory=dict)
-
-    # Summary statistics
-    total_products: int = 0
-    total_urls_checked: int = 0
-    prices_found: int = 0
-    out_of_stock: int = 0
-    fetch_errors: int = 0
-    extraction_errors: int = 0
-
-    # Detailed tracking
-    out_of_stock_items: Dict[str, List[str]] = field(default_factory=dict)  # product -> URLs
-    failed_urls: List[str] = field(default_factory=list)  # URLs that failed (fetch or extraction errors)
-
-    def print_summary(self, markdown: bool = False) -> None:
-        """Print a concise summary of the search results.
-
-        This is a convenience method that delegates to SearchResultsFormatter.
-        Kept for backward compatibility.
-
-        Args:
-            markdown: If True, format for markdown; otherwise format for terminal
-        """
-        from .search_results_formatter import SearchResultsFormatter  # pylint: disable=import-outside-toplevel
-
-        formatter = SearchResultsFormatter(self)
-        formatter.print_summary(markdown=markdown)
+from .price_collection import collect_prices_for_products
+from .price_models import PriceResult, SearchResults
 
 
 def extract_base_product_name(product_name: str) -> str:
@@ -168,213 +116,6 @@ def filter_best_value_sizes(results: SearchResults) -> SearchResults:
     return filtered_results
 
 
-def _create_progress_bar(
-    total_urls: int, progress_desc: str, show_progress: bool
-) -> Optional[tqdm]:  # type: ignore[type-arg]
-    """Create and initialize progress bar for URL tracking.
-
-    Args:
-        total_urls: Total number of URLs to process
-        progress_desc: Description text for the progress bar
-        show_progress: If True, create progress bar; otherwise return None
-
-    Returns:
-        tqdm progress bar instance or None if show_progress is False
-    """
-    if show_progress:
-        return tqdm(total=total_urls, desc=progress_desc, unit=" URL", file=sys.stderr, colour="green")
-    return None
-
-
-def _update_progress_bar_product_info(
-    pbar: Optional[tqdm], product_count: int, total_products: int, product_name: str  # type: ignore[type-arg]
-) -> None:
-    """Update progress bar with current product information.
-
-    Args:
-        pbar: tqdm progress bar instance (or None)
-        product_count: Current product number (1-based)
-        total_products: Total number of products
-        product_name: Name of current product being processed
-    """
-    if pbar:
-        pbar.set_postfix_str(f"[{product_count}/{total_products} products] {product_name[:40]:<40}")
-
-
-def _update_progress_bar_on_error(pbar: Optional[tqdm]) -> None:  # type: ignore[type-arg]
-    """Update progress bar and flash red color on error.
-
-    Args:
-        pbar: tqdm progress bar instance (or None)
-    """
-    if pbar:
-        pbar.colour = "red"
-        pbar.update(1)
-        pbar.colour = "green"
-
-
-def _finalize_progress_bar(pbar: Optional[tqdm], prices_found: int, total_urls: int) -> None:  # type: ignore[type-arg]
-    """Set final color based on results and close progress bar.
-
-    Args:
-        pbar: tqdm progress bar instance (or None)
-        prices_found: Number of successful price extractions
-        total_urls: Total number of URLs processed
-    """
-    if pbar:
-        if prices_found == total_urls:
-            # All URLs successful - green
-            pbar.colour = "green"
-        elif prices_found == 0:
-            # All URLs failed - red
-            pbar.colour = "red"
-        else:
-            # Some issues - yellow
-            pbar.colour = "yellow"
-        pbar.close()
-
-
-def _process_single_url(
-    url: str,
-    product_info: ProductInfo,
-    http_client: HttpClient,
-    verbose: bool,
-    pbar: Optional[tqdm],  # type: ignore[type-arg]
-) -> tuple[Optional[PriceResult], dict]:
-    """Process a single URL and return price result.
-
-    Args:
-        url: URL to fetch
-        product_info: Parsed product information
-        http_client: HttpClient instance
-        verbose: If True, print detailed messages
-        pbar: tqdm progress bar instance (or None)
-
-    Returns:
-        Tuple of (PriceResult or None, statistics dict with keys: fetch_error, out_of_stock, extraction_error)
-    """
-    stats = {"fetch_error": False, "out_of_stock": False, "extraction_error": False}
-
-    if verbose:
-        print(f"  Fetching: {url}", file=sys.stderr)
-
-    soup = http_client.fetch_page(url)
-
-    if not soup:
-        if verbose:
-            print("    Could not fetch page", file=sys.stderr)
-        stats["fetch_error"] = True
-        _update_progress_bar_on_error(pbar)
-        return None, stats
-
-    # Check stock status first
-    if is_out_of_stock(soup):
-        if verbose:
-            print("    Out of stock - skipping", file=sys.stderr)
-        stats["out_of_stock"] = True
-        _update_progress_bar_on_error(pbar)
-        return None, stats
-
-    price = extract_price(soup, url)
-
-    if not price:
-        if verbose:
-            print("    Could not find price", file=sys.stderr)
-        stats["extraction_error"] = True
-        _update_progress_bar_on_error(pbar)
-        http_client.remove_from_cache(url)
-        return None, stats
-
-    # Calculate price per 100ml if volume information is available
-    price_per_100ml = None
-    if product_info.total_volume_ml:
-        price_per_100ml = calculate_price_per_100ml(price, product_info.total_volume_ml)
-        if verbose:
-            print(f"    Found price: €{price:.2f} ({price_per_100ml:.2f}/100ml)", file=sys.stderr)
-    else:
-        if verbose:
-            print(f"    Found price: €{price:.2f}", file=sys.stderr)
-
-    if pbar:
-        pbar.update(1)
-
-    return PriceResult(price=price, url=url, price_per_100ml=price_per_100ml), stats
-
-
-def _collect_prices_for_products(
-    products: Dict[str, List[str]],
-    http_client: HttpClient,
-    verbose: bool = True,
-    show_progress: bool = True,
-    progress_desc: str = "Collecting prices",
-) -> tuple[Dict[str, List[PriceResult]], SearchResults]:
-    """Collect all prices for products with detailed statistics tracking.
-
-    This is a private helper function that collects ALL prices for each product
-    and tracks comprehensive statistics. Public functions use this and process
-    the results according to their specific needs.
-
-    Args:
-        products: Dictionary mapping product names to lists of URLs
-        http_client: HttpClient instance for fetching pages
-        verbose: If True, print detailed progress messages
-        show_progress: If True, display progress bar
-        progress_desc: Description for progress bar
-
-    Returns:
-        Tuple of (all_prices_dict, search_results_with_statistics)
-    """
-    all_prices: Dict[str, List[PriceResult]] = {}
-    results = SearchResults()
-    results.total_products = len(products)
-
-    # Calculate total URLs and create progress bar
-    total_urls = sum(len(urls) for urls in products.values())
-    pbar = _create_progress_bar(total_urls, progress_desc, show_progress)
-
-    product_count = 0
-    for product_name, urls in products.items():
-        product_count += 1
-
-        # Update progress bar with current product info
-        _update_progress_bar_product_info(pbar, product_count, results.total_products, product_name)
-
-        if verbose:
-            print(f"\nChecking prices for {product_name}...", file=sys.stderr)
-        prices = []
-
-        # Parse product info once for all URLs of this product
-        product_info = parse_product_name(product_name)
-
-        for url in urls:
-            results.total_urls_checked += 1
-
-            # Process URL and get result
-            price_result, stats = _process_single_url(url, product_info, http_client, verbose, pbar)
-
-            # Update statistics based on result
-            if stats["fetch_error"]:
-                results.fetch_errors += 1
-                results.failed_urls.append(url)
-            elif stats["out_of_stock"]:
-                results.out_of_stock += 1
-                results.out_of_stock_items.setdefault(product_name, []).append(url)
-            elif stats["extraction_error"]:
-                results.extraction_errors += 1
-                results.failed_urls.append(url)
-            elif price_result:
-                # Success - add price result
-                prices.append(price_result)
-                results.prices_found += 1
-
-        all_prices[product_name] = prices
-
-    # Finalize progress bar with appropriate color
-    _finalize_progress_bar(pbar, results.prices_found, total_urls)
-
-    return all_prices, results
-
-
 def find_cheapest_prices(
     products: Dict[str, List[str]],
     http_client: HttpClient,
@@ -392,7 +133,7 @@ def find_cheapest_prices(
     Returns:
         SearchResults object with prices and summary statistics
     """
-    all_prices, results = _collect_prices_for_products(
+    all_prices, results = collect_prices_for_products(
         products, http_client, verbose, show_progress, "Finding best prices"
     )
 
@@ -427,7 +168,24 @@ def find_all_prices(
 
     Returns:
         Dictionary mapping product names to lists of PriceResult objects
-        (one per store with product in stock and valid price)
     """
-    all_prices, _ = _collect_prices_for_products(products, http_client, verbose, show_progress, "Collecting all prices")
+    all_prices, _results = collect_prices_for_products(
+        products, http_client, verbose, show_progress, "Finding all prices"
+    )
+
     return all_prices
+
+
+def group_by_product_family(results: SearchResults) -> Dict[str, Dict[str, Optional[PriceResult]]]:
+    """Group search results by product family (base name without size info).
+
+    Args:
+        results: SearchResults object with prices
+
+    Returns:
+        Dictionary mapping base product names to dictionaries of {product_name: result}
+    """
+    product_families = _group_products_by_base_name(results.prices)
+
+    # Convert list of tuples to dict for each family
+    return {base_name: dict(products_list) for base_name, products_list in product_families.items()}
