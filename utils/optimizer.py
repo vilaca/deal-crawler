@@ -4,12 +4,12 @@ import re
 import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
-from urllib.parse import urlparse
 
 import pulp  # type: ignore[import-untyped]
 
 from .finder import PriceResult, extract_base_product_name
 from .shipping import ShippingConfig
+from .url_utils import extract_domain
 
 # Scale factor for value optimization to make price_per_100ml comparable to shipping costs
 VALUE_OPTIMIZATION_SCALE_FACTOR = 10.0
@@ -52,21 +52,20 @@ class OptimizedPlan:
     total_shipping: float = 0.0
 
 
-def _extract_domain(url: str) -> str:
-    """Extract domain from URL.
+@dataclass
+class ConstraintContext:
+    """Context containing data structures and configuration for MILP constraints.
 
-    Args:
-        url: Full URL
-
-    Returns:
-        Domain (e.g., 'notino.pt')
+    Groups related parameters to reduce parameter list complexity and improve
+    maintainability following the Law of Demeter.
     """
-    parsed = urlparse(url)
-    domain = parsed.netloc
-    # Remove www. prefix if present
-    if domain.startswith("www."):
-        return domain[4:]  # Remove "www."
-    return domain
+
+    products: List[str]
+    stores: List[str]
+    product_families: Dict[str, List[str]]
+    price_options: Dict[tuple[str, str, int], PriceResult]
+    all_prices: Dict[str, List[PriceResult]]
+    shipping_config: ShippingConfig
 
 
 def _build_price_index(
@@ -86,7 +85,7 @@ def _build_price_index(
 
     for product, price_list in all_prices.items():
         for size_idx, price_result in enumerate(price_list):
-            store = _extract_domain(price_result.url)
+            store = extract_domain(price_result.url)
             stores_set.add(store)
             price_options[(product, store, size_idx)] = price_result
 
@@ -171,12 +170,7 @@ def _add_constraints(
     *,
     use_store: Dict[Any, Any],
     free_ship: Dict[Any, Any],
-    products: List[str],
-    stores: List[str],
-    product_families: Dict[str, List[str]],
-    price_options: Dict[tuple[str, str, int], PriceResult],
-    all_prices: Dict[str, List[PriceResult]],
-    shipping_config: ShippingConfig,
+    context: ConstraintContext,
 ) -> None:
     """Add all constraints to MILP problem.
 
@@ -185,39 +179,36 @@ def _add_constraints(
         x: Buy decision variables
         use_store: Store usage variables
         free_ship: Free shipping variables
-        products: List of products
-        stores: List of stores
-        product_families: Product families mapping
-        price_options: Price options mapping
-        all_prices: All prices dictionary
-        shipping_config: Shipping configuration
+        context: Context containing data structures and configuration
     """
     # Constraint 1: Each product family bought exactly once
-    for base_name, family_products in product_families.items():
+    for base_name, family_products in context.product_families.items():
         prob += (
             pulp.lpSum(
                 x.get((product, s, i), 0)
                 for product in family_products
-                for s in stores
-                for i in range(len(all_prices[product]))
-                if (product, s, i) in price_options
+                for s in context.stores
+                for i in range(len(context.all_prices[product]))
+                if (product, s, i) in context.price_options
             )
             == 1,
             f"Buy_{_sanitize_constraint_name(base_name)}_once",
         )
 
     # Constraint 2: Link product selection to store usage
-    for p, s, i in price_options:
+    for p, s, i in context.price_options:
         prob += (
             x[(p, s, i)] <= use_store[s],
             f"Link_{_sanitize_constraint_name(p)}_{_sanitize_constraint_name(s)}_{i}_to_store",
         )
 
     # Constraint 3: Free shipping threshold
-    for store in stores:
-        shipping_info = shipping_config.get_shipping_info(store)
+    for store in context.stores:
+        shipping_info = context.shipping_config.get_shipping_info(store)
         subtotal = pulp.lpSum(
-            price_options[(p, s, i)].price * x.get((p, s, i), 0) for (p, s, i) in price_options if s == store
+            context.price_options[(p, s, i)].price * x.get((p, s, i), 0)
+            for (p, s, i) in context.price_options
+            if s == store
         )
         sanitized_store = _sanitize_constraint_name(store)
         prob += subtotal >= shipping_info.free_over * free_ship[store], f"Free_shipping_threshold_{sanitized_store}"
@@ -309,17 +300,20 @@ def optimize_shopping_plan(
         optimize_for_value=optimize_for_value,
     )
     product_families = _group_product_families(products)
-    _add_constraints(
-        prob,
-        x,
-        use_store=use_store,
-        free_ship=free_ship,
+    context = ConstraintContext(
         products=products,
         stores=stores,
         product_families=product_families,
         price_options=price_options,
         all_prices=all_prices,
         shipping_config=shipping_config,
+    )
+    _add_constraints(
+        prob,
+        x,
+        use_store=use_store,
+        free_ship=free_ship,
+        context=context,
     )
 
     # Solve

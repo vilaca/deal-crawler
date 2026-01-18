@@ -913,12 +913,14 @@ class TestCSVDumpHelpers(unittest.TestCase):
         # Verify file was opened
         mock_open.assert_called_once_with("test.csv", "w", newline="", encoding="utf-8")
 
-        # Verify header was written
+        # Verify header was written (1 call to writerow)
         header_call = mock_writer_instance.writerow.call_args_list[0]
         self.assertEqual(header_call[0][0], ["Product", "Price", "Price per 100ml", "URL"])
 
-        # Verify data rows
-        self.assertEqual(mock_writer_instance.writerow.call_count, 4)  # 1 header + 3 data rows
+        # Verify data rows were written (1 call to writerows with 3 rows)
+        self.assertEqual(mock_writer_instance.writerows.call_count, 1)
+        data_rows = mock_writer_instance.writerows.call_args_list[0][0][0]
+        self.assertEqual(len(data_rows), 3)  # 3 data rows
 
     @patch("builtins.open", create=True)
     @patch("main.csv.writer")
@@ -943,12 +945,14 @@ class TestCSVDumpHelpers(unittest.TestCase):
         # Verify file was opened
         mock_open.assert_called_once_with("plan.csv", "w", newline="", encoding="utf-8")
 
-        # Verify header was written
+        # Verify header was written (1 call to writerow)
         header_call = mock_writer_instance.writerow.call_args_list[0]
         self.assertEqual(header_call[0][0], ["Store", "Product", "Price", "Price per 100ml", "URL"])
 
-        # Verify data rows (2 products)
-        self.assertEqual(mock_writer_instance.writerow.call_count, 3)  # 1 header + 2 data rows
+        # Verify data rows were written (1 call to writerows with 2 rows)
+        self.assertEqual(mock_writer_instance.writerows.call_count, 1)
+        data_rows = mock_writer_instance.writerows.call_args_list[0][0][0]
+        self.assertEqual(len(data_rows), 2)  # 2 data rows
 
 
 if __name__ == "__main__":
