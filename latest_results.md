@@ -7,8 +7,8 @@
 | **Cerave Hydrating Cleanser (2x1000ml)** | €29.99<br>_(€1.50/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €15.88<br>_(€3.36/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
 | **Cerave Micellar Water (2x295ml)** | €15.99<br>_(€2.71/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
-| **Dercos DS** | €18.82 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
-| **LRP Anthelios UVMune 400 SPF50** | _No prices found_ | - |
+| **Dercos DS** | €18.88 | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
+| **LRP Anthelios UVMune 400 SPF50** | €20.02 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-7577494.html) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.67 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 3** | €49.40 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
 | **Medik8 Crystal Retinal 6** | €65.36 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
@@ -26,15 +26,15 @@
 
 ## 📊 Search Summary
 
-**❌ 46/94 URLs** (49% success) · **27 products**
+**⚠️ 47/94 URLs** (50% success) · **27 products**
 
-_📦 7 out of stock · 🌐 20 fetch errors · 🔍 21 extraction errors_
+_📦 6 out of stock · 🌐 20 fetch errors · 🔍 21 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
 - **Cerave Hydrating Cleanser (236ml)**: atida.com
 - **Cerave Hydrating Cleanser (2x236ml)**: atida.com
-- **LRP Anthelios UVMune 400 SPF50**: wells.pt, atida.com
+- **LRP Anthelios UVMune 400 SPF50**: atida.com
 - **Medik8 Duo**: atida.com
 
 **Failed URLs** (41):
