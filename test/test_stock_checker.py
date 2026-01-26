@@ -81,6 +81,33 @@ class TestIsOutOfStock(unittest.TestCase):
         soup = self.create_soup(html)
         self.assertFalse(is_out_of_stock(soup))
 
+    def test_json_ld_out_of_stock(self):
+        """Test JSON-LD OutOfStock availability detection."""
+        html = """
+        <script type="application/ld+json">
+        {"@type":"Product","availability":"https://schema.org/OutOfStock","price":"37.24"}
+        </script>
+        """
+        soup = self.create_soup(html)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_json_ld_mixed_availability_prioritizes_in_stock(self):
+        """Test JSON-LD with both InStock and OutOfStock prioritizes InStock.
+
+        This handles cases where a product page has multiple variants, some in stock
+        and some out of stock. If ANY variant is in stock, the product is available.
+        """
+        html = """
+        <script type="application/ld+json">
+        {"offers":[
+            {"availability":"https://schema.org/InStock","price":"12.04"},
+            {"availability":"https://schema.org/OutOfStock","price":"12.04"}
+        ]}
+        </script>
+        """
+        soup = self.create_soup(html)
+        self.assertFalse(is_out_of_stock(soup))  # Should be in stock
+
     def test_in_stock_class_takes_priority_over_out_of_stock_text(self):
         """Test in-stock indicator takes priority over out-of-stock text.
 

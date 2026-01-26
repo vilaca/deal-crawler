@@ -9,7 +9,7 @@ from .extractors import extract_price
 from .http_client import HttpClient
 from .price_models import PriceResult, PriceProcessingResult, SearchResults
 from .product_info import ProductInfo, calculate_price_per_100ml, parse_product_name
-from .stock_checker import is_out_of_stock
+from .stock_checker import is_out_of_stock_with_url
 
 
 class ProgressBarManager:
@@ -123,11 +123,12 @@ def _process_single_url(
         progress.update_on_error()
         return PriceProcessingResult(price_result=None, fetch_error=True)
 
-    # Check stock status first
-    if is_out_of_stock(soup):
+    # Check stock status first (using site-specific handlers)
+    if is_out_of_stock_with_url(soup, url, http_client.config):
         if verbose:
             print("    Out of stock - skipping", file=sys.stderr)
         progress.update_on_error()
+        http_client.remove_from_cache(url)  # Don't cache out-of-stock pages - stock status can change
         return PriceProcessingResult(price_result=None, out_of_stock=True)
 
     price = extract_price(soup, url, http_client.config)

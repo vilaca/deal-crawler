@@ -25,7 +25,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         """Helper to create a mock HttpClient."""
         return MagicMock()
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_finds_cheapest_among_multiple_urls(self, mock_extract, mock_stock):
         """Test finds cheapest price when multiple URLs have different prices."""
@@ -60,7 +60,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(results.statistics.total_urls_checked, 3)
         self.assertEqual(results.statistics.prices_found, 3)
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_excludes_out_of_stock_products(self, mock_extract, mock_stock):
         """Test excludes out-of-stock products from comparison."""
@@ -99,7 +99,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("Product B", results.statistics.out_of_stock_items)
         self.assertEqual(results.statistics.out_of_stock_items["Product B"], ["https://example.com/product1"])
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_returns_none_when_no_prices_found(self, mock_extract, mock_stock):
         """Test returns None when no prices can be extracted."""
@@ -130,7 +130,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertIn("https://example.com/product1", results.statistics.failed_urls)
         self.assertIn("https://example.com/product2", results.statistics.failed_urls)
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_returns_none_when_all_out_of_stock(self, mock_extract, mock_stock):
         """Test returns None when all products are out of stock."""
@@ -175,7 +175,7 @@ class TestFindCheapestPrices(unittest.TestCase):
         self.assertEqual(len(results.statistics.failed_urls), 1)
         self.assertIn("https://example.com/product1", results.statistics.failed_urls)
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_handles_multiple_products(self, mock_extract, mock_stock):
         """Test handles multiple products correctly."""
@@ -743,7 +743,7 @@ class TestFindAllPrices(unittest.TestCase):
         """
         return MagicMock()
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_returns_all_prices_not_just_cheapest(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test returns ALL prices across stores, not just the cheapest."""
@@ -780,7 +780,7 @@ class TestFindAllPrices(unittest.TestCase):
         self.assertIn("https://store2.com/product", urls)
         self.assertIn("https://store3.com/product", urls)
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_returns_empty_list_when_all_out_of_stock(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test returns empty list when all URLs are out of stock."""
@@ -804,7 +804,7 @@ class TestFindAllPrices(unittest.TestCase):
         self.assertIn("Product B", all_prices)
         self.assertEqual(all_prices["Product B"], [])
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_skips_out_of_stock_includes_in_stock(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test skips out-of-stock items but includes in-stock ones."""
@@ -833,7 +833,7 @@ class TestFindAllPrices(unittest.TestCase):
         self.assertEqual(all_prices["Product C"][0].price, 25.00)
         self.assertEqual(all_prices["Product C"][0].url, "https://store2.com/product")
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_handles_fetch_failures_gracefully(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test handles fetch failures gracefully and continues."""
@@ -865,7 +865,7 @@ class TestFindAllPrices(unittest.TestCase):
         prices = [p.price for p in all_prices["Product D"]]
         self.assertEqual(sorted(prices), [35.00, 40.00])
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_handles_price_extraction_failures(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test handles price extraction failures gracefully."""
@@ -897,7 +897,7 @@ class TestFindAllPrices(unittest.TestCase):
         # Should call remove_from_cache for failed extraction
         mock_client.remove_from_cache.assert_called_once_with("https://store1.com/product")
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_calculates_price_per_100ml_when_volume_available(
         self, mock_extract: MagicMock, mock_stock: MagicMock
@@ -938,7 +938,7 @@ class TestFindAllPrices(unittest.TestCase):
         assert price2.price_per_100ml is not None  # Type narrowing
         self.assertAlmostEqual(price2.price_per_100ml, 5.08, places=2)
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_price_per_100ml_none_when_no_volume_info(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test price_per_100ml is None when product name has no volume info."""
@@ -963,7 +963,7 @@ class TestFindAllPrices(unittest.TestCase):
         self.assertEqual(all_prices["Some Product"][0].price, 20.00)
         self.assertIsNone(all_prices["Some Product"][0].price_per_100ml)
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_works_with_multiple_products(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test correctly processes multiple products."""
@@ -1003,7 +1003,7 @@ class TestFindAllPrices(unittest.TestCase):
         prices_b = [p.price for p in all_prices["Product B (200ml)"]]
         self.assertEqual(sorted(prices_b), [20.00, 22.00])
 
-    @patch("utils.price_collection.is_out_of_stock")
+    @patch("utils.price_collection.is_out_of_stock_with_url")
     @patch("utils.price_collection.extract_price")
     def test_empty_products_returns_empty_dict(self, mock_extract: MagicMock, mock_stock: MagicMock) -> None:
         """Test returns empty dict when given empty products dict."""

@@ -9,6 +9,7 @@ from utils.site_handlers import (
     DefaultSiteHandler,
     FarmacentralHandler,
     NotinoHandler,
+    PerfumeriascoqueteoHandler,
     SiteHandlerRegistry,
     get_site_handler,
 )
@@ -41,6 +42,60 @@ class TestNotinoHandler(unittest.TestCase):
         self.assertEqual(headers["Origin"], "https://www.notino.pt")
         self.assertIn("DNT", headers)
         self.assertIn("sec-ch-ua-arch", headers)
+
+    def test_check_stock_variant_in_stock(self):
+        """Test stock checking for in-stock variant."""
+        html = """
+        <script type="application/ld+json">
+        {"offers":[{"url":"/avene/couvrance/p-11635778/","availability":"https://schema.org/InStock"}]}
+        </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.notino.pt/avene/couvrance/p-11635778/"
+        result = self.handler.check_stock(soup, url)
+        self.assertFalse(result)  # False = in stock
+
+    def test_check_stock_variant_out_of_stock(self):
+        """Test stock checking for out-of-stock variant."""
+        html = """
+        <script type="application/ld+json">
+        {"offers":[{"url":"/avene/couvrance/p-15677363/","availability":"https://schema.org/OutOfStock"}]}
+        </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.notino.pt/avene/couvrance/p-15677363/"
+        result = self.handler.check_stock(soup, url)
+        self.assertTrue(result)  # True = out of stock
+
+    def test_check_stock_mixed_variants(self):
+        """Test stock checking with mixed availability across variants."""
+        html = """
+        <script type="application/ld+json">
+        {"offers":[
+            {"url":"/product/p-11635778/","availability":"https://schema.org/InStock"},
+            {"url":"/product/p-15677363/","availability":"https://schema.org/OutOfStock"}
+        ]}
+        </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+
+        # First variant should be in stock
+        url1 = "https://www.notino.pt/product/p-11635778/"
+        result1 = self.handler.check_stock(soup, url1)
+        self.assertFalse(result1)
+
+        # Second variant should be out of stock
+        url2 = "https://www.notino.pt/product/p-15677363/"
+        result2 = self.handler.check_stock(soup, url2)
+        self.assertTrue(result2)
+
+    def test_check_stock_no_product_id_in_url(self):
+        """Test stock checking returns None if URL doesn't match pattern."""
+        html = "<script>var x = 1;</script>"
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.notino.pt/some-product/"
+        result = self.handler.check_stock(soup, url)
+        self.assertIsNone(result)  # None = use default checking
 
     def test_referer_randomization(self):
         """Test that referer is randomized."""
@@ -251,6 +306,87 @@ class TestFarmacentralHandler(unittest.TestCase):
         soup = BeautifulSoup(html, "lxml")
         price = self.handler.extract_price(soup)
         self.assertEqual(price, 12.34)
+
+
+class TestPerfumeriascoqueteoHandler(unittest.TestCase):
+    """Test Perfumeriascoqueteo site handler."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.config = Config()
+        self.handler = PerfumeriascoqueteoHandler(self.config)
+
+    def test_domain_pattern(self):
+        """Test Perfumeriascoqueteo domain pattern."""
+        self.assertEqual(self.handler.get_domain_pattern(), "perfumeriascoqueteo.com")
+
+    def test_delay_range(self):
+        """Test Perfumeriascoqueteo delay range."""
+        min_delay, max_delay = self.handler.get_delay_range()
+        self.assertEqual(min_delay, 1.0)
+        self.assertEqual(max_delay, 2.0)
+
+    def test_no_custom_headers(self):
+        """Test Perfumeriascoqueteo has no custom headers."""
+        headers = self.handler.get_custom_headers("www.perfumeriascoqueteo.com")
+        self.assertEqual(headers, {})
+
+    def test_extract_price_returns_none(self):
+        """Test extract_price returns None (uses default extraction)."""
+        html = "<div>Some HTML</div>"
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup)  # pylint: disable=assignment-from-none
+        self.assertIsNone(price)
+
+    def test_check_stock_in_stock(self):
+        """Test stock checking for in-stock product (quantity > 0)."""
+        html = """
+        <script>
+        var combinations = [];
+        combinations['22464'] = [];
+        combinations['22464']['quantity'] = '2';
+        </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.perfumeriascoqueteo.com/nicho/17208-22464-sleep-glycolic-818625024673.html"
+        result = self.handler.check_stock(soup, url)
+        self.assertFalse(result)  # False = in stock
+
+    def test_check_stock_out_of_stock(self):
+        """Test stock checking for out-of-stock product (quantity = 0)."""
+        html = """
+        <script>
+        var combinations = [];
+        combinations['22398'] = [];
+        combinations['22398']['quantity'] = '0';
+        </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.perfumeriascoqueteo.com/tratamientos-rostro/17176-22398-crystal-retinal-10-818625024529.html"
+        result = self.handler.check_stock(soup, url)
+        self.assertTrue(result)  # True = out of stock
+
+    def test_check_stock_no_combination_id_in_url(self):
+        """Test stock checking returns None if URL doesn't match pattern."""
+        html = "<script>var x = 1;</script>"
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.perfumeriascoqueteo.com/some-product.html"
+        result = self.handler.check_stock(soup, url)
+        self.assertIsNone(result)  # None = use default checking
+
+    def test_check_stock_combination_not_found_in_javascript(self):
+        """Test stock checking returns None if combination not found in JS."""
+        html = """
+        <script>
+        var combinations = [];
+        combinations['99999'] = [];
+        combinations['99999']['quantity'] = '5';
+        </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        url = "https://www.perfumeriascoqueteo.com/nicho/17208-22464-sleep-glycolic-818625024673.html"
+        result = self.handler.check_stock(soup, url)
+        self.assertIsNone(result)  # None = use default checking
 
 
 class TestDefaultSiteHandler(unittest.TestCase):
