@@ -353,7 +353,7 @@ def extract_price(soup: Optional[BeautifulSoup], url: str, config: Config) -> Op
 
     # Try site-specific extraction first
     handler = get_site_handler(url, config)
-    price = handler.extract_price(soup)
+    price = handler.extract_price(soup, url)
     if price:
         return price
 

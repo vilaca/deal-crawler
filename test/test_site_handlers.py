@@ -124,7 +124,7 @@ class TestNotinoHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertEqual(price, 29.99)
 
     def test_extract_price_from_json_multiple_prices(self):
@@ -137,7 +137,7 @@ class TestNotinoHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         # Should return first price in valid range (29.99)
         self.assertEqual(price, 29.99)
 
@@ -145,28 +145,28 @@ class TestNotinoHandler(unittest.TestCase):
         """Test returns None when no JSON found."""
         html = "<div>No price here</div>"
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)
 
     def test_extract_price_invalid_json_format(self):
         """Test handles invalid JSON gracefully."""
         html = '<script>{"price": "not_a_number"}</script>'
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)
 
     def test_extract_price_outside_range(self):
         """Test skips prices outside valid range."""
         html = '<script>{"price": 5000.00}</script>'
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)  # Too expensive
 
     def test_extract_price_script_with_no_string(self):
         """Test handles script tags with no string content."""
         html = '<script src="external.js"></script><script>{"price": 29.99}</script>'
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         # Should skip the first script (no string) and find price in second
         self.assertEqual(price, 29.99)
 
@@ -180,7 +180,7 @@ class TestNotinoHandler(unittest.TestCase):
         # when converted to float (though this is contrived)
         mock_findall.return_value = ["not_a_number"]
 
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)
 
 
@@ -215,7 +215,7 @@ class TestFarmacentralHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertEqual(price, 7.32)
 
     def test_extract_price_from_nuxt_state_json_notation(self):
@@ -226,7 +226,7 @@ class TestFarmacentralHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertEqual(price, 15.99)
 
     def test_extract_price_from_nuxt_state_single_quotes(self):
@@ -237,7 +237,7 @@ class TestFarmacentralHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertEqual(price, 22.50)
 
     def test_extract_price_from_nuxt_state_unquoted_key(self):
@@ -248,7 +248,7 @@ class TestFarmacentralHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertEqual(price, 7.32)
 
     def test_extract_price_multiple_prices_returns_first_valid(self):
@@ -263,7 +263,7 @@ class TestFarmacentralHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         # Should return first price in valid range (7.32)
         self.assertEqual(price, 7.32)
 
@@ -271,28 +271,28 @@ class TestFarmacentralHandler(unittest.TestCase):
         """Test returns None when no Nuxt state found."""
         html = "<div>No Nuxt state here</div>"
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)
 
     def test_extract_price_invalid_price_format(self):
         """Test handles invalid price format gracefully."""
         html = '<script>window.__NUXT__={price:"not_a_number"}</script>'
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)
 
     def test_extract_price_outside_range(self):
         """Test skips prices outside valid range."""
         html = "<script>window.__NUXT__={price:5000.00}</script>"
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertIsNone(price)  # Too expensive
 
     def test_extract_price_script_with_no_string(self):
         """Test handles script tags with no string content."""
         html = '<script src="external.js"></script><script>window.__NUXT__={"price":29.99}</script>'
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         # Should skip the first script (no string) and find price in second
         self.assertEqual(price, 29.99)
 
@@ -304,7 +304,7 @@ class TestFarmacentralHandler(unittest.TestCase):
             </script>
         """
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)
+        price = self.handler.extract_price(soup, "https://example.com/")
         self.assertEqual(price, 12.34)
 
 
@@ -335,7 +335,7 @@ class TestPerfumeriascoqueteoHandler(unittest.TestCase):
         """Test extract_price returns None (uses default extraction)."""
         html = "<div>Some HTML</div>"
         soup = BeautifulSoup(html, "lxml")
-        price = self.handler.extract_price(soup)  # pylint: disable=assignment-from-none
+        price = self.handler.extract_price(soup, "https://example.com/")  # pylint: disable=assignment-from-none
         self.assertIsNone(price)
 
     def test_check_stock_in_stock(self):
@@ -417,7 +417,7 @@ class TestDefaultSiteHandler(unittest.TestCase):
         html = '<div class="price">€29.99</div>'
         soup = BeautifulSoup(html, "lxml")
         # Default handler always returns None to defer to generic strategies
-        self.assertIsNone(self.handler.extract_price(soup))
+        self.assertIsNone(self.handler.extract_price(soup, "https://example.com/"))
 
 
 class TestSiteHandlerRegistry(unittest.TestCase):
