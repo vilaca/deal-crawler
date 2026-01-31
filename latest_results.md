@@ -27,9 +27,9 @@
 
 ## 📊 Search Summary
 
-**❌ 48/103 URLs** (47% success) · **29 products**
+**❌ 49/103 URLs** (48% success) · **29 products**
 
-_📦 9 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
+_📦 8 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
@@ -39,7 +39,6 @@ _📦 9 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
 - **Medik8 Crystal Retinal 6**: sabina.com
 - **Medik8 Duo**: atida.com
 - **Medik8 Sleep Glycolic**: sabina.com
-- **Paradontax pasta gums (75ml)**: atida.com
 
 **Failed URLs** (46):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
