@@ -10,9 +10,9 @@
 | **Dercos DS (390ml)** | €18.82<br>_(€4.83/100ml)_ | [🔗 wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €20.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.00 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
-| **Medik8 Crystal Retinal 3** | €60.47 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=02) |
-| **Medik8 Crystal Retinal 6** | €79.07 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=03) |
-| **Medik8 Crystal Retinal 10** | €102.33 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
+| **Medik8 Crystal Retinal 3** | €57.45 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=02) |
+| **Medik8 Crystal Retinal 6** | €75.12 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=03) |
+| **Medik8 Crystal Retinal 10** | €97.21 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Duo** | €68.40 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/35249-advanced-night-restore-50-ml-hydr8-b5-intense-30ml.html) |
 | **Medik8 Sleep Glycolic** | _No prices found_ | - |
 | **Medik8 Super Ferrulic** | €66.12 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
@@ -27,12 +27,13 @@
 
 ## 📊 Search Summary
 
-**❌ 49/103 URLs** (48% success) · **29 products**
+**❌ 48/103 URLs** (47% success) · **29 products**
 
-_📦 8 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
+_📦 9 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
+- **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
 - **Cerave Micellar Water (295ml)**: wells.pt
 - **LRP Anthelios UVMune 400 SPF50**: wells.pt
 - **Medik8 Crystal Retinal 3**: sabina.com
