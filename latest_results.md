@@ -4,10 +4,10 @@
 | Product | Price | Link |
 |---------|-------|------|
 | **Avène Couvrance Fluido Maquiagem** | _No prices found_ | - |
-| **Cerave Hydrating Cleanser (1000ml)** | €17.00<br>_(€1.70/100ml)_ | [🔗 wells.pt](https://wells.pt/creme-limpeza-rosto-e-corpo-hidratante-6703201.html) |
-| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €17.00<br>_(€3.59/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
+| **Cerave Hydrating Cleanser (1000ml)** | €16.51<br>_(€1.65/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cerave-creme-hidratante-de-limpeza-1000ml-) |
+| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €15.88<br>_(€3.36/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
 | **Cerave Micellar Water (295ml)** | €9.99<br>_(€3.39/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-agua-micelar-295ml) |
-| **Dercos DS (390ml)** | €18.77<br>_(€4.81/100ml)_ | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
+| **Dercos DS (390ml)** | €18.80<br>_(€4.82/100ml)_ | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €20.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.00 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 10** | €75.61 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
