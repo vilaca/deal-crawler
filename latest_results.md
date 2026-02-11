@@ -16,25 +16,27 @@
 | **Medik8 Duo** | €54.30 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-moisturisers-hydr8-b5-intenso-serum-hidratante-intenso-p-017682kd?st=04) |
 | **Medik8 Sleep Glycolic** | €33.68 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-exfoliation-cleansing-sleep-glycolic-at-home-peel-noturno-p-017678kd) |
 | **Medik8 Super Ferrulic** | €58.42 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamin-c-super-c-ferulic-serum-vitamina-c-p-017624kd?st=01) |
-| **Paradontax (500ml)** | €9.00<br>_(€1.80/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
-| **Paradontax gums (500ml)** | €8.00<br>_(€1.60/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
+| **Paradontax (500ml)** | €7.00<br>_(€1.40/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
+| **Paradontax gums (500ml)** | €6.00<br>_(€1.20/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
 | **Paradontax pasta (75ml)** | €6.99<br>_(€9.32/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/parodontax-extra-fresh-complete-protection-75ml) |
 | **Paradontax pasta gums (2x75ml)** | €9.99<br>_(€6.66/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/parodontax-pasta-de-dentes-complete-protection-gengivas-2x75-ml) |
-| **Paradontax pasta original (2x75ml)** | €8.00<br>_(€5.33/100ml)_ | [🔗 wells.pt](https://wells.pt/pasta-de-dentes-parodontax-original-7753557.html) |
+| **Paradontax pasta original (2x75ml)** | €5.00<br>_(€3.33/100ml)_ | [🔗 wells.pt](https://wells.pt/pasta-de-dentes-parodontax-original-7753557.html) |
 
 ---
 
 
 ## 📊 Search Summary
 
-**❌ 46/104 URLs** (44% success) · **29 products**
+**❌ 44/104 URLs** (42% success) · **29 products**
 
-_📦 11 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
+_📦 13 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
 - **Cerave Hydrating Cleanser (1000ml)**: atida.com
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
+- **Cerave Hydrating Cleanser (2x473ml)**: atida.com
+- **Cerave Hydrating Cleanser (473ml)**: atida.com
 - **Cerave Micellar Water (295ml)**: wells.pt
 - **Medik8 Crystal Retinal 3**: aveirofarma.pt, sabina.com
 - **Medik8 Crystal Retinal 6**: sabina.com
