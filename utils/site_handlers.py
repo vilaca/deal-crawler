@@ -568,7 +568,7 @@ class WellsHandler(SiteHandler):
         if capacity_idx >= 0:
             # Extract from capacity section (next ~500 chars should contain all sizes)
             section = page_text[capacity_idx : capacity_idx + 500]
-            pattern = r"(\d+)\s*ml[^€]*€\s*([0-9]+[,.]?[0-9]*)"
+            pattern = r"(\d+)\s*ml[^€]*€\s*([0-9]+[,.][0-9]+)"
             matches = re.findall(pattern, section)
 
             for size, price_str in matches:
@@ -582,7 +582,7 @@ class WellsHandler(SiteHandler):
 
         # Fallback: extract from entire page, but deduplicate by keeping last occurrence
         if not valid_prices:
-            pattern = r"(\d+)\s*ml[^€]*€\s*([0-9]+[,.]?[0-9]*)"
+            pattern = r"(\d+)\s*ml[^€]*€\s*([0-9]+[,.][0-9]+)"
             matches = re.findall(pattern, page_text)
 
             # Use dict to keep last occurrence of each size
