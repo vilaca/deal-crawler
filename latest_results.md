@@ -27,16 +27,14 @@
 
 ## 📊 Search Summary
 
-**❌ 44/103 URLs** (43% success) · **29 products**
+**❌ 46/103 URLs** (45% success) · **29 products**
 
-_📦 12 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
+_📦 10 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
 - **Cerave Hydrating Cleanser (1000ml)**: atida.com
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
-- **Cerave Hydrating Cleanser (2x473ml)**: atida.com
-- **Cerave Hydrating Cleanser (473ml)**: atida.com
 - **Medik8 Crystal Retinal 3**: aveirofarma.pt, sabina.com
 - **Medik8 Crystal Retinal 6**: sabina.com
 - **Medik8 Duo**: atida.com
