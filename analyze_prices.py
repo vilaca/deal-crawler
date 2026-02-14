@@ -315,9 +315,9 @@ def print_summary_table(all_stats: List[PriceStats]) -> None:
         f"{'€/100ml':>8} "
         f"{'Avg 30d':>9} "
         f"{'Lowest':>9} "
-        f"{'Deal':>10} "
-        f"{'Since':>6} "
-        f" {'Site':<15}"
+        f"{'Deal':^10} "
+        f"{'Last':>5} "
+        f"  {'Site':<17}"
     )
     print(header)
     print("-" * terminal_width)
