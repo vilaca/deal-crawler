@@ -11,11 +11,11 @@
 | **LRP Anthelios UVMune 400 SPF50** | €20.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.67 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 10** | €93.50 | [🔗 atida.com](https://www.atida.com/pt-pt/medik8-crystal-retinal-10-30-ml) |
-| **Medik8 Crystal Retinal 3** | €52.00 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
-| **Medik8 Crystal Retinal 6** | €68.80 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
-| **Medik8 Duo** | €72.00 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/35249-advanced-night-restore-50-ml-hydr8-b5-intense-30ml.html) |
-| **Medik8 Sleep Glycolic** | €39.20 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19590-medik8-sleep-glycolic-30ml.html) |
-| **Medik8 Super Ferrulic** | €69.60 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
+| **Medik8 Crystal Retinal 3** | €49.40 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
+| **Medik8 Crystal Retinal 6** | €65.36 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
+| **Medik8 Duo** | €68.40 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/35249-advanced-night-restore-50-ml-hydr8-b5-intense-30ml.html) |
+| **Medik8 Sleep Glycolic** | €37.24 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19590-medik8-sleep-glycolic-30ml.html) |
+| **Medik8 Super Ferrulic** | €66.12 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
 | **Paradontax (500ml)** | €7.49<br>_(€1.50/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
 | **Paradontax gums (500ml)** | €6.58<br>_(€1.32/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
 | **Paradontax pasta (2x75ml)** | €7.49<br>_(€4.99/100ml)_ | [🔗 wells.pt](https://wells.pt/pasta-de-dentes-parodontax-original-7753557.html) |
