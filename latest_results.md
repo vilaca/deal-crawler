@@ -4,7 +4,7 @@
 | Product | Price | Link |
 |---------|-------|------|
 | **Avène Couvrance Fluido Maquiagem** | _No prices found_ | - |
-| **Cerave Hydrating Cleanser (1000ml)** | €16.51<br>_(€1.65/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cerave-creme-hidratante-de-limpeza-1000ml-) |
+| **Cerave Hydrating Cleanser (473ml)** | €9.68<br>_(€2.05/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cerave-creme-hidratante-de-limpeza-recarga-473ml) |
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €14.78<br>_(€3.12/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
 | **Cerave Micellar Water (295ml)** | €8.33<br>_(€2.82/100ml)_ | [🔗 wells.pt](https://wells.pt/micellar-cleansing-water-6703198.html) |
 | **Dercos DS (390ml)** | €18.82<br>_(€4.83/100ml)_ | [🔗 wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#390ml) |
@@ -25,13 +25,13 @@
 
 ## 📊 Search Summary
 
-**❌ 49/103 URLs** (48% success) · **26 products**
+**❌ 48/103 URLs** (47% success) · **26 products**
 
-_📦 7 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
+_📦 8 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Avène Couvrance Fluido Maquiagem**: wells.pt, atida.com
-- **Cerave Hydrating Cleanser (1000ml)**: wells.pt, atida.com
+- **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt, wells.pt, atida.com
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
 - **Medik8 Crystal Retinal 3**: aveirofarma.pt
 - **Medik8 Duo**: atida.com
