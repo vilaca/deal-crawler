@@ -25,13 +25,14 @@
 
 ## 📊 Search Summary
 
-**❌ 48/103 URLs** (47% success) · **26 products**
+**❌ 47/103 URLs** (46% success) · **26 products**
 
-_📦 8 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
+_📦 9 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Cerave Hydrating Cleanser (1000ml)**: wells.pt, atida.com
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
+- **Cerave Hydrating Cleanser (473ml)**: wells.pt
 - **Cerave Hydrating Cream To Foam Cleanser (236ml)**: wells.pt
 - **Cerave Hydrating Cream To Foam Cleanser (473ml)**: wells.pt
 - **Cerave Micellar Water (295ml)**: wells.pt
