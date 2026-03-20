@@ -4,10 +4,10 @@
 | Product | Price | Link |
 |---------|-------|------|
 | **Avène Couvrance Fluido Maquiagem** | €17.62 | [🔗 wells.pt](https://wells.pt/couvrance-fluid-foundation-corrector-3.0-3599509.html) |
-| **Cerave Hydrating Cleanser (2x473ml)** | €19.99<br>_(€2.11/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x473-ml) |
-| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €16.04<br>_(€3.39/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
+| **Cerave Hydrating Cleanser (1000ml)** | €17.12<br>_(€1.71/100ml)_ | [🔗 wells.pt](https://wells.pt/creme-limpeza-rosto-e-corpo-hidratante-6703201.html) |
+| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €17.73<br>_(€3.75/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
 | **Cerave Micellar Water (2x295ml)** | €15.99<br>_(€2.71/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
-| **Dercos DS (390ml)** | €20.47<br>_(€5.25/100ml)_ | [🔗 atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
+| **Dercos DS (390ml)** | €18.82<br>_(€4.83/100ml)_ | [🔗 wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €19.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €19.67 | [🔗 wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 10** | €99.26 | [🔗 sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
@@ -25,24 +25,20 @@
 
 ## 📊 Search Summary
 
-**❌ 45/103 URLs** (44% success) · **26 products**
+**❌ 44/103 URLs** (43% success) · **26 products**
 
-_📦 12 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
+_📦 5 out of stock · 🌐 22 fetch errors · 🔍 32 extraction errors_
 
 **Out of Stock:**
-- **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt, wells.pt, atida.com
+- **Cerave Hydrating Cleanser (1000ml)**: atida.com
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
-- **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt, wells.pt
-- **Cerave Hydrating Cream To Foam Cleanser (236ml)**: wells.pt
-- **Cerave Hydrating Cream To Foam Cleanser (473ml)**: wells.pt
-- **Dercos DS (200ml)**: wells.pt
-- **Dercos DS (390ml)**: wells.pt
-- **Medik8 Crystal Retinal 3**: aveirofarma.pt
+- **Cerave Hydrating Cleanser (473ml)**: wells.pt
+- **Cerave Micellar Water (295ml)**: wells.pt
 - **Medik8 Duo**: atida.com
 
-**Failed URLs** (46):
+**Failed URLs** (54):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
 - `https://www.farmacia365.pt/avene-couvrance-base-fluido-areia-30ml_6600163`
 - `https://www.farmacia365.pt/avene-couvrance-base-fluido-bege-30ml_6951863`
-- _43 more..._
+- _51 more..._
 
