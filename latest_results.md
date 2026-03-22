@@ -25,15 +25,18 @@
 
 ## 📊 Search Summary
 
-**❌ 50/103 URLs** (49% success) · **26 products**
+**❌ 45/103 URLs** (44% success) · **26 products**
 
-_📦 7 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
+_📦 12 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt, atida.com
 - **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
-- **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt
+- **Cerave Hydrating Cleanser (2x473ml)**: atida.com
+- **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt, wells.pt, atida.com
 - **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
+- **Cerave Hydrating Cream To Foam Cleanser (473ml)**: wells.pt
+- **Cerave Micellar Water (295ml)**: wells.pt
 - **Medik8 Crystal Retinal 3**: aveirofarma.pt
 - **Medik8 Duo**: atida.com
 
