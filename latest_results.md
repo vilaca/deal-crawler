@@ -4,7 +4,7 @@
 | Product | Price | Link |
 |---------|-------|------|
 | **Avène Couvrance Fluido Maquiagem** | €16.45 | [🔗 wells.pt](https://wells.pt/couvrance-fluid-foundation-corrector-3.0-3599509.html) |
-| **Cerave Hydrating Cleanser (1000ml)** | €17.12<br>_(€1.71/100ml)_ | [🔗 wells.pt](https://wells.pt/creme-limpeza-rosto-e-corpo-hidratante-6703201.html) |
+| **Cerave Hydrating Cleanser (1000ml)** | €16.05<br>_(€1.61/100ml)_ | [🔗 wells.pt](https://wells.pt/creme-limpeza-rosto-e-corpo-hidratante-6703201.html) |
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €16.04<br>_(€3.39/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
 | **Cerave Micellar Water (295ml)** | €9.99<br>_(€3.39/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-agua-micelar-295ml) |
 | **Dercos DS (390ml)** | €17.57<br>_(€4.51/100ml)_ | [🔗 wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#390ml) |
@@ -25,23 +25,19 @@
 
 ## 📊 Search Summary
 
-**❌ 47/103 URLs** (46% success) · **26 products**
+**⚠️ 52/103 URLs** (50% success) · **26 products**
 
-_📦 10 out of stock · 🌐 22 fetch errors · 🔍 24 extraction errors_
+_📦 4 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
-- **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt, atida.com
-- **Cerave Hydrating Cleanser (2x1000ml)**: atida.com
-- **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt, wells.pt
-- **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
+- **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt
+- **Cerave Hydrating Cleanser (473ml)**: wells.pt
 - **Cerave Hydrating Cream To Foam Cleanser (473ml)**: wells.pt
-- **Cerave Micellar Water (295ml)**: wells.pt
-- **Medik8 Crystal Retinal 3**: aveirofarma.pt
 - **Medik8 Duo**: atida.com
 
-**Failed URLs** (46):
+**Failed URLs** (47):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
 - `https://www.farmacia365.pt/avene-couvrance-base-fluido-areia-30ml_6600163`
 - `https://www.farmacia365.pt/avene-couvrance-base-fluido-bege-30ml_6951863`
-- _43 more..._
+- _44 more..._
 
