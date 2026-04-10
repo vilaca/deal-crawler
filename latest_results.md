@@ -25,9 +25,9 @@
 
 ## 📊 Search Summary
 
-**❌ 50/103 URLs** (49% success) · **26 products**
+**❌ 49/103 URLs** (48% success) · **26 products**
 
-_📦 6 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
+_📦 7 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 
 **Out of Stock:**
 - **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt
@@ -35,6 +35,7 @@ _📦 6 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
 - **Cerave Hydrating Cleanser (2x236ml)**: atida.com
 - **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt
 - **Medik8 Duo**: atida.com
+- **Paradontax pasta (75ml)**: atida.com
 
 **Failed URLs** (47):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
