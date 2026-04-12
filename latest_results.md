@@ -4,8 +4,8 @@
 | Product | Price | Link |
 |---------|-------|------|
 | **Avène Couvrance Fluido Maquiagem** | €16.45 | [🔗 wells.pt](https://wells.pt/couvrance-fluid-foundation-corrector-3.0-3599509.html) |
-| **Cerave Hydrating Cleanser (1000ml)** | €16.05<br>_(€1.61/100ml)_ | [🔗 wells.pt](https://wells.pt/creme-limpeza-rosto-e-corpo-hidratante-6703201.html) |
-| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €16.04<br>_(€3.39/100ml)_ | [🔗 aveirofarma.pt](https://aveirofarma.pt/cera-ve-creme-espuma-de-limpeza-hidratante-473ml) |
+| **Cerave Hydrating Cleanser (2x1000ml)** | €38.99<br>_(€1.95/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
+| **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €17.73<br>_(€3.75/100ml)_ | [🔗 wells.pt](https://wells.pt/hydrating-cream-to-foam-cleanser-8362148.html) |
 | **Cerave Micellar Water (295ml)** | €9.99<br>_(€3.39/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/cerave-agua-micelar-295ml) |
 | **Dercos DS (390ml)** | €17.57<br>_(€4.51/100ml)_ | [🔗 wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €16.99 | [🔗 atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
@@ -25,21 +25,20 @@
 
 ## 📊 Search Summary
 
-**❌ 49/103 URLs** (48% success) · **26 products**
+**❌ 44/103 URLs** (43% success) · **26 products**
 
-_📦 7 out of stock · 🌐 23 fetch errors · 🔍 24 extraction errors_
+_📦 5 out of stock · 🌐 22 fetch errors · 🔍 32 extraction errors_
 
 **Out of Stock:**
-- **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt
-- **Cerave Hydrating Cleanser (236ml)**: aveirofarma.pt, atida.com
+- **Cerave Hydrating Cleanser (1000ml)**: wells.pt
+- **Cerave Hydrating Cleanser (236ml)**: atida.com
 - **Cerave Hydrating Cleanser (2x236ml)**: atida.com
-- **Cerave Hydrating Cleanser (473ml)**: aveirofarma.pt
 - **Medik8 Duo**: atida.com
 - **Paradontax pasta (75ml)**: atida.com
 
-**Failed URLs** (47):
+**Failed URLs** (54):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
 - `https://www.farmacia365.pt/avene-couvrance-base-fluido-areia-30ml_6600163`
 - `https://www.farmacia365.pt/avene-couvrance-base-fluido-bege-30ml_6951863`
-- _44 more..._
+- _51 more..._
 
