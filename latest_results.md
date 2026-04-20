@@ -18,16 +18,16 @@
 | **Medik8 Super Ferrulic** | €70.25 | [🔗 sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
 | **Paradontax (500ml)** | €10.29<br>_(€2.06/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
 | **Paradontax gums (500ml)** | €8.99<br>_(€1.80/100ml)_ | [🔗 wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
-| **Paradontax pasta (2x75ml)** | €8.49<br>_(€5.66/100ml)_ | [🔗 wells.pt](https://wells.pt/pasta-de-dentes-parodontax-original-7753557.html) |
+| **Paradontax pasta (2x75ml)** | €9.99<br>_(€6.66/100ml)_ | [🔗 atida.com](https://www.atida.com/pt-pt/parodontax-pasta-de-dentes-complete-protection-gengivas-2x75-ml) |
 
 ---
 
 
 ## 📊 Search Summary
 
-**❌ 48/103 URLs** (47% success) · **26 products**
+**❌ 47/103 URLs** (46% success) · **26 products**
 
-_📦 8 out of stock · 🌐 24 fetch errors · 🔍 23 extraction errors_
+_📦 9 out of stock · 🌐 24 fetch errors · 🔍 23 extraction errors_
 
 **Out of Stock:**
 - **Cerave Hydrating Cleanser (1000ml)**: aveirofarma.pt
@@ -37,6 +37,7 @@ _📦 8 out of stock · 🌐 24 fetch errors · 🔍 23 extraction errors_
 - **Cerave Hydrating Cream To Foam Cleanser (236ml)**: aveirofarma.pt
 - **Cerave Hydrating Cream To Foam Cleanser (473ml)**: aveirofarma.pt
 - **Medik8 Duo**: atida.com
+- **Paradontax pasta (2x75ml)**: wells.pt
 
 **Failed URLs** (47):
 - `https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml`
