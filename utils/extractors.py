@@ -1,5 +1,6 @@
 """Price extraction logic for various websites."""
 
+import json
 import re
 from bs4 import BeautifulSoup, Tag
 from typing import Any, Dict, List, Optional
@@ -218,6 +219,74 @@ def _extract_price_from_elements(
     return None
 
 
+def _extract_price_from_json_ld(soup: BeautifulSoup, config: Config) -> Optional[float]:
+    """Extract price from JSON-LD structured data (Strategy 0 - most reliable).
+
+    Looks for schema.org Product/Offer data in <script type="application/ld+json"> tags.
+
+    Args:
+        soup: BeautifulSoup object to extract from
+        config: Configuration instance for price validation
+
+    Returns:
+        Extracted price or None
+    """
+    for script in soup.find_all("script", type="application/ld+json"):
+        if not script.string:
+            continue
+        try:
+            data = json.loads(script.string)
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+        items = data if isinstance(data, list) else [data]
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            price = _find_price_in_json_ld(item, config)
+            if price:
+                return price
+
+    return None
+
+
+def _find_price_in_json_ld(data: dict, config: Config) -> Optional[float]:
+    """Recursively find a price in JSON-LD data.
+
+    Args:
+        data: JSON-LD dictionary (Product, Offer, etc.)
+        config: Configuration instance for price validation
+
+    Returns:
+        Extracted price or None
+    """
+    # Direct price on an Offer
+    if data.get("@type") == "Offer" or "price" in data:
+        price_val = data.get("price")
+        if price_val is not None:
+            try:
+                price = float(price_val)
+                if config.min_price < price < config.max_price:
+                    return price
+            except (ValueError, TypeError):
+                pass
+
+    # Check nested offers
+    offers = data.get("offers")
+    if isinstance(offers, dict):
+        price = _find_price_in_json_ld(offers, config)
+        if price:
+            return price
+    elif isinstance(offers, list):
+        for offer in offers:
+            if isinstance(offer, dict):
+                price = _find_price_in_json_ld(offer, config)
+                if price:
+                    return price
+
+    return None
+
+
 def _extract_price_from_meta_tags(soup: BeautifulSoup) -> Optional[float]:
     """Extract price from meta tags (Strategy 1)."""
     meta_tags = [
@@ -326,6 +395,7 @@ def _get_extraction_strategies(config: Config) -> List[Any]:
         5. Text patterns (last resort fallback)
     """
     return [
+        lambda soup: _extract_price_from_json_ld(soup, config),
         _extract_price_from_meta_tags,
         _extract_price_from_data_attribute,
         _extract_price_from_priority_classes,
