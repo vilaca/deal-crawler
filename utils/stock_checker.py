@@ -35,27 +35,8 @@ def _check_for_in_stock_indicators(soup: BeautifulSoup) -> Optional[bool]:
     Returns:
         False if clear in-stock indicators found, True if out-of-stock indicators found, None if unclear
     """
-    # Check for in-stock classes with meaningful text content
-    # (e.g., <span class="in_stock">Em Stock</span>)
-    # Ignore empty icons or elements without text
-    in_stock_elements = soup.find_all(attrs={"class": IN_STOCK_CLASS_PATTERN})
-    for element in in_stock_elements:
-        # Skip pure icon elements (i, svg, img tags typically have no meaningful text)
-        if element.name in ["i", "svg", "img"]:
-            continue
-
-        # Skip "back in stock" notification elements (false positive)
-        classes = " ".join(element.get("class", []))
-        if re.search(r"back[-_\s]?in[-_\s]?stock", classes, re.IGNORECASE):
-            continue
-
-        text = element.get_text(strip=True)
-        # Only consider elements with actual text content (not just icons)
-        if text and len(text) > 2:  # At least 3 characters of actual text
-            return False
-
-    # Check JSON-LD structured data for availability
-    # For products with multiple variants, prioritize in-stock over out-of-stock
+    # Check JSON-LD structured data first - most authoritative signal
+    # because it describes the specific product, not related items on the page
     scripts = soup.find_all("script", type="application/ld+json")
     has_in_stock = False
     has_out_of_stock = False
@@ -74,6 +55,24 @@ def _check_for_in_stock_indicators(soup: BeautifulSoup) -> Optional[bool]:
     # If only out of stock variants found (no in-stock), product is unavailable
     if has_out_of_stock:
         return True
+
+    # Fallback: check for in-stock CSS classes with meaningful text content
+    # (e.g., <span class="in_stock">Em Stock</span>)
+    in_stock_elements = soup.find_all(attrs={"class": IN_STOCK_CLASS_PATTERN})
+    for element in in_stock_elements:
+        # Skip pure icon elements (i, svg, img tags typically have no meaningful text)
+        if element.name in ["i", "svg", "img"]:
+            continue
+
+        # Skip "back in stock" notification elements (false positive)
+        classes = " ".join(element.get("class", []))
+        if re.search(r"back[-_\s]?in[-_\s]?stock", classes, re.IGNORECASE):
+            continue
+
+        text = element.get_text(strip=True)
+        # Only consider elements with actual text content (not just icons)
+        if text and len(text) > 2:  # At least 3 characters of actual text
+            return False
 
     return None
 
