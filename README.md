@@ -104,16 +104,21 @@ Cerave Hydrating Cleanser (1000ml),notino.pt,18.99,1.90,https://www.notino.pt/..
 
 Products and their URLs are defined in `products.yml`. Shipping costs per store are in `shipping.yaml`.
 
-<details>
-<summary>Environment variables</summary>
+These environment variables affect `collect_all_prices.py` (and the RPi cron script):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Products file path |
+| `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP timeout (seconds) |
+| `DEAL_CRAWLER_MAX_RETRIES` | `2` | Retry attempts |
 | `DEAL_CRAWLER_MIN_PRICE` | `1.0` | Minimum valid price |
 | `DEAL_CRAWLER_MAX_PRICE` | `1000.0` | Maximum valid price |
-| `DEAL_CRAWLER_MAX_RETRIES` | `2` | Retry attempts |
-| `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP timeout (seconds) |
-| `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Products file path |
+
+<details>
+<summary>Rate limiting</summary>
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `DEAL_CRAWLER_NOTINO_DELAY_MIN` | `4.0` | Min delay for Notino (s) |
 | `DEAL_CRAWLER_NOTINO_DELAY_MAX` | `7.0` | Max delay for Notino (s) |
 | `DEAL_CRAWLER_DEFAULT_DELAY_MIN` | `1.0` | Min delay for other sites (s) |
