@@ -75,3 +75,6 @@ data.yml.backup
 
 # HTTP cache
 .http_cache.json
+
+# RPi scrape logs
+logs/

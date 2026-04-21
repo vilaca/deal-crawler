@@ -1,17 +1,18 @@
-name: Daily Price Scrape
+name: Generate Price Report
 
 on:
-  schedule:
-    # Run daily at 4am UTC
-    - cron: '0 4 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'history/all/*.csv'
   workflow_dispatch: # Allow manual trigger
 
 permissions:
   contents: write
 
 jobs:
-  scrape:
-    name: Scrape Prices
+  report:
+    name: Generate Report
     runs-on: ubuntu-latest
 
     steps:
@@ -29,63 +30,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run scraper
+      - name: Generate report
         run: |
           set -euo pipefail
 
-          # Configuration
           MARKDOWN_OUTPUT="latest_results.md"
-          HISTORY_DIR="history"
-          TODAY=$(date -u +'%Y-%m-%d')
-          HISTORY_FILE="$HISTORY_DIR/$TODAY.csv"
 
-          # Helper function: verify file exists and has content
-          verify_file() {
-            local file=$1
-            local description=$2
+          python generate_report.py --output "$MARKDOWN_OUTPUT"
 
-            if [ ! -f "$file" ]; then
-              echo "Error: $description was not created"
-              exit 1
-            fi
+          # Verify output
+          if [ ! -s "$MARKDOWN_OUTPUT" ]; then
+            echo "Error: Report generation failed"
+            exit 1
+          fi
 
-            if [ ! -s "$file" ]; then
-              echo "Error: $description is empty"
-              exit 1
-            fi
-          }
+          if ! grep -q "| Product | Price | Link |" "$MARKDOWN_OUTPUT"; then
+            echo "Error: Report does not contain expected table"
+            cat "$MARKDOWN_OUTPUT"
+            exit 1
+          fi
 
-          # Helper function: verify file contains expected content
-          verify_content() {
-            local file=$1
-            local pattern=$2
-            local description=$3
+          echo "Report generated successfully"
 
-            if ! grep -q "$pattern" "$file"; then
-              echo "Error: $description does not contain expected content"
-              cat "$file"
-              exit 1
-            fi
-          }
-
-          # Create history directory and run scraper
-          mkdir -p "$HISTORY_DIR"
-          python main.py --markdown --no-cache --dump "$HISTORY_FILE" > "$MARKDOWN_OUTPUT"
-
-          # Verify outputs
-          verify_file "$MARKDOWN_OUTPUT" "Markdown output file"
-          verify_content "$MARKDOWN_OUTPUT" "| Product | Price | Link |" "Markdown output"
-          verify_file "$HISTORY_FILE" "History CSV file"
-
-          echo "✓ Scraper completed successfully"
-          echo "✓ Results saved to $MARKDOWN_OUTPUT and $HISTORY_FILE"
-
-      - name: Commit and push results
+      - name: Commit and push report
         run: |
-          TODAY=$(date -u +'%Y-%m-%d %H:%M UTC')
-
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add latest_results.md history/
-          git diff --staged --quiet || git commit -m "Update prices - $TODAY"
+          git add latest_results.md
+          git diff --staged --quiet || git commit -m "Update report - $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
