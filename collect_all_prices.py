@@ -11,11 +11,10 @@ Usage:
 
 import argparse
 import csv
-import io
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import IO, Dict, List, Optional
 
 from utils.config import Config
 from utils.data_loader import load_products
@@ -26,7 +25,7 @@ from utils.price_models import PriceResult
 from utils.url_utils import extract_domain
 
 
-def _write_csv(output: io.TextIOBase, all_prices: Dict[str, List[PriceResult]]) -> int:
+def _write_csv(output: IO[str], all_prices: Dict[str, List[PriceResult]]) -> int:
     """Write all prices as CSV to a file or stream.
 
     Args:

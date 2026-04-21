@@ -15,6 +15,11 @@ jobs:
   test:
     name: Test & Lint
     runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.tests.outcome }}
+      coverage: ${{ steps.coverage.outcome }}
+      typecheck: ${{ steps.typecheck.outcome }}
+      docstrings: ${{ steps.docstrings.outcome }}
 
     steps:
       - name: Checkout code
@@ -38,15 +43,13 @@ jobs:
       #   - Test setup/teardown issues
       # Fix: Run 'make test' locally to see which tests fail, fix the code, ensure all tests pass
       - name: Run tests
+        id: tests
+        continue-on-error: true
         run: make test
 
-      # FAILURE POINT 2: Coverage check failed
-      # Possible causes:
-      #   - Test coverage below threshold (check Makefile for minimum percentage)
-      #   - New code added without tests
-      #   - Tests not running or not detecting code paths
-      # Fix: Run 'make coverage' locally, add tests for uncovered code, aim for >95% coverage
       - name: Run coverage
+        id: coverage
+        continue-on-error: true
         run: |
           make coverage | tee coverage-output.txt
 
@@ -108,18 +111,17 @@ jobs:
       #   - Incompatible type operations (e.g., int + None)
       # Fix: Run 'make typecheck' locally, add/fix type hints, use 'assert' for type narrowing
       - name: Type check with mypy
+        id: typecheck
+        continue-on-error: true
         run: make typecheck
 
       - name: Check dead code
         run: |
           make vulture > vulture-report.txt 2>&1 || true
 
-      # FAILURE POINT 4: Missing docstrings
-      # Possible causes:
-      #   - Functions/classes/methods missing docstrings
-      #   - Docstring coverage below 100%
-      # Fix: Run 'make interrogate' locally, add docstrings to all functions/classes
       - name: Check docstring coverage
+        id: docstrings
+        continue-on-error: true
         run: make interrogate
 
       - name: Check code complexity
@@ -367,12 +369,17 @@ jobs:
       #   - Coverage failed → Add tests for new code
       #   - Type check failed → Fix type annotations
       #   - Docstrings failed → Add missing docstrings
-      - name: Check test results
+      - name: Check results
         run: |
-          if [ "${{ needs.test.result }}" == "success" ]; then
+          FAILED=""
+          if [ "${{ needs.test.outputs.tests }}" == "failure" ]; then FAILED="$FAILED tests"; fi
+          if [ "${{ needs.test.outputs.coverage }}" == "failure" ]; then FAILED="$FAILED coverage"; fi
+          if [ "${{ needs.test.outputs.typecheck }}" == "failure" ]; then FAILED="$FAILED typecheck"; fi
+          if [ "${{ needs.test.outputs.docstrings }}" == "failure" ]; then FAILED="$FAILED docstrings"; fi
+
+          if [ -z "$FAILED" ]; then
             echo "✅ All quality checks passed!"
           else
-            echo "❌ Some quality checks failed"
-            echo "Check the failed step above and follow the FAILURE POINT comments for guidance"
+            echo "❌ Failed checks:$FAILED"
             exit 1
           fi

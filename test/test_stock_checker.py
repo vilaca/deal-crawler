@@ -282,8 +282,8 @@ class TestIsOutOfStock(unittest.TestCase):
         soup = self.create_soup(html)
         self.assertTrue(is_out_of_stock(soup))
 
-    def test_json_ld_in_stock(self):
-        """Test JSON-LD InStock is detected correctly."""
+    def test_json_ld_in_stock_with_offer_type(self):
+        """Test JSON-LD InStock is detected correctly with Offer type."""
         html = """
         <script type="application/ld+json">
         {"@type": "Offer", "availability": "https://schema.org/InStock"}
