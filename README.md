@@ -48,8 +48,6 @@ python generate_report.py
 python generate_report.py --input-dir history/all --output report.md
 ```
 
-```
-
 ## Architecture
 
 ```
