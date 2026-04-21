@@ -48,29 +48,6 @@ python generate_report.py
 python generate_report.py --input-dir history/all --output report.md
 ```
 
-### Find cheapest prices (interactive)
-
-```bash
-# All products
-python main.py
-
-# Filter by sites and products
-python main.py --sites "notino.pt,wells.pt" --products "Cerave,Medik8"
-
-# Markdown output, skip cache
-python main.py --markdown --no-cache
-```
-
-### Optimize shopping plan (experimental)
-
-Uses Mixed Integer Linear Programming (MILP) to minimize total cost across stores, considering shipping costs and free shipping thresholds.
-
-```bash
-# Minimize total cost (products + shipping)
-python main.py --plan "Cerave,Medik8"
-
-# Optimize for best value (price per ml)
-python main.py --plan "Cerave,Medik8" --optimize-for-value
 ```
 
 ## Architecture
@@ -121,40 +98,22 @@ Cerave Hydrating Cleanser (1000ml),notino.pt,18.99,1.90,https://www.notino.pt/..
 |--------|---------|
 | `collect_all_prices.py` | Scrape all prices from all sites, with `--products`/`--sites`/`--stdout` filters |
 | `generate_report.py` | Generate `latest_results.md` from latest CSV |
-| `main.py` | Interactive CLI: cheapest prices, filtering, shopping plan optimization |
 | `scripts/rpi_scrape.sh` | Cron wrapper: git pull, collect, commit, push |
 
 ## Configuration
 
 Products and their URLs are defined in `products.yml`. Shipping costs per store are in `shipping.yaml`.
 
-### Environment variables
-
-All `main.py` flags also accept environment variables (CLI flags take precedence):
-
-| Flag | Environment Variable | Default | Description |
-|------|---------------------|---------|-------------|
-| `--markdown` | `DEAL_CRAWLER_MARKDOWN` | `false` | Markdown output |
-| `--sites` | `DEAL_CRAWLER_SITES` | - | Filter by domains |
-| `--products` | `DEAL_CRAWLER_PRODUCTS` | - | Filter by product names |
-| `--plan` | `DEAL_CRAWLER_PLAN` | - | Optimize shopping plan |
-| `--optimize-for-value` | `DEAL_CRAWLER_OPTIMIZE_FOR_VALUE` | `false` | Optimize for price/ml |
-| `--all-sizes` | `DEAL_CRAWLER_ALL_SIZES` | `false` | Show all sizes |
-| `--dump` | `DEAL_CRAWLER_DUMP` | - | Export to CSV |
-| `--no-cache` | `DEAL_CRAWLER_NO_CACHE` | `false` | Bypass HTTP cache |
-| `--cache-duration` | `DEAL_CRAWLER_CACHE_DURATION` | `3600` | Cache TTL (seconds) |
-| `--request-timeout` | `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP timeout (seconds) |
-| `--products-file` | `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Products file path |
-| `--shipping-file` | `DEAL_CRAWLER_SHIPPING_FILE` | `shipping.yaml` | Shipping config path |
-
 <details>
-<summary>Rate limiting and retry settings</summary>
+<summary>Environment variables</summary>
 
-| Environment Variable | Default | Description |
-|---------------------|---------|-------------|
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `DEAL_CRAWLER_MIN_PRICE` | `1.0` | Minimum valid price |
 | `DEAL_CRAWLER_MAX_PRICE` | `1000.0` | Maximum valid price |
 | `DEAL_CRAWLER_MAX_RETRIES` | `2` | Retry attempts |
+| `DEAL_CRAWLER_REQUEST_TIMEOUT` | `15` | HTTP timeout (seconds) |
+| `DEAL_CRAWLER_PRODUCTS_FILE` | `products.yml` | Products file path |
 | `DEAL_CRAWLER_NOTINO_DELAY_MIN` | `4.0` | Min delay for Notino (s) |
 | `DEAL_CRAWLER_NOTINO_DELAY_MAX` | `7.0` | Max delay for Notino (s) |
 | `DEAL_CRAWLER_DEFAULT_DELAY_MIN` | `1.0` | Min delay for other sites (s) |
@@ -199,8 +158,11 @@ Logs are saved to `logs/scrape-YYYY-MM-DD.log` and cleaned up after 30 days.
 
 ## Deprecated Scripts
 
+These scripts are from the earlier architecture and are superseded by the current pipeline. They still work but are no longer actively maintained.
+
 | Script | Replaced by | Notes |
 |--------|-------------|-------|
+| `main.py` | `collect_all_prices.py` | Interactive CLI, only finds cheapest price per product. Includes experimental shopping plan optimizer (`--plan`) |
 | `crawl_prices.py` | `collect_all_prices.py` | Low-level debug tool, tab-separated stdout |
 | `analyze_prices.py` | `generate_report.py` | Reads old `history/*.csv` format (cheapest-only) |
 
