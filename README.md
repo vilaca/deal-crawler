@@ -9,7 +9,7 @@
 
 Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
 
-📊 **[View Best Prices](latest_results.md)** - Updated daily at 4am UTC
+📊 **[View Best Prices](latest_results.md)** - Updated daily
 
 ## Quick Start
 
@@ -114,6 +114,62 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 - 🤖 Bot detection evasion with randomized delays
 - 📊 Text and markdown output formats
 - 💾 HTTP response caching (1 hour default)
+
+## Raspberry Pi Setup
+
+The price scraper can run on a Raspberry Pi as a daily cron job. The RPi collects all prices and pushes results to GitHub, which triggers a GitHub Action to generate the report.
+
+### Prerequisites
+
+- Python 3.11+
+- Git with push access to the repository (SSH key recommended)
+
+### Installation
+
+```bash
+git clone git@github.com:vilaca/deal-crawler.git
+cd deal-crawler
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Git configuration
+
+```bash
+git config user.name "Your Name"
+git config user.email "your@email.com"
+```
+
+### Cron setup
+
+Run `crontab -e` and add:
+
+```cron
+0 20 * * * /path/to/deal-crawler/scripts/rpi_scrape.sh
+```
+
+This runs the scraper every day at 8pm. Adjust the time as needed.
+
+### What the script does
+
+1. Pulls the latest code from GitHub
+2. Runs `collect_all_prices.py` to scrape all prices from all sites
+3. Saves results to `history/all/YYYY-MM-DD.csv`
+4. Commits and pushes the CSV to GitHub
+5. A GitHub Action then generates `latest_results.md` from the new data
+
+Logs are saved to `logs/scrape-YYYY-MM-DD.log` and automatically cleaned up after 30 days.
+
+### Manual run
+
+```bash
+# Collect all prices
+python collect_all_prices.py --verbose
+
+# Generate report from collected data
+python generate_report.py
+```
 
 ## Contributing
 
