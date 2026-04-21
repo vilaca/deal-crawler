@@ -21,7 +21,15 @@ cd "$REPO_DIR"
 
 # Pull latest changes
 echo "Pulling latest..."
+SELF="$SCRIPT_DIR/$(basename "$0")"
+HASH_BEFORE=$(md5sum "$SELF" | cut -d' ' -f1)
 git pull --ff-only origin main
+HASH_AFTER=$(md5sum "$SELF" | cut -d' ' -f1)
+
+if [ "$HASH_BEFORE" != "$HASH_AFTER" ] && [ "${RPi_REEXEC:-}" != "1" ]; then
+    echo "Script updated, re-executing..."
+    RPi_REEXEC=1 exec "$SELF" "$@"
+fi
 
 # Activate virtual environment if present
 if [ -d "$REPO_DIR/venv" ]; then
