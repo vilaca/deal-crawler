@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
-Price comparison tool that scrapes product prices from multiple retailers and finds the best deals.
+Price comparison tool that scrapes product prices from multiple Portuguese retailers and finds the best deals. A Raspberry Pi collects prices daily and a GitHub Action generates reports automatically.
 
 📊 **[View Best Prices](latest_results.md)** - Updated daily
 
@@ -17,15 +17,52 @@ Price comparison tool that scrapes product prices from multiple retailers and fi
 git clone https://github.com/vilaca/deal-crawler.git
 cd deal-crawler
 python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
-python main.py
+
+# Collect all prices from all sites
+python collect_all_prices.py --verbose
+
+# Generate the best-prices report
+python generate_report.py
 ```
 
-## Usage
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `collect_all_prices.py` | Scrapes all prices from all sites, saves to `history/all/YYYY-MM-DD.csv` |
+| `generate_report.py` | Reads latest CSV and generates `latest_results.md` |
+| `main.py` | Interactive CLI for querying prices, filtering, and shopping plan optimization |
+| `scripts/rpi_scrape.sh` | Cron wrapper: pull, collect, commit, push |
+
+### collect_all_prices.py
 
 ```bash
-# Basic usage
+# Collect all prices (default output: history/all/)
+python collect_all_prices.py
+
+# With verbose output
+python collect_all_prices.py --verbose
+
+# Custom output directory
+python collect_all_prices.py --output-dir /tmp/prices
+```
+
+### generate_report.py
+
+```bash
+# Generate report from latest CSV
+python generate_report.py
+
+# Custom input/output
+python generate_report.py --input-dir history/all --output report.md
+```
+
+### main.py (interactive use)
+
+```bash
+# Find cheapest prices
 python main.py
 
 # Filter by sites and products
@@ -37,27 +74,16 @@ python main.py --plan "Cerave,Medik8"
 # Optimize for best value (price per ml) instead of lowest cost
 python main.py --plan "Cerave,Medik8" --optimize-for-value
 
-# Use environment variables instead
-export DEAL_CRAWLER_SITES="notino.pt,wells.pt"
-export DEAL_CRAWLER_PRODUCTS="Cerave,Medik8"
-python main.py
-
 # Markdown output, bypass cache, show all sizes
 python main.py --markdown --no-cache --all-sizes
 
-# Export results to CSV file
+# Export cheapest prices to CSV
 python main.py --dump results.csv
-
-# Verbose output with detailed progress
-python main.py --verbose
-
-# Disable progress bar
-python main.py --no-progress
 ```
 
 ## Shopping Plan Optimization
 
-The `--plan` flag uses Mixed Integer Linear Programming (MILP) to find the optimal way to purchase products across multiple stores, minimizing total cost (products + shipping) or maximizing value (best price per ml with `--optimize-for-value`).
+The `--plan` flag in `main.py` uses Mixed Integer Linear Programming (MILP) to find the optimal way to purchase products across multiple stores, minimizing total cost (products + shipping) or maximizing value (best price per ml with `--optimize-for-value`).
 
 **How it works:** The optimizer considers all available product sizes and stores, automatically consolidating purchases to trigger free shipping thresholds when beneficial. It ensures exactly one size is selected per product while balancing individual prices, shipping costs, and free shipping eligibility across stores.
 
@@ -96,24 +122,6 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 | `DEAL_CRAWLER_DEFAULT_DELAY_MAX` | `2.0` | Max delay for other sites (seconds) |
 | `DEAL_CRAWLER_RETRY_DELAY_MIN` | `5.0` | Min delay before retry (seconds) |
 | `DEAL_CRAWLER_RETRY_DELAY_MAX` | `8.0` | Max delay before retry (seconds) |
-
-## Features
-
-- 🛒 Multi-retailer price scraping with automatic retry
-- 💰 Prioritizes discounted prices
-- 📦 Excludes out-of-stock products
-- 🔍 Flexible filtering (sites, products, sizes)
-- 🧮 **Shopping plan optimization** - Uses MILP to minimize total cost across stores
-- 📊 **Value optimization** - Optimize for best price per ml instead of lowest cost
-- 🚚 **Smart shipping** - Considers free shipping thresholds when optimizing
-- 📈 **Smart progress bar** - Tracks URLs with dynamic colors (green/yellow/red) and product info
-- 📁 **CSV export** - Export results to CSV files with `--dump`
-- 🗂️ **Historical data** - Daily price history saved automatically
-- 🔊 **Verbose mode** - Detailed progress output with `--verbose`
-- ⚙️ Configurable via CLI flags or environment variables
-- 🤖 Bot detection evasion with randomized delays
-- 📊 Text and markdown output formats
-- 💾 HTTP response caching (1 hour default)
 
 ## Architecture
 
@@ -205,6 +213,17 @@ python collect_all_prices.py --verbose
 # Generate report from collected data
 python generate_report.py
 ```
+
+## Deprecated Scripts
+
+These scripts are from the earlier architecture where a GitHub Action handled scraping. They still work but are superseded by the RPi-based pipeline.
+
+| Script | Replaced by | Notes |
+|--------|-------------|-------|
+| `crawl_prices.py` | `collect_all_prices.py` | Low-level debug tool, prints tab-separated output to stdout |
+| `analyze_prices.py` | `generate_report.py` | Reads old `history/*.csv` format (cheapest-only, 4 columns) |
+
+The old `history/*.csv` files (one cheapest price per product) are preserved for historical reference. New data is collected in `history/all/*.csv` (all prices from all sites, 5 columns).
 
 ## Contributing
 
