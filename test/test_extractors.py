@@ -543,5 +543,107 @@ class TestExtractPrice(unittest.TestCase):
         self.assertEqual(price, 29.99)
 
 
+class TestExtractPriceFromJsonLd(unittest.TestCase):
+    """Test JSON-LD price extraction."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.config = Config()
+
+    def create_soup(self, html):
+        """Helper to create BeautifulSoup from HTML."""
+        return BeautifulSoup(html, "lxml")
+
+    def test_direct_offer_price(self):
+        """Test extraction from a direct Offer with price."""
+        html = '''<script type="application/ld+json">
+        {"@type": "Offer", "price": "16.04", "priceCurrency": "EUR"}
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertEqual(price, 16.04)
+
+    def test_product_with_nested_offers(self):
+        """Test extraction from Product with nested offers dict."""
+        html = '''<script type="application/ld+json">
+        {"@type": "Product", "name": "Test", "offers": {"@type": "Offer", "price": "29.99"}}
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertEqual(price, 29.99)
+
+    def test_product_with_offers_list(self):
+        """Test extraction from Product with offers as a list."""
+        html = '''<script type="application/ld+json">
+        {"@type": "Product", "offers": [{"@type": "Offer", "price": "19.99"}]}
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertEqual(price, 19.99)
+
+    def test_json_ld_array(self):
+        """Test extraction from JSON-LD array format."""
+        html = '''<script type="application/ld+json">
+        [{"@type": "Product", "offers": {"@type": "Offer", "price": "42.50"}}]
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertEqual(price, 42.50)
+
+    def test_invalid_json(self):
+        """Test graceful handling of invalid JSON."""
+        html = '<script type="application/ld+json">not valid json{</script>'
+        soup = self.create_soup(html)
+        # Should fall through to other strategies, not crash
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertIsNone(price)
+
+    def test_price_outside_range(self):
+        """Test skips prices outside valid range."""
+        html = '''<script type="application/ld+json">
+        {"@type": "Offer", "price": "0.50"}
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertIsNone(price)
+
+    def test_empty_script(self):
+        """Test handles empty script tag."""
+        html = '<script type="application/ld+json"></script>'
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertIsNone(price)
+
+    def test_json_ld_takes_priority_over_html(self):
+        """Test JSON-LD price is preferred over HTML price elements."""
+        html = '''
+        <script type="application/ld+json">
+        {"@type": "Offer", "price": "16.04"}
+        </script>
+        <span class="price-actual">20.70€</span>
+        '''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertEqual(price, 16.04)
+
+    def test_non_dict_items_in_list(self):
+        """Test graceful handling of non-dict items in JSON-LD array."""
+        html = '''<script type="application/ld+json">
+        ["string", 123, {"@type": "Offer", "price": "9.99"}]
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertEqual(price, 9.99)
+
+    def test_invalid_price_value(self):
+        """Test handles non-numeric price value."""
+        html = '''<script type="application/ld+json">
+        {"@type": "Offer", "price": "contact us"}
+        </script>'''
+        soup = self.create_soup(html)
+        price = extract_price(soup, "https://example.com", self.config)
+        self.assertIsNone(price)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

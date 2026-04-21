@@ -274,15 +274,15 @@ def _find_price_in_json_ld(data: dict, config: Config) -> Optional[float]:
     # Check nested offers
     offers = data.get("offers")
     if isinstance(offers, dict):
-        price = _find_price_in_json_ld(offers, config)
-        if price:
-            return price
+        offer_price = _find_price_in_json_ld(offers, config)
+        if offer_price:
+            return offer_price
     elif isinstance(offers, list):
         for offer in offers:
             if isinstance(offer, dict):
-                price = _find_price_in_json_ld(offer, config)
-                if price:
-                    return price
+                offer_price = _find_price_in_json_ld(offer, config)
+                if offer_price:
+                    return offer_price
 
     return None
 

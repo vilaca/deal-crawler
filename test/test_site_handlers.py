@@ -308,6 +308,62 @@ class TestFarmacentralHandler(unittest.TestCase):
         self.assertEqual(price, 12.34)
 
 
+    def test_extract_price_from_model_serialization(self):
+        """Test extraction from App\\Models\\Brand serialized format."""
+        html = """
+            <script>
+                window.__NUXT__=(function(){return {data:[
+                    20963,"App\\\\Models\\\\Product",13065,"App\\\\Models\\\\Brand",{},10.41,13.5
+                ]}})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup, "https://example.com/")
+        self.assertEqual(price, 10.41)
+
+    def test_skips_cost_price(self):
+        """Test that cost_price is skipped in favor of retail price."""
+        html = """
+            <script>
+                window.__NUXT__=(function(){return {
+                    cost_price:6.94,
+                    data:[20963,"App\\\\Models\\\\Product",13065,"App\\\\Models\\\\Brand",{},10.41,13.5]
+                }})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup, "https://example.com/")
+        self.assertEqual(price, 10.41)
+
+    def test_skips_pivot_price(self):
+        """Test that pivot price is skipped."""
+        html = """
+            <script>
+                window.__NUXT__=(function(){return {
+                    pivot:{product_id:123,price_type_id:1,price:6.94},
+                    data:[20963,"App\\\\Models\\\\Product",13065,"App\\\\Models\\\\Brand",{},10.41,13.5]
+                }})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup, "https://example.com/")
+        self.assertEqual(price, 10.41)
+
+    def test_model_pattern_takes_priority(self):
+        """Test model serialization price is preferred over unquoted price key."""
+        html = """
+            <script>
+                window.__NUXT__=(function(){return {
+                    price:6.94,
+                    data:[20963,"App\\\\Models\\\\Product",13065,"App\\\\Models\\\\Brand",{},10.41,13.5]
+                }})()
+            </script>
+        """
+        soup = BeautifulSoup(html, "lxml")
+        price = self.handler.extract_price(soup, "https://example.com/")
+        self.assertEqual(price, 10.41)
+
+
 class TestPerfumeriascoqueteoHandler(unittest.TestCase):
     """Test Perfumeriascoqueteo site handler."""
 

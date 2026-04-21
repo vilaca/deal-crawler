@@ -259,5 +259,39 @@ class TestIsOutOfStock(unittest.TestCase):
         self.assertTrue(is_out_of_stock(soup))
 
 
+    def test_ja_nao_esta_disponivel(self):
+        """Test Portuguese 'já não está disponível' pattern."""
+        html = "<div>este produto já não está disponível</div>"
+        soup = self.create_soup(html)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_nao_esta_disponivel(self):
+        """Test Portuguese 'não está disponível' pattern."""
+        html = "<div>produto não está disponível</div>"
+        soup = self.create_soup(html)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_json_ld_out_of_stock_overrides_in_stock_classes(self):
+        """Test JSON-LD OutOfStock takes priority over in-stock CSS classes."""
+        html = """
+        <script type="application/ld+json">
+        {"@type": "Offer", "availability": "https://schema.org/OutOfStock"}
+        </script>
+        <div class="product-in-stock">Disponível</div>
+        """
+        soup = self.create_soup(html)
+        self.assertTrue(is_out_of_stock(soup))
+
+    def test_json_ld_in_stock(self):
+        """Test JSON-LD InStock is detected correctly."""
+        html = """
+        <script type="application/ld+json">
+        {"@type": "Offer", "availability": "https://schema.org/InStock"}
+        </script>
+        """
+        soup = self.create_soup(html)
+        self.assertFalse(is_out_of_stock(soup))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
