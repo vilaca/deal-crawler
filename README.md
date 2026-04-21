@@ -61,7 +61,7 @@ python main.py --sites "notino.pt,wells.pt" --products "Cerave,Medik8"
 python main.py --markdown --no-cache
 ```
 
-### Optimize shopping plan
+### Optimize shopping plan (experimental)
 
 Uses Mixed Integer Linear Programming (MILP) to minimize total cost across stores, considering shipping costs and free shipping thresholds.
 
