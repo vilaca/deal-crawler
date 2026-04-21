@@ -42,12 +42,13 @@ fi
 
 echo "Output verified: $OUTPUT_FILE"
 
-# Commit and push
+# Commit and push (pull --rebase first in case remote changed during scrape)
 git add "$OUTPUT_FILE"
 if git diff --staged --quiet; then
     echo "No changes to commit"
 else
     git commit -m "Collect all prices - $TODAY"
+    git pull --rebase origin main
     git push origin main
     echo "Pushed to origin"
 fi
