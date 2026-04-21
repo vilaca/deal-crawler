@@ -75,7 +75,7 @@ A cron job on the Raspberry Pi runs `scripts/rpi_scrape.sh` daily. It scrapes **
 
 ### Data format
 
-The daily CSV (`history/all/YYYY-MM-DD.csv`) stores one row per product per site:
+The daily CSV (`history/all/YYYY-MM-DD.csv`) stores one row per product, size, and site:
 
 ```csv
 Product,Site,Price,Price per 100ml,URL
