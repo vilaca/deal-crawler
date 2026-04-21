@@ -2,7 +2,7 @@
 # RPi daily price collection script.
 #
 # Pulls latest code, scrapes all prices, commits and pushes results.
-# Run via cron, e.g.: 0 20 * * * /home/pi/fisher/scripts/rpi_scrape.sh
+# Run via cron, e.g.: 0 8 * * * /home/pi/fisher/scripts/rpi_scrape.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

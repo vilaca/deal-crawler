@@ -189,10 +189,10 @@ git config user.email "your@email.com"
 Run `crontab -e` and add:
 
 ```cron
-0 20 * * * /path/to/deal-crawler/scripts/rpi_scrape.sh
+0 8 * * * /path/to/deal-crawler/scripts/rpi_scrape.sh
 ```
 
-This runs the scraper every day at 8pm. Adjust the time as needed.
+This runs the scraper every day at 8am. Adjust the time as needed.
 
 ### What the script does
 
