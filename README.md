@@ -115,6 +115,41 @@ All parameters work as **both CLI flags and environment variables** (CLI flags o
 - 📊 Text and markdown output formats
 - 💾 HTTP response caching (1 hour default)
 
+## Architecture
+
+```
++-------------------+         git push CSV          +-------------------+
+|   Raspberry Pi    | ----------------------------► |      GitHub       |
+|                   |                               |                   |
+|  cron (daily)     |                               |  history/all/     |
+|  rpi_scrape.sh    |                               |   YYYY-MM-DD.csv  |
+|  collect_all_     |                               |                   |
+|   prices.py       |                               +--------+----------+
++-------------------+                                        |
+                                                   push triggers workflow
+                                                             |
+                                                    +--------▼----------+
+                                                    |   GitHub Actions  |
+                                                    |                   |
+                                                    |  generate_        |
+                                                    |   report.py       |
+                                                    |       ▼           |
+                                                    |  latest_results.md|
+                                                    +-------------------+
+```
+
+### Data collection (Raspberry Pi)
+
+A cron job on the RPi runs `scripts/rpi_scrape.sh` every evening. This pulls the latest code, executes `collect_all_prices.py` to scrape **all** prices from all sites (not just cheapest), saves them to `history/all/YYYY-MM-DD.csv`, and pushes the CSV to GitHub.
+
+### Report generation (GitHub Actions)
+
+When a new CSV is pushed to `history/all/`, the **Generate Price Report** workflow triggers automatically. It runs `generate_report.py` to read the CSV, pick the cheapest price per product, and produce `latest_results.md`.
+
+### CI (GitHub Actions)
+
+The **CI** workflow runs on every push and pull request. It runs tests, coverage, linting (black, flake8, pylint), type checking (mypy), docstring coverage, complexity analysis, and security audits.
+
 ## Raspberry Pi Setup
 
 The price scraper can run on a Raspberry Pi as a daily cron job. The RPi collects all prices and pushes results to GitHub, which triggers a GitHub Action to generate the report.
