@@ -15,10 +15,11 @@ import io
 import os
 import sys
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from utils.config import Config
 from utils.data_loader import load_products
+from utils.filters import filter_by_products, filter_by_sites
 from utils.finder import find_all_prices
 from utils.http_client import HttpClient
 from utils.price_models import PriceResult
@@ -51,12 +52,16 @@ def _write_csv(output: io.TextIOBase, all_prices: Dict[str, List[PriceResult]]) 
     return row_count
 
 
-def _collect(verbose: bool, show_progress: bool) -> Dict[str, List[PriceResult]]:
-    """Load products and scrape all prices.
+def _collect(
+    verbose: bool, show_progress: bool, products_filter: Optional[str], sites_filter: Optional[str]
+) -> Dict[str, List[PriceResult]]:
+    """Load products, apply filters, and scrape all prices.
 
     Args:
         verbose: If True, print detailed progress.
         show_progress: If True, display progress bar.
+        products_filter: Comma-separated product name substrings, or None.
+        sites_filter: Comma-separated site domains, or None.
 
     Returns:
         Dictionary mapping product names to lists of PriceResult.
@@ -68,6 +73,15 @@ def _collect(verbose: bool, show_progress: bool) -> Dict[str, List[PriceResult]]
         print("No products found.", file=sys.stderr)
         sys.exit(1)
 
+    if products_filter:
+        products = filter_by_products(products, [p.strip() for p in products_filter.split(",")])
+    if sites_filter:
+        products = filter_by_sites(products, [s.strip() for s in sites_filter.split(",")])
+
+    if not products:
+        print("No products match the given filters.", file=sys.stderr)
+        sys.exit(1)
+
     with HttpClient(config=config, use_cache=False, verbose=verbose) as http_client:
         return find_all_prices(products, http_client, verbose=verbose, show_progress=show_progress)
 
@@ -77,11 +91,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Collect all prices from all sites")
     parser.add_argument("--output-dir", default="history/all", help="Output directory for CSV files")
     parser.add_argument("--stdout", action="store_true", help="Print CSV to stdout instead of writing a file")
+    parser.add_argument("--products", help="Filter by product names (comma-separated substrings)")
+    parser.add_argument("--sites", help="Filter by site domains (comma-separated)")
     parser.add_argument("--verbose", action="store_true", help="Print detailed progress")
     parser.add_argument("--no-progress", action="store_true", help="Disable progress bar")
     args = parser.parse_args()
 
-    all_prices = _collect(args.verbose, show_progress=not (args.no_progress or args.verbose))
+    all_prices = _collect(
+        args.verbose,
+        show_progress=not (args.no_progress or args.verbose),
+        products_filter=args.products,
+        sites_filter=args.sites,
+    )
 
     if args.stdout:
         row_count = _write_csv(sys.stdout, all_prices)
