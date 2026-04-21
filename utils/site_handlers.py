@@ -320,34 +320,41 @@ class FarmacentralHandler(SiteHandler):
         Returns:
             Extracted price if found, None otherwise
         """
-        # Patterns for various formats found in Nuxt state
+        # Primary: look for the retail price in the serialized model format
+        # e.g. "App\\\\Models\\\\Brand",{},10.41,13.5,
+        model_match = re.search(
+            r'App\\\\Models\\\\Brand",\{\},([0-9]+\.[0-9]+)',
+            script_content,
+        )
+        if model_match:
+            try:
+                price = float(model_match.group(1))
+                if self._is_valid_price(price):
+                    return price
+            except ValueError:
+                pass
+
+        # Fallback patterns for other Nuxt state formats
         price_patterns = [
-            r"price:([0-9]+\.?[0-9]*)",  # price:7.32 (any context)
-            r"\.price[=:]([0-9]+\.?[0-9]*)",  # gl.price=7.32
+            r"\.price=([0-9]+\.?[0-9]*)",  # jo.price=7.32
             r'"price"[:\s]*([0-9]+\.?[0-9]*)',  # "price":7.32
             r"'price'[:\s]*([0-9]+\.?[0-9]*)",  # 'price':7.32
+            r"(?<![a-zA-Z_])price:([0-9]+\.?[0-9]*)",  # price:7.32 (last resort)
         ]
 
-        # Try specific price patterns first
+        skip_contexts = ("cost_price", "pivot")
+
         for pattern in price_patterns:
-            price_matches = re.findall(pattern, script_content)
-            for price_str in price_matches:
+            for match in re.finditer(pattern, script_content):
+                context = script_content[max(0, match.start() - 30) : match.start()]
+                if any(skip in context for skip in skip_contexts):
+                    continue
                 try:
-                    price = float(price_str)
+                    price = float(match.group(1))
                     if self._is_valid_price(price):
                         return price
                 except ValueError:
                     continue
-
-        # Fallback: find all decimal numbers and return first valid one
-        all_numbers = re.findall(r"\b([0-9]+\.[0-9]{2})\b", script_content)
-        for num_str in all_numbers:
-            try:
-                price = float(num_str)
-                if self._is_valid_price(price):
-                    return price
-            except ValueError:
-                continue
 
         return None
 
