@@ -168,7 +168,7 @@ These scripts are from the earlier architecture and are superseded by the curren
 | Script | Replaced by | Notes |
 |--------|-------------|-------|
 | `main.py` | `collect_all_prices.py` | Interactive CLI, only finds cheapest price per product. Includes experimental shopping plan optimizer (`--plan`) |
-| `crawl_prices.py` | `collect_all_prices.py` | Low-level debug tool, tab-separated stdout |
+| `crawl_prices.py` | `collect_all_prices.py` | Simpler scraper, outputs tab-separated text to stdout |
 | `analyze_prices.py` | `generate_report.py` | Reads old `history/*.csv` format (cheapest-only) |
 
 ## Contributing
