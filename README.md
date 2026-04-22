@@ -85,13 +85,6 @@ Cerave Hydrating Cleanser (1000ml),wells.pt,16.05,1.61,https://wells.pt/...
 Cerave Hydrating Cleanser (1000ml),notino.pt,18.99,1.90,https://www.notino.pt/...
 ```
 
-### GitHub Actions
-
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| **Generate Price Report** | Push to `history/all/*.csv` | Runs `generate_report.py` to update `latest_results.md` |
-| **CI** | Push / Pull request | Quality checks (see below) |
-
 ## CI
 
 The CI pipeline runs on every push and pull request. It checks code quality across multiple dimensions and blocks merging if critical checks fail.
