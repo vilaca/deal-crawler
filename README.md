@@ -90,7 +90,46 @@ Cerave Hydrating Cleanser (1000ml),notino.pt,18.99,1.90,https://www.notino.pt/..
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **Generate Price Report** | Push to `history/all/*.csv` | Runs `generate_report.py` to update `latest_results.md` |
-| **CI** | Push / Pull request | Tests, coverage, linting, type checking, security audits |
+| **CI** | Push / Pull request | Quality checks (see below) |
+
+## CI
+
+The CI pipeline runs on every push and pull request. It checks code quality across multiple dimensions and blocks merging if critical checks fail.
+
+### Critical checks (must pass)
+
+| Check | Command | What it does |
+|-------|---------|-------------|
+| Tests | `make test` | Runs all unit tests |
+| Coverage | `make coverage` | Verifies test coverage threshold |
+| Type checking | `make typecheck` | Strict mypy on production code, lenient on tests |
+| Docstrings | `make interrogate` | Requires 100% docstring coverage |
+
+### Warning checks (informational)
+
+| Check | Command | What it does |
+|-------|---------|-------------|
+| Formatting | `make format-check` | Checks black formatting (120 char line length) |
+| Linting | `make lint` | Runs flake8 and pylint |
+| Dead code | `make vulture` | Detects unused code |
+| Complexity | `make complexity` | Radon cyclomatic complexity (target: A-B grades) |
+| Security | `make bandit` | Static security analysis |
+| Vulnerabilities | `make pip-audit` | Checks dependencies for known vulnerabilities |
+
+### Running locally
+
+```bash
+# Run all checks at once
+make check-all
+
+# Or individually
+make test
+make typecheck
+make coverage
+
+# Auto-fix formatting
+make format
+```
 
 ## Scripts
 
