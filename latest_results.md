@@ -31,4 +31,4 @@
 
 ---
 
-_Generated from 2026-04-25.csv — 82 prices across 25 products_
+_Generated from 2026-04-26.csv — 82 prices across 25 products_
