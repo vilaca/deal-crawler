@@ -19,8 +19,8 @@
 | **LRP Anthelios UVMune 400 SPF50** | €16.03 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €16.99 | [atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-spf-gel-creme-toque-seco-50ml) |
 | **Medik8 Crystal Retinal 10** | €93.60 | [notino.pt](https://www.notino.pt/medik8/crystal-retinal-10-serum-de-noite-rejuvenescedor-com-vitaminas-a-e-e/) |
-| **Medik8 Crystal Retinal 3** | €50.05 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/tratamientos-rostro/17176-22398-crystal-retinal-10-818625024529.html) |
-| **Medik8 Crystal Retinal 6** | €73.10 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
+| **Medik8 Crystal Retinal 3** | €52.49 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
+| **Medik8 Crystal Retinal 6** | €69.44 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
 | **Medik8 Duo** | €69.41 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
 | **Medik8 Sleep Glycolic** | €43.56 | [notino.pt](https://www.notino.pt/medik8/sleep-glycolic-peeling-enzimatico-com-acido-glicolico-para-a-noite/) |
 | **Medik8 Super Ferrulic** | €58.98 | [farmacia365.pt](https://www.farmacia365.pt/medik8-super-c-ferulic-serum-30ml) |
@@ -31,4 +31,4 @@
 
 ---
 
-_Generated from 2026-04-29.csv — 80 prices across 25 products_
+_Generated from 2026-04-30.csv — 79 prices across 25 products_
