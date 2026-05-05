@@ -3,8 +3,8 @@
 
 | Product | Price | Link |
 |---------|-------|------|
-| **Avène Couvrance Fluido Maquiagem** | €16.45 | [wells.pt](https://wells.pt/couvrance-fluid-foundation-corrector-3.0-3599509.html) |
-| **Cerave Hydrating Cleanser (1000ml)** | €16.05<br>_(€1.61/100ml)_ | [wells.pt](https://wells.pt/creme-limpeza-rosto-e-corpo-hidratante-6703201.html) |
+| **Avène Couvrance Fluido Maquiagem** | €16.88 | [farmacentral.pt](https://farmacentral.pt/pt/artigo/avene-couvrance-base-fluida-areia-30ml) |
+| **Cerave Hydrating Cleanser (1000ml)** | €16.31<br>_(€1.63/100ml)_ | [farmacia365.pt](https://www.farmacia365.pt/cerave-creme-limpeza-hidratante-rostocorpo-1000ml) |
 | **Cerave Hydrating Cleanser (236ml)** | €7.23<br>_(€3.06/100ml)_ | [farmacentral.pt](https://farmacentral.pt/pt/artigo/cerave-cleanser-hydrating-limpeza-facial-236ml) |
 | **Cerave Hydrating Cleanser (2x1000ml)** | €31.99<br>_(€1.60/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
 | **Cerave Hydrating Cleanser (2x473ml)** | €19.99<br>_(€2.11/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x473-ml) |
@@ -30,4 +30,4 @@
 
 ---
 
-_Generated from 2026-05-04.csv — 81 prices across 24 products_
+_Generated from 2026-05-05.csv — 80 prices across 24 products_
