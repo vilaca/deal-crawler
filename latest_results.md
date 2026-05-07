@@ -23,7 +23,7 @@
 | **Medik8 Crystal Retinal 3** | €52.49 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19562-medik8-crystal-retinal-3-30ml.html) |
 | **Medik8 Crystal Retinal 6** | €69.44 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
 | **Medik8 Duo** | €99.15 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
-| **Medik8 Sleep Glycolic** | €43.56 | [notino.pt](https://www.notino.pt/medik8/sleep-glycolic-peeling-enzimatico-com-acido-glicolico-para-a-noite/) |
+| **Medik8 Sleep Glycolic** | €44.21 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-exfoliation-cleansing-sleep-glycolic-at-home-peel-noturno-p-017678kd) |
 | **Medik8 Super Ferrulic** | €70.25 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
 | **Paradontax gums (500ml)** | €7.19<br>_(€1.44/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
 | **Paradontax pasta (2x75ml)** | €6.50<br>_(€4.33/100ml)_ | [farmacia365.pt](https://www.farmacia365.pt/parodontax-extra-fresh-pasta-2x75ml-70-2aunidade) |
@@ -31,4 +31,4 @@
 
 ---
 
-_Generated from 2026-05-06.csv — 82 prices across 25 products_
+_Generated from 2026-05-07.csv — 82 prices across 25 products_
