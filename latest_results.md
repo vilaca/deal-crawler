@@ -15,6 +15,7 @@
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €16.04<br>_(€3.39/100ml)_ | [skin.pt](https://skin.pt/cerave-hydrating-cream-to-foam-cleanser-creme-espuma-de-limpeza?attr=uom&opt=473ml) |
 | **Cerave Micellar Water (295ml)** | €8.20<br>_(€2.78/100ml)_ | [skin.pt](https://skin.pt/cerave-micellar-cleansing-water-agua-micelar-295ml) |
 | **Cerave Micellar Water (2x295ml)** | €15.99<br>_(€2.71/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
+| **Dercos DS (200ml)** | €10.59<br>_(€5.29/100ml)_ | [wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#200ml) |
 | **Dercos DS (390ml)** | €17.55<br>_(€4.50/100ml)_ | [atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €16.03 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €16.99 | [atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-spf-gel-creme-toque-seco-50ml) |
@@ -30,4 +31,4 @@
 
 ---
 
-_Generated from 2026-05-15.csv — 78 prices across 24 products_
+_Generated from 2026-05-16.csv — 82 prices across 25 products_
