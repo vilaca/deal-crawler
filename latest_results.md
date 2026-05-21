@@ -16,11 +16,12 @@
 | **Cerave Micellar Water (295ml)** | €8.20<br>_(€2.78/100ml)_ | [skin.pt](https://skin.pt/cerave-micellar-cleansing-water-agua-micelar-295ml) |
 | **Cerave Micellar Water (2x295ml)** | €15.99<br>_(€2.71/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
 | **Dercos DS (390ml)** | €17.55<br>_(€4.50/100ml)_ | [atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
-| **LRP Anthelios UVMune 400 SPF50** | €16.99 | [atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-creme-fondante-50ml-sem-perfume) |
+| **LRP Anthelios UVMune 400 SPF50** | €16.03 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €16.99 | [atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-spf-gel-creme-toque-seco-50ml) |
 | **Medik8 Crystal Retinal 10** | €99.26 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Crystal Retinal 3** | €50.05 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/tratamientos-rostro/17176-22398-crystal-retinal-10-818625024529.html) |
 | **Medik8 Crystal Retinal 6** | €66.22 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/nicho/17177-22400-crystal-retinal-10-818625024536.html) |
+| **Medik8 Duo** | €99.15 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
 | **Medik8 Sleep Glycolic** | €37.73 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/nicho/17208-22464-sleep-glycolic-818625024673.html#/tamano_ml-30_ml) |
 | **Medik8 Super Ferrulic** | €70.25 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
 | **Paradontax gums (500ml)** | €7.19<br>_(€1.44/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
@@ -29,4 +30,4 @@
 
 ---
 
-_Generated from 2026-05-20.csv — 69 prices across 23 products_
+_Generated from 2026-05-21.csv — 80 prices across 24 products_
