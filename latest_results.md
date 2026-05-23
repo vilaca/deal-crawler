@@ -15,13 +15,14 @@
 | **Cerave Hydrating Cream To Foam Cleanser (473ml)** | €16.04<br>_(€3.39/100ml)_ | [skin.pt](https://skin.pt/cerave-hydrating-cream-to-foam-cleanser-creme-espuma-de-limpeza?attr=uom&opt=473ml) |
 | **Cerave Micellar Water (295ml)** | €8.20<br>_(€2.78/100ml)_ | [skin.pt](https://skin.pt/cerave-micellar-cleansing-water-agua-micelar-295ml) |
 | **Cerave Micellar Water (2x295ml)** | €15.99<br>_(€2.71/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
+| **Dercos DS (200ml)** | €10.59<br>_(€5.29/100ml)_ | [wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#200ml) |
 | **Dercos DS (390ml)** | €17.55<br>_(€4.50/100ml)_ | [atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €16.03 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €16.99 | [atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-spf-gel-creme-toque-seco-50ml) |
 | **Medik8 Crystal Retinal 10** | €71.69 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Crystal Retinal 3** | €42.36 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=02) |
 | **Medik8 Crystal Retinal 6** | €55.40 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=03) |
-| **Medik8 Duo** | €99.15 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
+| **Medik8 Duo** | €69.41 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
 | **Medik8 Sleep Glycolic** | €31.93 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-exfoliation-cleansing-sleep-glycolic-at-home-peel-noturno-p-017678kd) |
 | **Medik8 Super Ferrulic** | €55.40 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamin-c-super-c-ferulic-serum-vitamina-c-p-017624kd?st=01) |
 | **Paradontax gums (500ml)** | €7.19<br>_(€1.44/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
@@ -30,4 +31,4 @@
 
 ---
 
-_Generated from 2026-05-22.csv — 80 prices across 24 products_
+_Generated from 2026-05-23.csv — 85 prices across 25 products_
