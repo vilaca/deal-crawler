@@ -18,7 +18,7 @@
 | **Dercos DS (200ml)** | €10.59<br>_(€5.29/100ml)_ | [wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#200ml) |
 | **Dercos DS (390ml)** | €17.55<br>_(€4.50/100ml)_ | [atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €16.03 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
-| **LRP Anthelios UVMune 400 SPF50 - Oil control** | €16.99 | [atida.com](https://www.atida.com/pt-pt/la-roche-posay-anthelios-xl-50-spf-gel-creme-toque-seco-50ml) |
+| **LRP Anthelios UVMune 400 SPF50 - Oil control** | €18.26 | [wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 10** | €99.26 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Crystal Retinal 3** | €50.05 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/tratamientos-rostro/17176-22398-crystal-retinal-10-818625024529.html) |
 | **Medik8 Crystal Retinal 6** | €70.91 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
@@ -26,10 +26,10 @@
 | **Medik8 Sleep Glycolic** | €37.73 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/nicho/17208-22464-sleep-glycolic-818625024673.html#/tamano_ml-30_ml) |
 | **Medik8 Super Ferrulic** | €71.73 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
 | **Paradontax (500ml)** | €8.23<br>_(€1.65/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
-| **Paradontax gums (500ml)** | €7.19<br>_(€1.44/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
+| **Paradontax gums (500ml)** | €9.99<br>_(€2.00/100ml)_ | [atida.com](https://www.atida.com/pt-pt/parodontax-colutorio-complete-protection-500-ml) |
 | **Paradontax pasta (2x75ml)** | €7.99<br>_(€5.33/100ml)_ | [wells.pt](https://wells.pt/pasta-de-dentes-parodontax-original-7753557.html) |
 | **Paradontax pasta (75ml)** | €5.27<br>_(€7.03/100ml)_ | [farmacentral.pt](https://farmacentral.pt/pt/artigo/parodontax-original-gengivas-pasta-dentifrica-75ml) |
 
 ---
 
-_Generated from 2026-05-30.csv — 84 prices across 26 products_
+_Generated from 2026-05-31.csv — 82 prices across 26 products_
