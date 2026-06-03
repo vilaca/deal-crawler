@@ -27,9 +27,9 @@
 | **Medik8 Super Ferrulic** | €70.25 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
 | **Paradontax (500ml)** | €8.74<br>_(€1.75/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
 | **Paradontax gums (500ml)** | €7.64<br>_(€1.53/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
-| **Paradontax pasta (2x75ml)** | €7.99<br>_(€5.33/100ml)_ | [wells.pt](https://wells.pt/pasta-de-dentes-parodontax-original-7753557.html) |
+| **Paradontax pasta (2x75ml)** | €6.50<br>_(€4.33/100ml)_ | [farmacia365.pt](https://www.farmacia365.pt/parodontax-extra-fresh-pasta-2x75ml-70-2aunidade) |
 | **Paradontax pasta (75ml)** | €5.27<br>_(€7.03/100ml)_ | [farmacentral.pt](https://farmacentral.pt/pt/artigo/parodontax-original-gengivas-pasta-dentifrica-75ml) |
 
 ---
 
-_Generated from 2026-06-02.csv — 81 prices across 26 products_
+_Generated from 2026-06-03.csv — 82 prices across 26 products_
