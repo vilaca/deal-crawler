@@ -17,9 +17,9 @@
 | **Cerave Micellar Water (2x295ml)** | €19.99<br>_(€3.39/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-gua-micelar-2x295-ml) |
 | **Dercos DS (200ml)** | €10.59<br>_(€5.29/100ml)_ | [wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#200ml) |
 | **Dercos DS (390ml)** | €17.55<br>_(€4.50/100ml)_ | [atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
-| **LRP Anthelios UVMune 400 SPF50** | €14.42 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
+| **LRP Anthelios UVMune 400 SPF50** | €12.82 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €18.26 | [wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
-| **Medik8 Crystal Retinal 10** | €99.11 | [notino.pt](https://www.notino.pt/medik8/crystal-retinal-10-serum-de-noite-rejuvenescedor-com-vitaminas-a-e-e/) |
+| **Medik8 Crystal Retinal 10** | €99.26 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Crystal Retinal 3** | €50.05 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/tratamientos-rostro/17176-22398-crystal-retinal-10-818625024529.html) |
 | **Medik8 Crystal Retinal 6** | €69.44 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19563-medik8-crystal-retinal-6-30ml.html) |
 | **Medik8 Duo** | €99.15 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
@@ -32,4 +32,4 @@
 
 ---
 
-_Generated from 2026-06-03.csv — 82 prices across 26 products_
+_Generated from 2026-06-04.csv — 83 prices across 26 products_
