@@ -8,7 +8,7 @@
 | **Cerave Hydrating Cleanser (236ml)** | €7.21<br>_(€3.06/100ml)_ | [farmacia365.pt](https://www.farmacia365.pt/cerave-creme-limpeza-hidratante-236ml) |
 | **Cerave Hydrating Cleanser (2x1000ml)** | €38.99<br>_(€1.95/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x1-litro) |
 | **Cerave Hydrating Cleanser (2x236ml)** | €17.99<br>_(€3.81/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x236-ml) |
-| **Cerave Hydrating Cleanser (2x473ml)** | €24.99<br>_(€2.64/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-limpador-hidratante-473-ml-recarga) |
+| **Cerave Hydrating Cleanser (2x473ml)** | €27.30<br>_(€2.89/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-creme-de-limpeza-hidratante-2x473-ml) |
 | **Cerave Hydrating Cleanser (473ml)** | €9.21<br>_(€1.95/100ml)_ | [farmacia365.pt](https://www.farmacia365.pt/cerave-refill-limpeza-hidratante-473ml) |
 | **Cerave Hydrating Cream To Foam Cleanser (236ml)** | €11.00<br>_(€4.66/100ml)_ | [notino.pt](https://www.notino.pt/cerave/cleansers-creme-espumoso-de-limpeza-para-pele-normal-a-seca/p-16066027/) |
 | **Cerave Hydrating Cream To Foam Cleanser (2x236ml)** | €26.99<br>_(€5.72/100ml)_ | [atida.com](https://www.atida.com/pt-pt/cerave-crema-espuma-de-limpeza-hidratante-2x236-ml) |
@@ -32,4 +32,4 @@
 
 ---
 
-_Generated from 2026-06-05.csv — 83 prices across 26 products_
+_Generated from 2026-06-06.csv — 81 prices across 26 products_
