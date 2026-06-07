@@ -32,4 +32,4 @@
 
 ---
 
-_Generated from 2026-06-06.csv — 81 prices across 26 products_
+_Generated from 2026-06-07.csv — 82 prices across 26 products_
