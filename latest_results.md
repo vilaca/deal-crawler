@@ -21,7 +21,7 @@
 | **LRP Anthelios UVMune 400 SPF50 - Oil control** | €18.26 | [wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
 | **Medik8 Crystal Retinal 10** | €99.26 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Crystal Retinal 3** | €50.05 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/tratamientos-rostro/17176-22398-crystal-retinal-10-818625024529.html) |
-| **Medik8 Crystal Retinal 6** | €76.70 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=03) |
+| **Medik8 Crystal Retinal 6** | €66.22 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/nicho/17177-22400-crystal-retinal-10-818625024536.html) |
 | **Medik8 Duo** | €99.15 | [farmacia365.pt](https://www.farmacia365.pt/medik8-coffret-firm-favourites-serum-hidr8-b5-intense-30ml-creme-de-noite-advanced-night-restore-50ml) |
 | **Medik8 Sleep Glycolic** | €37.73 | [perfumeriascoqueteo.com](https://www.perfumeriascoqueteo.com/nicho/17208-22464-sleep-glycolic-818625024673.html#/tamano_ml-30_ml) |
 | **Medik8 Super Ferrulic** | €70.25 | [sabina.com](https://www.sabina.com/pt/cosmetica-facial-mulher/19591-medik8-super-c-ferulic-30-ml.html) |
@@ -32,4 +32,4 @@
 
 ---
 
-_Generated from 2026-06-08.csv — 80 prices across 26 products_
+_Generated from 2026-06-09.csv — 81 prices across 26 products_
