@@ -26,10 +26,10 @@
 | **Medik8 Sleep Glycolic** | €34.02 | [farmacia365.pt](https://www.farmacia365.pt/medik8-sleep-glycolic-creme-30ml) |
 | **Medik8 Super Ferrulic** | €58.98 | [farmacia365.pt](https://www.farmacia365.pt/medik8-super-c-ferulic-serum-30ml) |
 | **Paradontax (500ml)** | €8.74<br>_(€1.75/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7712480.html) |
-| **Paradontax gums (500ml)** | €7.64<br>_(€1.53/100ml)_ | [wells.pt](https://wells.pt/elixir-cuidado-gengivas-7009519.html) |
+| **Paradontax gums (500ml)** | €9.99<br>_(€2.00/100ml)_ | [atida.com](https://www.atida.com/pt-pt/parodontax-colutorio-complete-protection-500-ml) |
 | **Paradontax pasta (2x75ml)** | €6.50<br>_(€4.33/100ml)_ | [farmacia365.pt](https://www.farmacia365.pt/parodontax-extra-fresh-pasta-2x75ml-70-2aunidade) |
 | **Paradontax pasta (75ml)** | €5.27<br>_(€7.03/100ml)_ | [farmacentral.pt](https://farmacentral.pt/pt/artigo/parodontax-original-gengivas-pasta-dentifrica-75ml) |
 
 ---
 
-_Generated from 2026-06-13.csv — 83 prices across 26 products_
+_Generated from 2026-06-14.csv — 82 prices across 26 products_
