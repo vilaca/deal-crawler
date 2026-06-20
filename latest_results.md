@@ -18,7 +18,7 @@
 | **Dercos DS (200ml)** | €10.59<br>_(€5.29/100ml)_ | [wells.pt](https://wells.pt/dercos-anti-pelicullaire-ds-shampooing-gras-285450.html#200ml) |
 | **Dercos DS (390ml)** | €17.55<br>_(€4.50/100ml)_ | [atuafarmacia.pt](https://atuafarmacia.pt/products/dercos-anticaspa-ch-caspa-oleosa-390ml) |
 | **LRP Anthelios UVMune 400 SPF50** | €12.82 | [farmacia365.pt](https://www.farmacia365.pt/la-roche-posay-anthelios-uvmune-400-creme-s-perfume-spf50-50ml) |
-| **LRP Anthelios UVMune 400 SPF50 - Oil control** | €18.26 | [wells.pt](https://wells.pt/protetor-solar-anthelios-uvmune-400-spf50-5058410.html) |
+| **LRP Anthelios UVMune 400 SPF50 - Oil control** | €18.14 | [skin.pt](https://skin.pt/la-roche-posay-anthelios-spf50-gel-creme-toque-seco-sem-perfume-50ml) |
 | **Medik8 Crystal Retinal 10** | €71.69 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=04) |
 | **Medik8 Crystal Retinal 3** | €42.36 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=02) |
 | **Medik8 Crystal Retinal 6** | €55.40 | [sweetcare.pt](https://www.sweetcare.pt/pt/medik8-vitamina-cristal-retinal-serum-noturno-retinal-p-017631kd?st=03) |
@@ -32,4 +32,4 @@
 
 ---
 
-_Generated from 2026-06-19.csv — 83 prices across 26 products_
+_Generated from 2026-06-20.csv — 83 prices across 26 products_
